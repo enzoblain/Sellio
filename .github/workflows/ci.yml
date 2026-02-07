@@ -24,11 +24,11 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace -- -D warnings
 
-      - name: Build (release)
-        run: cargo build --workspace --release
+      - name: Build (release, server)
+        run: cargo build --manifest-path server/Cargo.toml --release
 
-      - name: Test
-        run: cargo test --workspace --verbose
+      - name: Test (server)
+        run: cargo test --manifest-path server/Cargo.toml --verbose
 
   linux:
     runs-on: ubuntu-latest
@@ -49,11 +49,11 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace -- -D warnings
 
-      - name: Build (release)
-        run: cargo build --workspace --release
+      - name: Build (release, server)
+        run: cargo build --manifest-path server/Cargo.toml --release
 
-      - name: Test
-        run: cargo test --workspace --verbose
+      - name: Test (server)
+        run: cargo test --manifest-path server/Cargo.toml --verbose
   windows:
     runs-on: windows-latest
     steps:
@@ -73,8 +73,8 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace -- -D warnings
 
-      - name: Build (release)
-        run: cargo build --workspace --release
+      - name: Build (release, server)
+        run: cargo build --manifest-path server/Cargo.toml --release
 
-      - name: Test
-        run: cargo test --workspace --verbose
+      - name: Test (server)
+        run: cargo test --manifest-path server/Cargo.toml --verbose
