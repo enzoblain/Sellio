@@ -4,7 +4,7 @@ A desktop application for buy-resell management to track your purchases, sales, 
 
 ## Description
 
-Sellio is a desktop application designed to streamline buy-resell activities between partners. It allows you to record purchased products, track their resale, and automatically calculate profits and margins. An interactive dashboard provides an overview of performance with detailed statistics and charts.
+Sellio is a desktop application designed to streamline buy-resell activities between partners. It lets you record purchases, track resale, and automatically calculate profits and margins. An interactive dashboard provides an overview of performance with detailed statistics and charts.
 
 ## Key Features
 
@@ -18,7 +18,8 @@ Sellio is a desktop application designed to streamline buy-resell activities bet
   - Most profitable categories
   - Trend charts
 - **Multi-user**: Partner account management
-- **Local Database**: Secure data storage with SQLite
+- **Media**: Multiple images per item
+- **Database**: Secure data storage with PostgreSQL
 
 ## Tech Stack
 
@@ -28,7 +29,7 @@ Sellio is a desktop application designed to streamline buy-resell activities bet
 | **Bundler** | Vite 6 |
 | **Desktop** | Tauri 2 |
 | **Backend** | Rust |
-| **Database** | PostgreSql |
+| **Database** | PostgreSQL |
 | **Languages** | TypeScript / Rust |
 
 ## Installation
@@ -79,7 +80,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### v0.1.0 - MVP
 - [x] Basic project structure
-- [ ] PostgreSql database configuration
+- [x] PostgreSql database configuration
 - [ ] CRUD for items
 - [ ] CRUD for purchases and sales
 - [ ] Basic profit calculation

@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:18
+    container_name: selliodb
+    environment:
+      POSTGRES_USER: sellio
+      POSTGRES_PASSWORD: sellio_pass
+      POSTGRES_DB: sellio_db
+    volumes:  
+      - db-data:/var/lib/postgresql/data
+      - ./server/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sellio -d sellio_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
