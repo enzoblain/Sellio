@@ -6,7 +6,7 @@ pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
     var server = try httpz.Server(void).init(init.io, allocator, .{
-        .address = .localhost(2509),
+        .address = .all(2509),
     }, {});
     defer {
         server.stop();
