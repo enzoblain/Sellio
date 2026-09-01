@@ -1,6 +1,6 @@
 const std = @import("std");
-const Sellio = @import("Sellio");
 const httpz = @import("httpz");
+const router = @import("router.zig");
 
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
@@ -13,13 +13,6 @@ pub fn main(init: std.process.Init) !void {
         server.deinit();
     }
 
-    var router = try server.router(.{});
-    router.get("/health", getHealth, .{});
-
+    try router.init(&server);
     try server.listen();
-}
-
-fn getHealth(_: *httpz.Request, res: *httpz.Response) !void {
-    res.status = 200;
-    try res.json(.{ .status = "Ok" }, .{});
 }
