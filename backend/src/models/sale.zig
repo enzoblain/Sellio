@@ -30,32 +30,41 @@ pub const Sale = struct {
 
     pub fn getFromRow(
         allocator: std.mem.Allocator,
-        row: anytype,
+        reader: anytype,
         images: []const Image,
     ) !Sale {
+        const id = try helpers.uuidFromPg(
+            try reader.next([]const u8),
+        );
+
+        const purchase_price = try reader.next(i64);
+        const shipping_price = try reader.next(i64);
+        const listing_price = try reader.next(i64);
+        const sale_price = try reader.next(?i64);
+
+        const status: SaleStatus = @enumFromInt(
+            try reader.next(u8),
+        );
+
+        const created_at = try reader.next(i64);
+        const updated_at = try reader.next(i64);
+
+        const garment = try Garment.getFromRow(
+            allocator,
+            reader,
+            images,
+        );
+
         return .{
-            .id = try helpers.uuidFromPg(
-                try row.get([]const u8, 0),
-            ),
-
-            .garment = try Garment.getFromRow(
-                allocator,
-                row,
-                8,
-                images,
-            ),
-
-            .purchase_price = try row.get(i64, 1),
-            .shipping_price = try row.get(i64, 2),
-            .listing_price = try row.get(i64, 3),
-            .sale_price = try row.get(?i64, 4),
-
-            .status = @enumFromInt(
-                try row.get(u8, 5),
-            ),
-
-            .created_at = try row.get(i64, 6),
-            .updated_at = try row.get(i64, 7),
+            .id = id,
+            .garment = garment,
+            .purchase_price = purchase_price,
+            .shipping_price = shipping_price,
+            .listing_price = listing_price,
+            .sale_price = sale_price,
+            .status = status,
+            .created_at = created_at,
+            .updated_at = updated_at,
         };
     }
 };

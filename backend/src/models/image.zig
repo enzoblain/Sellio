@@ -14,25 +14,24 @@ pub const Image = struct {
 
     pub fn getFromRow(
         allocator: std.mem.Allocator,
-        row: anytype,
-        index: usize,
+        reader: anytype,
     ) !Image {
         return .{
             .id = try helpers.uuidFromPg(
-                try row.get([]const u8, index),
+                try reader.next([]const u8),
             ),
             .path = try allocator.dupe(
                 u8,
-                try row.get([]const u8, index + 1),
+                try reader.next([]const u8),
             ),
             .mime_type = try allocator.dupe(
                 u8,
-                try row.get([]const u8, index + 2),
+                try reader.next([]const u8),
             ),
-            .size_bytes = try row.get(i64, index + 3),
-            .width = try row.get(?i32, index + 4),
-            .height = try row.get(?i32, index + 5),
-            .created_at = try row.get(i64, index + 6),
+            .size_bytes = try reader.next(i64),
+            .width = try reader.next(?i32),
+            .height = try reader.next(?i32),
+            .created_at = try reader.next(i64),
         };
     }
 };

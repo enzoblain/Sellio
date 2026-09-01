@@ -1,10 +1,10 @@
 const std = @import("std");
 
-const queries = @import("queries.zig");
-const helpers = @import("../helpers.zig");
-const Database = @import("db.zig").Database;
-const Sale = @import("../models/sale.zig").Sale;
-const Image = @import("../models/image.zig").Image;
+const queries = @import("../queries.zig");
+const helpers = @import("../../helpers.zig");
+const Database = @import("../db.zig").Database;
+const Sale = @import("../../models/sale.zig").Sale;
+const Image = @import("../../models/image.zig").Image;
 
 pub fn getAll(
     db: *Database,
@@ -20,11 +20,11 @@ pub fn getAll(
     }
 
     while (try result.next()) |row| {
-        var existing_sale: ?*Sale = null;
-
         const sale_id = try helpers.uuidFromPg(
             try row.get([]const u8, 0),
         );
+
+        var existing_sale: ?*Sale = null;
 
         for (sales.items) |*sale| {
             if (sale.id == sale_id) {
@@ -33,7 +33,13 @@ pub fn getAll(
             }
         }
 
+        // Sale + Garment + Model + Brand + Size + Color = 17 columns
         if (existing_sale) |sale| {
+            var reader = helpers.RowReader(@TypeOf(row)){
+                .row = row,
+                .index = 17,
+            };
+
             if (row.get(?[]const u8, 17) catch null) |_| {
                 const old_images = sale.garment.images;
 
@@ -49,8 +55,7 @@ pub fn getAll(
 
                 new_images[old_images.len] = try Image.getFromRow(
                     allocator,
-                    row,
-                    17,
+                    &reader,
                 );
 
                 allocator.free(old_images);
@@ -60,25 +65,31 @@ pub fn getAll(
             continue;
         }
 
+        var reader = helpers.RowReader(@TypeOf(row)){
+            .row = row,
+        };
+
+        const new_sale = try Sale.getFromRow(
+            allocator,
+            &reader,
+            &.{},
+        );
+
         var images: []Image = &.{};
 
-        if (row.get(?[]const u8, 17) catch null) |_| {
+        if (row.get(?[]const u8, reader.index) catch null) |_| {
             images = try allocator.alloc(Image, 1);
 
             images[0] = try Image.getFromRow(
                 allocator,
-                row,
-                17,
+                &reader,
             );
         }
 
-        const new_sale = try Sale.getFromRow(
-            allocator,
-            row,
-            images,
-        );
+        var sale = new_sale;
+        sale.garment.images = images;
 
-        try sales.append(allocator, new_sale);
+        try sales.append(allocator, sale);
     }
 
     return try sales.toOwnedSlice(allocator);

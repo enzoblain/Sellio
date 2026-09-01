@@ -1,12 +1,12 @@
 const httpz = @import("httpz");
 const std = @import("std");
 
-const sale = @import("db/sales.zig");
-const Database = @import("db/db.zig").Database;
-const Sale = @import("models/sale.zig").Sale;
-const Image = @import("models/image.zig").Image;
+const sale = @import("../db/queries/sales.zig");
+const Database = @import("../db/db.zig").Database;
+const Sale = @import("../models/sale.zig").Sale;
+const Image = @import("../models/image.zig").Image;
 
-pub fn getSalesV1(
+pub fn getAll(
     db: *Database,
     req: *httpz.Request,
     res: *httpz.Response,

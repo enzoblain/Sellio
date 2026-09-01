@@ -9,16 +9,15 @@ pub const Brand = struct {
 
     pub fn getFromRow(
         allocator: std.mem.Allocator,
-        row: anytype,
-        index: usize,
+        reader: anytype,
     ) !Brand {
         return .{
             .id = try helpers.uuidFromPg(
-                try row.get([]const u8, index),
+                try reader.next([]const u8),
             ),
             .name = try allocator.dupe(
                 u8,
-                try row.get([]const u8, index + 1),
+                try reader.next([]const u8),
             ),
         };
     }

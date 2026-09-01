@@ -1,6 +1,6 @@
 const httpz = @import("httpz");
 
-const sales = @import("sales.zig");
+const sales = @import("routes/sales.zig");
 const Database = @import("db/db.zig").Database;
 
 pub fn init(server: *httpz.Server(*Database)) !void {
@@ -17,5 +17,5 @@ fn health(_: *Database, _: *httpz.Request, res: *httpz.Response) !void {
 }
 
 pub fn init_v1(group: anytype) !void {
-    group.get("/sales", sales.getSalesV1, .{});
+    group.get("/sales", sales.getAll, .{});
 }
