@@ -43,7 +43,7 @@ pub const Sale = struct {
         const sale_price = try reader.next(?i64);
 
         const status: SaleStatus = @enumFromInt(
-            try reader.next(u8),
+            try reader.next(i16),
         );
 
         const created_at = try reader.next(i64);

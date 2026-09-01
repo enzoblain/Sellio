@@ -20,9 +20,8 @@ pub fn getAll(
     }
 
     while (try result.next()) |row| {
-        const sale_id = try helpers.uuidFromPg(
-            try row.get([]const u8, 0),
-        );
+        const sale_id_raw = try row.get([]const u8, 0);
+        const sale_id = try helpers.uuidFromPg(sale_id_raw);
 
         var existing_sale: ?*Sale = null;
 
