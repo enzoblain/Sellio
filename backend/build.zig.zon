@@ -40,6 +40,10 @@
             .url = "https://codeberg.org/r4gus/uuid-zig/archive/0.5.0.tar.gz",
             .hash = "uuid-0.5.0-oOieIQx-AABtc9U3ihv_bf9pZAYoKp4UMsNFHBr-cn-w",
         },
+        .pg = .{
+            .url = "https://github.com/karlseguin/pg.zig/archive/refs/heads/master.tar.gz",
+            .hash = "pg-0.0.0-Wp_7gVzCBgDIFbqjSA6I7bJQj0gh66KzpmDxvx1Nn4PV",
+        },
     },
     .paths = .{
         "build.zig",

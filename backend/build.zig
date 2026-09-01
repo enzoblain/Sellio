@@ -8,7 +8,13 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+
     const uuid = b.dependency("uuid", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const pg = b.dependency("pg", .{
         .target = target,
         .optimize = optimize,
     });
@@ -22,6 +28,7 @@ pub fn build(b: *std.Build) void {
             .imports = &.{
                 .{ .name = "httpz", .module = httpz.module("httpz") },
                 .{ .name = "uuid", .module = uuid.module("uuid") },
+                .{ .name = "pg", .module = pg.module("pg") },
             },
         }),
     });
@@ -38,9 +45,12 @@ pub fn build(b: *std.Build) void {
         run_cmd.addArgs(args);
     }
 
-    const exe_tests = b.addTest(.{ .root_module = exe.root_module });
-    const run_exe_tests = b.addRunArtifact(exe_tests);
-    const test_step = b.step("test", "Run tests");
+    const exe_tests = b.addTest(.{
+        .root_module = exe.root_module,
+    });
 
+    const run_exe_tests = b.addRunArtifact(exe_tests);
+
+    const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_exe_tests.step);
 }

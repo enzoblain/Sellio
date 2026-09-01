@@ -1,6 +1,8 @@
 const std = @import("std");
 const httpz = @import("httpz");
+
 const router = @import("router.zig");
+const Database = @import("db/db.zig").Database;
 
 pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
