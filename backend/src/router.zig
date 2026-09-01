@@ -1,7 +1,9 @@
 const httpz = @import("httpz");
-const sales = @import("sales.zig");
 
-pub fn init(server: *httpz.Server(void)) !void {
+const sales = @import("sales.zig");
+const Database = @import("db/db.zig").Database;
+
+pub fn init(server: *httpz.Server(*Database)) !void {
     var router = try server.router(.{});
     router.get("/health", health, .{});
 
@@ -9,7 +11,7 @@ pub fn init(server: *httpz.Server(void)) !void {
     try init_v1(&v1);
 }
 
-fn health(_: *httpz.Request, res: *httpz.Response) !void {
+fn health(_: *Database, _: *httpz.Request, res: *httpz.Response) !void {
     res.status = 200;
     try res.json(.{ .status = "ok" }, .{});
 }

@@ -1,10 +1,10 @@
 CREATE TABLE sales (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
     garment_id uuid NOT NULL UNIQUE REFERENCES garments (id),
-    purchase_price numeric(10, 2) NOT NULL,
-    shipping_price numeric(10, 2) NOT NULL DEFAULT 0,
-    listing_price numeric(10, 2) NOT NULL,
-    sale_price numeric(10, 2),
+    purchase_price bigint NOT NULL,
+    shipping_price bigint NOT NULL DEFAULT 0,
+    listing_price bigint NOT NULL,
+    sale_price bigint,
     status smallint NOT NULL DEFAULT 0 CHECK (status BETWEEN 0 AND 5),
     created_at timestamp NOT NULL DEFAULT NOW(),
     updated_at timestamp NOT NULL DEFAULT NOW()

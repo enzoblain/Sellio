@@ -3,9 +3,13 @@ const pg = @import("pg");
 
 pub const Database = struct {
     pool: *pg.Pool,
+    allocator: std.mem.Allocator,
 
-    pub fn init(allocator: std.mem.Allocator) !Database {
-        const pool = try pg.Pool.init(allocator, .{
+    pub fn init(
+        io: std.Io,
+        allocator: std.mem.Allocator,
+    ) !Database {
+        const pool = try pg.Pool.init(io, allocator, .{
             .connect = .{
                 .host = "db",
                 .port = 5432,
@@ -20,6 +24,7 @@ pub const Database = struct {
 
         return .{
             .pool = pool,
+            .allocator = allocator,
         };
     }
 
