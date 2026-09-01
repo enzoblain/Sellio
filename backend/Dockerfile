@@ -27,6 +27,7 @@ WORKDIR /app
 
 COPY build.zig build.zig.zon ./
 COPY src ./src
+COPY db/queries ./src/queries
 COPY zig-pkg ./zig-pkg
 
 RUN zig version
