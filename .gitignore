@@ -1,0 +1,9 @@
+.zig-cache/
+.zig-pkg/
+
+zig-cache/
+zig-out/
+zig-pkg/
+
+.DS_Store
+._*
