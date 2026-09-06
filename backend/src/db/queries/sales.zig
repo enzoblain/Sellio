@@ -6,6 +6,9 @@ const Database = @import("../db.zig").Database;
 const Sale = @import("../../models/sale.zig").Sale;
 const Image = @import("../../models/image.zig").Image;
 
+// Sale + Garment + Model + Brand + Size + Color = 17 columns
+const row_sale_length: usize = 17;
+
 pub fn getAll(
     db: *Database,
     allocator: std.mem.Allocator,
@@ -14,7 +17,6 @@ pub fn getAll(
     defer result.deinit();
 
     var sales: std.ArrayList(Sale) = .empty;
-
     errdefer {
         sales.deinit(allocator);
     }
@@ -32,34 +34,16 @@ pub fn getAll(
             }
         }
 
-        // Sale + Garment + Model + Brand + Size + Color = 17 columns
         if (existing_sale) |sale| {
             var reader = helpers.RowReader(@TypeOf(row)){
                 .row = row,
-                .index = 17,
+                .index = row_sale_length,
             };
 
-            if (row.get(?[]const u8, 17) catch null) |_| {
-                const old_images = sale.garment.images;
+            _ = row.get(?[]const u8, row_sale_length) catch null orelse continue;
 
-                const new_images = try allocator.alloc(
-                    Image,
-                    old_images.len + 1,
-                );
-
-                @memcpy(
-                    new_images[0..old_images.len],
-                    old_images,
-                );
-
-                new_images[old_images.len] = try Image.getFromRow(
-                    allocator,
-                    &reader,
-                );
-
-                allocator.free(old_images);
-                sale.garment.images = new_images;
-            }
+            const image = try Image.getFromRow(allocator, &reader);
+            try sale.garment.addImage(allocator, image);
 
             continue;
         }

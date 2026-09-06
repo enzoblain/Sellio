@@ -8,11 +8,9 @@ const Image = @import("../models/image.zig").Image;
 
 pub fn getAll(
     db: *Database,
-    req: *httpz.Request,
+    _: *httpz.Request,
     res: *httpz.Response,
 ) !void {
-    _ = req;
-
     const allSales = try sales.getAll(db, db.allocator);
     defer db.allocator.free(allSales);
 

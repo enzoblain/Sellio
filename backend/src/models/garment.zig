@@ -44,4 +44,27 @@ pub const Garment = struct {
             .images = images,
         };
     }
+
+    pub fn addImage(
+        self: *Garment,
+        allocator: std.mem.Allocator,
+        image: Image,
+    ) !void {
+        const old_images = self.images;
+        const new_images = try allocator.alloc(
+            Image,
+            old_images.len + 1,
+        );
+        errdefer allocator.free(new_images);
+
+        @memcpy(
+            new_images[0..old_images.len],
+            old_images,
+        );
+
+        new_images[old_images.len] = image;
+
+        allocator.free(old_images);
+        self.images = new_images;
+    }
 };
