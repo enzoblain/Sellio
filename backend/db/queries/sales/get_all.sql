@@ -5,7 +5,6 @@ SELECT
     s.listing_price,
     s.sale_price,
     ss.status_after AS status,
-    EXTRACT(EPOCH FROM s.created_at)::bigint,
     EXTRACT(EPOCH FROM s.updated_at)::bigint,
     g.id,
     m.id,
