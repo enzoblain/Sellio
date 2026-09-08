@@ -33,3 +33,19 @@ pub fn RowReader(comptime Row: type) type {
         }
     };
 }
+
+pub fn findBy(
+    comptime T: type,
+    comptime Arg: type,
+    items: []T,
+    predicate: fn (*T, Arg) bool,
+    arg: Arg,
+) ?*T {
+    for (items) |*item| {
+        if (predicate(item, arg)) {
+            return item;
+        }
+    }
+
+    return null;
+}

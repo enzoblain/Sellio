@@ -1,9 +1,13 @@
 const std = @import("std");
 const Uuid = @import("uuid").Uuid;
+const Row = @import("pg").Row;
 
 const helpers = @import("../helpers.zig");
 const Garment = @import("garment.zig").Garment;
 const Image = @import("image.zig").Image;
+
+// Sale + Garment + Model + Brand + Size + Color = 17 columns
+const row_sale_length: usize = 17;
 
 pub const SaleStatus = enum(u8) {
     purchased = 0,
@@ -27,6 +31,10 @@ pub const Sale = struct {
 
     created_at: i64,
     updated_at: i64,
+
+    pub fn hasId(self: *Sale, id: Uuid) bool {
+        return self.id == id;
+    }
 
     pub fn getFromRow(
         allocator: std.mem.Allocator,
@@ -66,5 +74,58 @@ pub const Sale = struct {
             .created_at = created_at,
             .updated_at = updated_at,
         };
+    }
+
+    pub fn parseAndAppend(allocator: std.mem.Allocator, sales: *std.ArrayList(Sale), row: Row) !void {
+        const sale_id_raw = try row.get([]const u8, 0);
+        const sale_id = try helpers.uuidFromPg(sale_id_raw);
+
+        const existing_sale = helpers.findBy(
+            Sale,
+            Uuid,
+            sales.items,
+            Sale.hasId,
+            sale_id,
+        );
+
+        if (existing_sale) |sale| {
+            var reader = helpers.RowReader(@TypeOf(row)){
+                .row = row,
+                .index = row_sale_length,
+            };
+
+            _ = row.get(?[]const u8, row_sale_length) catch null orelse return;
+
+            const image = try Image.getFromRow(allocator, &reader);
+            try sale.garment.addImage(allocator, image);
+
+            return;
+        }
+
+        var reader = helpers.RowReader(@TypeOf(row)){
+            .row = row,
+        };
+
+        const new_sale = try Sale.getFromRow(
+            allocator,
+            &reader,
+            &.{},
+        );
+
+        var images: []Image = &.{};
+
+        if (row.get(?[]const u8, reader.index) catch null) |_| {
+            images = try allocator.alloc(Image, 1);
+
+            images[0] = try Image.getFromRow(
+                allocator,
+                &reader,
+            );
+        }
+
+        var sale = new_sale;
+        sale.garment.images = images;
+
+        try sales.append(allocator, sale);
     }
 };
