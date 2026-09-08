@@ -42,6 +42,7 @@ FROM
     JOIN sizes sz ON sz.id = g.size_id
     JOIN colors c ON c.id = g.color_id
     LEFT JOIN images i ON i.garment_id = g.id
-ORDER BY
-    s.created_at DESC,
-    i.created_at ASC;
+        AND i.is_cover = TRUE
+    ORDER BY
+        s.created_at DESC;
+

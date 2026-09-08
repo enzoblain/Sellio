@@ -5,18 +5,10 @@ const Row = @import("pg").Row;
 const helpers = @import("../helpers.zig");
 const Garment = @import("garment.zig").Garment;
 const Image = @import("image.zig").Image;
+const SaleStatus = @import("status.zig").SaleStatus;
 
 // Sale + Garment + Model + Brand + Size + Color = 17 columns
 const row_sale_length: usize = 17;
-
-pub const SaleStatus = enum(u8) {
-    purchased = 0,
-    listed = 1,
-    to_ship = 2,
-    shipped = 3,
-    completed = 4,
-    returned = 5,
-};
 
 pub const Sale = struct {
     id: Uuid,
@@ -27,7 +19,7 @@ pub const Sale = struct {
     listing_price: i64,
     sale_price: ?i64,
 
-    status: SaleStatus,
+    status: ?SaleStatus,
 
     created_at: i64,
     updated_at: i64,
@@ -50,9 +42,11 @@ pub const Sale = struct {
         const listing_price = try reader.next(i64);
         const sale_price = try reader.next(?i64);
 
-        const status: SaleStatus = @enumFromInt(
-            try reader.next(i16),
-        );
+        const status_value = try reader.next(?i16);
+        const status: ?SaleStatus = if (status_value) |value|
+            @enumFromInt(value)
+        else
+            null;
 
         const created_at = try reader.next(i64);
         const updated_at = try reader.next(i64);
@@ -76,7 +70,11 @@ pub const Sale = struct {
         };
     }
 
-    pub fn parseAndAppend(allocator: std.mem.Allocator, sales: *std.ArrayList(Sale), row: Row) !void {
+    pub fn parseAndAppend(
+        allocator: std.mem.Allocator,
+        sales: *std.ArrayList(Sale),
+        row: Row,
+    ) !void {
         const sale_id_raw = try row.get([]const u8, 0);
         const sale_id = try helpers.uuidFromPg(sale_id_raw);
 
@@ -94,10 +92,9 @@ pub const Sale = struct {
                 .index = row_sale_length,
             };
 
-            _ = row.get(?[]const u8, row_sale_length) catch null orelse return;
-
-            const image = try Image.getFromRow(allocator, &reader);
-            try sale.garment.addImage(allocator, image);
+            if (try Image.getFromRow(allocator, &reader)) |image| {
+                try sale.garment.addImage(allocator, image);
+            }
 
             return;
         }
@@ -112,19 +109,15 @@ pub const Sale = struct {
             &.{},
         );
 
-        var images: []Image = &.{};
-
-        if (row.get(?[]const u8, reader.index) catch null) |_| {
-            images = try allocator.alloc(Image, 1);
-
-            images[0] = try Image.getFromRow(
-                allocator,
-                &reader,
-            );
-        }
-
         var sale = new_sale;
-        sale.garment.images = images;
+
+        if (try Image.getFromRow(allocator, &reader)) |image| {
+            var images = try allocator.alloc(Image, 1);
+            images[0] = image;
+            sale.garment.images = images;
+        } else {
+            sale.garment.images = &.{};
+        }
 
         try sales.append(allocator, sale);
     }

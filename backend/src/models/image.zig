@@ -15,11 +15,11 @@ pub const Image = struct {
     pub fn getFromRow(
         allocator: std.mem.Allocator,
         reader: anytype,
-    ) !Image {
+    ) !?Image {
+        const id = try reader.next(?[]const u8) orelse return null;
+
         return .{
-            .id = try helpers.uuidFromPg(
-                try reader.next([]const u8),
-            ),
+            .id = try helpers.uuidFromPg(id),
             .path = try allocator.dupe(
                 u8,
                 try reader.next([]const u8),
