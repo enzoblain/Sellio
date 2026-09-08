@@ -4,7 +4,7 @@ SELECT
     s.shipping_price,
     s.listing_price,
     s.sale_price,
-    s.status,
+    ss.status_after AS status,
     EXTRACT(EPOCH FROM s.created_at)::bigint,
     EXTRACT(EPOCH FROM s.updated_at)::bigint,
     g.id,
@@ -25,6 +25,17 @@ SELECT
     EXTRACT(EPOCH FROM i.created_at)::bigint
 FROM
     sales s
+    LEFT JOIN LATERAL (
+        SELECT
+            status_after
+        FROM
+            sale_status ss
+        WHERE
+            ss.sale_id = s.id
+        ORDER BY
+            ss.created_at DESC,
+            ss.id DESC
+        LIMIT 1) ss ON TRUE
     JOIN garments g ON g.id = s.garment_id
     JOIN models m ON m.id = g.model_id
     JOIN brands b ON b.id = m.brand_id
@@ -34,4 +45,3 @@ FROM
 ORDER BY
     s.created_at DESC,
     i.created_at ASC;
-

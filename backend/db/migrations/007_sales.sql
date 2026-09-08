@@ -5,7 +5,6 @@ CREATE TABLE sales (
     shipping_price bigint NOT NULL DEFAULT 0,
     listing_price bigint NOT NULL,
     sale_price bigint,
-    status smallint NOT NULL DEFAULT 0 CHECK (status BETWEEN 0 AND 5),
     created_at timestamp NOT NULL DEFAULT NOW(),
     updated_at timestamp NOT NULL DEFAULT NOW()
 );
@@ -24,4 +23,3 @@ CREATE TRIGGER sales_updated_at
     BEFORE UPDATE ON sales
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at ();
-
