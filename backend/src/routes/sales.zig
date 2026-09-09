@@ -1,6 +1,7 @@
 const httpz = @import("httpz");
 const std = @import("std");
 
+const helpers = @import("../helpers.zig");
 const sales = @import("../db/queries/sales.zig");
 const Database = @import("../db/db.zig").Database;
 const Sale = @import("../models/sale.zig").Sale;
@@ -19,4 +20,28 @@ pub fn getAll(
     try res.json(.{
         .sales = allSales,
     }, .{});
+}
+
+pub fn getById(
+    db: *Database,
+    req: *httpz.Request,
+    res: *httpz.Response,
+) !void {
+    const id = req.param("id") orelse {
+        res.status = 400;
+        return;
+    };
+
+    const sale = try sales.getById(
+        db,
+        db.allocator,
+        id,
+    ) orelse {
+        res.status = 404;
+        return;
+    };
+
+    res.status = 200;
+
+    try res.json(sale, .{});
 }

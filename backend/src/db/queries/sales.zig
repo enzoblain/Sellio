@@ -4,6 +4,8 @@ const queries = @import("../queries.zig");
 const helpers = @import("../../helpers.zig");
 const Database = @import("../db.zig").Database;
 const SalePreview = @import("../../models/sale.zig").SalePreview;
+const SaleDetail = @import("../../models/sale.zig").SaleDetail;
+const Uuid = @import("../../types.zig").Uuid;
 
 pub fn getAll(
     db: *Database,
@@ -29,4 +31,31 @@ pub fn getAll(
     }
 
     return try sales.toOwnedSlice(allocator);
+}
+
+pub fn getById(
+    db: *Database,
+    allocator: std.mem.Allocator,
+    sale_id: []const u8,
+) !?SaleDetail {
+    var result = try db.pool.query(
+        queries.salesGetById,
+        .{sale_id},
+    );
+    defer result.deinit();
+
+    if (try result.next()) |row| {
+        var reader = helpers.RowReader(@TypeOf(row)){
+            .row = row,
+        };
+
+        const sale = try SaleDetail.getFromRow(
+            allocator,
+            &reader,
+        );
+
+        return sale;
+    }
+
+    return null;
 }
