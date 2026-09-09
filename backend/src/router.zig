@@ -1,5 +1,6 @@
 const httpz = @import("httpz");
 
+const brands = @import("routes/brands.zig");
 const sales = @import("routes/sales.zig");
 const Database = @import("db/db.zig").Database;
 
@@ -17,6 +18,9 @@ fn health(_: *Database, _: *httpz.Request, res: *httpz.Response) !void {
 }
 
 pub fn init_v1(group: anytype) !void {
+    group.get("/brands", brands.getAll, .{});
+    group.get("/brands/:id", brands.getById, .{});
+
     group.get("/sales", sales.getAll, .{});
     group.get("/sales/:id", sales.getById, .{});
 }

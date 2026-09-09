@@ -109,3 +109,59 @@ pub const SaleDetail = struct {
         };
     }
 };
+
+pub const BrandSalePreview = struct {
+    id: Uuid,
+
+    purchase_price: i64,
+    shipping_price: i64,
+    listing_price: i64,
+    sale_price: ?i64,
+
+    updated_at: i64,
+
+    const JsonSale = struct {
+        id: []const u8,
+        purchase_price: i64,
+        shipping_price: i64,
+        listing_price: i64,
+        sale_price: ?i64,
+        updated_at: i64,
+    };
+
+    pub fn getFromRow(
+        allocator: std.mem.Allocator,
+        reader: anytype,
+    ) ![]BrandSalePreview {
+        const json = try reader.next(?[]const u8) orelse {
+            return &.{};
+        };
+
+        var parsed = try std.json.parseFromSlice(
+            []JsonSale,
+            allocator,
+            json,
+            .{},
+        );
+        defer parsed.deinit();
+
+        const sales = try allocator.alloc(
+            BrandSalePreview,
+            parsed.value.len,
+        );
+        errdefer allocator.free(sales);
+
+        for (parsed.value, 0..) |sale, i| {
+            sales[i] = .{
+                .id = try helpers.uuidFromString(sale.id),
+                .purchase_price = sale.purchase_price,
+                .shipping_price = sale.shipping_price,
+                .listing_price = sale.listing_price,
+                .sale_price = sale.sale_price,
+                .updated_at = sale.updated_at,
+            };
+        }
+
+        return sales;
+    }
+};
