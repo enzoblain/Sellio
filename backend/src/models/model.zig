@@ -76,3 +76,32 @@ pub const ModelPreview = struct {
         return models;
     }
 };
+
+pub const ModelListItem = struct {
+    id: Uuid,
+    name: []const u8,
+    brand: Brand,
+    average_purchase_price: ?f64,
+    average_sale_price: ?f64,
+
+    pub fn getFromRow(
+        allocator: std.mem.Allocator,
+        reader: anytype,
+    ) !ModelListItem {
+        return .{
+            .id = try helpers.uuidFromPg(
+                try reader.next([]const u8),
+            ),
+            .name = try allocator.dupe(
+                u8,
+                try reader.next([]const u8),
+            ),
+            .brand = try Brand.getFromRow(
+                allocator,
+                reader,
+            ),
+            .average_purchase_price = try reader.next(?f64),
+            .average_sale_price = try reader.next(?f64),
+        };
+    }
+};

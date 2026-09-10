@@ -82,3 +82,23 @@ pub const BrandDetail = struct {
         };
     }
 };
+
+pub const BrandInfo = struct {
+    id: Uuid,
+    name: []const u8,
+
+    pub fn getFromRow(
+        allocator: std.mem.Allocator,
+        reader: anytype,
+    ) !BrandInfo {
+        return .{
+            .id = try helpers.uuidFromPg(
+                try reader.next([]const u8),
+            ),
+            .name = try allocator.dupe(
+                u8,
+                try reader.next([]const u8),
+            ),
+        };
+    }
+};
