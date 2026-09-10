@@ -27,10 +27,8 @@ pub fn getById(
     req: *httpz.Request,
     res: *httpz.Response,
 ) !void {
-    const id = req.param("id") orelse {
-        res.status = 400;
-        return;
-    };
+    const id =
+        req.param("id") orelse return error.BadRequest;
 
     const sale = try sales.getById(
         db,

@@ -1,5 +1,6 @@
 const httpz = @import("httpz");
 
+const helpers = @import("../helpers.zig");
 const brands = @import("../db/queries/brands.zig");
 const Database = @import("../db/db.zig").Database;
 
@@ -26,10 +27,8 @@ pub fn getById(
     req: *httpz.Request,
     res: *httpz.Response,
 ) !void {
-    const id = req.param("id") orelse {
-        res.status = 400;
-        return;
-    };
+    const id =
+        req.param("id") orelse return error.BadRequest;
 
     const brand = try brands.getById(
         db,

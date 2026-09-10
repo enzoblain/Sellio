@@ -5,26 +5,6 @@ const helpers = @import("../helpers.zig");
 const ModelPreview = @import("model.zig").ModelPreview;
 const BrandSalePreview = @import("sale.zig").BrandSalePreview;
 
-pub const Brand = struct {
-    id: Uuid,
-    name: []const u8,
-
-    pub fn getFromRow(
-        allocator: std.mem.Allocator,
-        reader: anytype,
-    ) !Brand {
-        return .{
-            .id = try helpers.uuidFromPg(
-                try reader.next([]const u8),
-            ),
-            .name = try allocator.dupe(
-                u8,
-                try reader.next([]const u8),
-            ),
-        };
-    }
-};
-
 pub const BrandPreview = struct {
     id: Uuid,
     name: []const u8,

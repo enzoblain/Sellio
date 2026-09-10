@@ -2,11 +2,12 @@ const std = @import("std");
 const Uuid = @import("uuid").Uuid;
 
 const helpers = @import("../helpers.zig");
-const Brand = @import("brand.zig").Brand;
+const BrandInfo = @import("brand.zig").BrandInfo;
+const ModelSalePreview = @import("sale.zig").ModelSalePreview;
 
 pub const Model = struct {
     id: Uuid,
-    brand: Brand,
+    brand: BrandInfo,
     name: []const u8,
 
     pub fn getFromRow(
@@ -21,7 +22,7 @@ pub const Model = struct {
                 u8,
                 try reader.next([]const u8),
             ),
-            .brand = try Brand.getFromRow(
+            .brand = try BrandInfo.getFromRow(
                 allocator,
                 reader,
             ),
@@ -80,7 +81,7 @@ pub const ModelPreview = struct {
 pub const ModelListItem = struct {
     id: Uuid,
     name: []const u8,
-    brand: Brand,
+    brand: BrandInfo,
     average_purchase_price: ?f64,
     average_sale_price: ?f64,
 
@@ -96,12 +97,46 @@ pub const ModelListItem = struct {
                 u8,
                 try reader.next([]const u8),
             ),
-            .brand = try Brand.getFromRow(
+            .brand = try BrandInfo.getFromRow(
                 allocator,
                 reader,
             ),
             .average_purchase_price = try reader.next(?f64),
             .average_sale_price = try reader.next(?f64),
+        };
+    }
+};
+
+pub const ModelDetail = struct {
+    id: Uuid,
+    name: []const u8,
+    brand: BrandInfo,
+    average_purchase_price: ?f64,
+    average_sale_price: ?f64,
+    sales: []ModelSalePreview,
+
+    pub fn getFromRow(
+        allocator: std.mem.Allocator,
+        reader: anytype,
+    ) !ModelDetail {
+        return .{
+            .id = try helpers.uuidFromPg(
+                try reader.next([]const u8),
+            ),
+            .name = try allocator.dupe(
+                u8,
+                try reader.next([]const u8),
+            ),
+            .brand = try BrandInfo.getFromRow(
+                allocator,
+                reader,
+            ),
+            .average_purchase_price = try reader.next(?f64),
+            .average_sale_price = try reader.next(?f64),
+            .sales = try ModelSalePreview.getFromRow(
+                allocator,
+                reader,
+            ),
         };
     }
 };
