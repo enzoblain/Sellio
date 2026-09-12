@@ -1,3 +1,6 @@
+pub const brandsGetNames = @embedFile("../queries/brands/get_names.sql");
+pub const brandsGetExactName = @embedFile("../queries/brands/get_exact_name.sql");
+
 pub const brandsGetAll = @embedFile("../queries/brands/get_all.sql");
 pub const brandsGetById = @embedFile("../queries/brands/get_by_id.sql");
 

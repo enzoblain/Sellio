@@ -19,6 +19,8 @@ fn health(_: *Database, _: *httpz.Request, res: *httpz.Response) !void {
 }
 
 pub fn init_v1(group: anytype) !void {
+    group.get("/names/brands", brands.getNames, .{});
+
     group.get("/models", models.getAll, .{});
     group.get("/models/:id", models.getById, .{});
 

@@ -38,5 +38,22 @@ services:
       db:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    environment:
+      PUBLIC_API_URL: http://api:2509
+
+    container_name: sellio-frontend
+    restart: unless-stopped
+
+    ports:
+      - "5173:5173"
+
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
