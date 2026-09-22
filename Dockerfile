@@ -19,6 +19,8 @@ ENV PORT=5173
 
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/drizzle.config.ts ./
+COPY --from=builder /app/src/lib/server/db ./src/lib/server/db
 
 RUN npm ci --omit=dev
 
