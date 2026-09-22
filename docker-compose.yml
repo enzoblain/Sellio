@@ -11,7 +11,6 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/db/migrations:/docker-entrypoint-initdb.d:ro
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sellio -d sellio"]
@@ -19,41 +18,25 @@ services:
       timeout: 5s
       retries: 10
 
-  api:
+  app:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
 
-    container_name: sellio-api
+    container_name: sellio-app
     restart: unless-stopped
 
     environment:
       DATABASE_URL: postgres://sellio:sellio@db:5432/sellio
-      PORT: 2509
-
-    expose:
-      - "2509"
-
-    depends_on:
-      db:
-        condition: service_healthy
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-
-    environment:
-      PUBLIC_API_URL: http://api:2509
-
-    container_name: sellio-frontend
-    restart: unless-stopped
+      PORT: 5173
+      HOST: 0.0.0.0
 
     ports:
       - "5173:5173"
 
     depends_on:
-      - api
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:
