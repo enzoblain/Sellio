@@ -1,5 +1,5 @@
-import { generate_uuid } from '$lib/server/helpers';
-import { expenseCategories } from './expense-categories';
+import { generate_uuid } from '../../helpers';
+import { expenseCategories } from './009_expense-categories';
 
 import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
 

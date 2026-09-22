@@ -1,5 +1,5 @@
-import { generate_uuid } from '$lib/server/helpers';
-import { brands } from './brands';
+import { generate_uuid } from '../../helpers';
+import { brands } from './001_brands';
 
 import { pgTable, unique, text, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 

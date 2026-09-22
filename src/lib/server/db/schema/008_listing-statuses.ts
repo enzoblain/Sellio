@@ -1,5 +1,5 @@
-import { generate_uuid } from '$lib/server/helpers';
-import { listings } from './listings';
+import { generate_uuid } from '../../helpers';
+import { listings } from './007_listings';
 
 import { text, pgTable, smallint, uuid, timestamp } from 'drizzle-orm/pg-core';
 

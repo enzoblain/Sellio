@@ -1,4 +1,4 @@
-import { generate_uuid } from '$lib/server/helpers';
+import { generate_uuid } from '../../helpers';
 
 import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
 

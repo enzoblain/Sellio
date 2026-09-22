@@ -1,7 +1,7 @@
-import { generate_uuid } from '$lib/server/helpers';
-import { models } from './models';
-import { sizes } from './sizes';
-import { colors } from './colors';
+import { generate_uuid } from '../../helpers';
+import { models } from './003_models';
+import { sizes } from './004_sizes';
+import { colors } from './002_colors';
 
 import { pgTable, uuid } from 'drizzle-orm/pg-core';
 

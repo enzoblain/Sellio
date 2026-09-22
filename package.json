@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"start": "npm run db:setup && node build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -18,7 +19,7 @@
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx src/lib/server/db/seed.ts",
-		"db:setup": "npm run db:migrate && npm run db:seed"
+		"db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

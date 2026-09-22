@@ -1,6 +1,6 @@
 import { db } from './index';
-import { expenseCategories } from './schema/expense-categories';
-import { listingStatuses } from './schema/listing-statuses';
+import { expenseCategories } from './schema/009_expense-categories';
+import { listingStatuses } from './schema/008_listing-statuses';
 
 await db
 	.insert(listingStatuses)

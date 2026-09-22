@@ -13,10 +13,25 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sellio -d sellio"]
+      test: ['CMD-SHELL', 'pg_isready -U sellio -d sellio']
       interval: 5s
       timeout: 5s
       retries: 10
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sellio-migrate
+
+    environment:
+      DATABASE_URL: postgres://sellio:sellio@db:5432/sellio
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    command: npm run db:setup
 
   app:
     build:
@@ -32,11 +47,11 @@ services:
       HOST: 0.0.0.0
 
     ports:
-      - "5173:5173"
+      - '5173:5173'
 
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:
