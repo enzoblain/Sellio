@@ -1,5 +1,8 @@
-import { db, client } from './index';
+import { getDb, getClient } from './index';
 import { listingStatuses, stocking_places, expenseCategories } from './schema';
+
+const db = getDb();
+const client = getClient();
 
 await db
 	.insert(listingStatuses)

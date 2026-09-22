@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
+	import { searchBrands } from '$lib/remote/brands.remote';
 
 	let selectedBrandUuid = $state('');
 
@@ -9,19 +10,11 @@
 		offset: number,
 		limit: number
 	): Promise<AutocompleteItem[]> => {
-		const params = new URLSearchParams({
+		return searchBrands({
 			search,
-			offset: String(offset),
-			limit: String(limit)
+			offset,
+			limit
 		});
-
-		const response = await fetch(`/api/brands?${params}`);
-
-		if (!response.ok) {
-			throw new Error('Erreur lors de la recherche des marques');
-		}
-
-		return response.json();
 	};
 </script>
 
