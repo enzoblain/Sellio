@@ -1,4 +1,4 @@
-import { db } from './index';
+import { db, client } from './index';
 import { listingStatuses, stocking_places, expenseCategories } from './schema';
 
 await db
@@ -22,3 +22,5 @@ await db
 	.insert(stocking_places)
 	.values([{ name: "Appartement d'Enzo" }, { name: 'Maison de Sarah' }])
 	.onConflictDoNothing();
+
+await client.end();

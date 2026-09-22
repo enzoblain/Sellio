@@ -1,15 +1,25 @@
-import { api } from '$lib/api/client';
+export type AutocompleteItem = {
+	uuid: string;
+	value: string;
+};
 
-export function createAutocomplete(getEndpoint: () => string, getLimit: () => number) {
+export function createAutocomplete(
+	getQuery: () => (search: string, offset: number, limit: number) => Promise<AutocompleteItem[]>,
+	getLimit: () => number,
+	getDebounce: () => number,
+	setValue?: (value: string) => void
+) {
 	let state = $state({
 		value: '',
 		focused: false,
-		items: [] as string[],
+		items: [] as AutocompleteItem[],
 		page: 1,
 		loading: false,
 		hasmore: true,
 		requestid: 0
 	});
+
+	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
 	function getSearchValue() {
 		return state.value.trim();
@@ -21,7 +31,21 @@ export function createAutocomplete(getEndpoint: () => string, getLimit: () => nu
 	}
 
 	function oninput() {
-		loadItems(true);
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
+
+		const delay = getDebounce();
+
+		if (delay <= 0) {
+			loadItems(true);
+			return;
+		}
+
+		debounceTimer = setTimeout(() => {
+			debounceTimer = undefined;
+			loadItems(true);
+		}, delay);
 	}
 
 	function onscroll(event: UIEvent) {
@@ -33,12 +57,13 @@ export function createAutocomplete(getEndpoint: () => string, getLimit: () => nu
 	}
 
 	function additem() {
-		selectitem(state.value);
+		state.focused = false;
 	}
 
-	function selectitem(item: string) {
-		state.value = item;
+	function selectitem(item: AutocompleteItem) {
+		state.value = item.value;
 		state.focused = false;
+		setValue?.(item.uuid);
 	}
 
 	async function loadItems(reset = false) {
@@ -59,7 +84,7 @@ export function createAutocomplete(getEndpoint: () => string, getLimit: () => nu
 		const limit = getLimit();
 
 		try {
-			const newItems = await getItems(currentPage, limit);
+			const newItems = await getQuery()(getSearchValue(), (currentPage - 1) * limit, limit);
 
 			if (currentRequest !== state.requestid) return;
 
@@ -78,32 +103,6 @@ export function createAutocomplete(getEndpoint: () => string, getLimit: () => nu
 		}
 	}
 
-	async function getItems(page: number, limit: number) {
-		const value = getSearchValue();
-		const offset = (page - 1) * limit;
-
-		const response = await api
-			.get<{ names: string[] }>(getEndpoint())
-			.arg('search', value)
-			.arg('offset', offset)
-			.arg('limit', limit)
-			.call();
-
-		return response.names;
-	}
-
-	async function existsInDb() {
-		const value = getSearchValue();
-
-		if (!value) {
-			return false;
-		}
-
-		const response = await api.get<{ exists: boolean }>(getEndpoint()).arg('exact', value).call();
-
-		return response.exists;
-	}
-
 	return {
 		state,
 		oninput,
@@ -111,7 +110,6 @@ export function createAutocomplete(getEndpoint: () => string, getLimit: () => nu
 		onscroll,
 		additem,
 		selectitem,
-		loadItems,
-		existsInDb
+		loadItems
 	};
 }

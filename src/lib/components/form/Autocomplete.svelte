@@ -1,17 +1,23 @@
 <script lang="ts">
-	import { createAutocomplete } from './Autocomplete.svelte.js';
+	import { createAutocomplete, type AutocompleteItem } from './Autocomplete.svelte.js';
 
 	let {
-		endpoint,
-		limit = 5
+		query,
+		limit = 5,
+		debounce = 100,
+		value = $bindable('')
 	}: {
-		endpoint: string;
+		query: (search: string, offset: number, limit: number) => Promise<AutocompleteItem[]>;
 		limit?: number;
+		debounce?: number;
+		value?: string;
 	} = $props();
 
 	const { state, oninput, onfocus, onscroll, additem, selectitem } = createAutocomplete(
-		() => endpoint,
-		() => limit
+		() => query,
+		() => limit,
+		() => debounce,
+		(newValue) => (value = newValue)
 	);
 
 	const ITEM_HEIGHT = 40;
@@ -31,14 +37,14 @@
 		{#if state.focused}
 			<ul
 				{onscroll}
-				style="max-height: {maxHeight}px"
+				style:max-height={`${maxHeight}px`}
 				class="absolute z-10 mt-1 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
 			>
 				{#if state.value.trim()}
-					<li class="border-b border-gray-100">
+					<li style:height={`${ITEM_HEIGHT}px`} class="border-b border-gray-100">
 						<button
 							type="button"
-							class="w-full cursor-pointer px-4 py-2 text-left font-medium text-blue-600 hover:bg-blue-50"
+							class="h-full w-full cursor-pointer px-4 text-left font-medium text-blue-600 hover:bg-blue-50"
 							onmousedown={() => additem()}
 						>
 							Ajouter « {state.value} »
@@ -47,24 +53,33 @@
 				{/if}
 
 				{#if state.loading && state.items.length === 0}
-					<li class="px-4 py-2 text-gray-400">Chargement...</li>
+					<li style:height={`${ITEM_HEIGHT}px`} class="flex items-center px-4 text-gray-400">
+						Chargement...
+					</li>
 				{:else if state.items.length === 0}
-					<li class="px-4 py-2 text-gray-500">Aucun résultat trouvé</li>
+					<li style:height={`${ITEM_HEIGHT}px`} class="flex items-center px-4 text-gray-500">
+						Aucun résultat trouvé
+					</li>
 				{:else}
 					{#each state.items as item}
-						<li>
+						<li style:height={`${ITEM_HEIGHT}px`}>
 							<button
 								type="button"
-								class="w-full cursor-pointer px-4 py-2 text-left hover:bg-gray-100"
+								class="h-full w-full cursor-pointer px-4 text-left hover:bg-gray-100"
 								onmousedown={() => selectitem(item)}
 							>
-								{item}
+								{item.value}
 							</button>
 						</li>
 					{/each}
 
 					{#if state.loading}
-						<li class="px-4 py-2 text-center text-xs text-gray-400">Chargement de la suite...</li>
+						<li
+							style:height={`${ITEM_HEIGHT}px`}
+							class="flex items-center justify-center text-xs text-gray-400"
+						>
+							Chargement de la suite...
+						</li>
 					{/if}
 				{/if}
 			</ul>
