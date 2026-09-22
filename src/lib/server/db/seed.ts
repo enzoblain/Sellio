@@ -1,6 +1,5 @@
 import { db } from './index';
-import { expenseCategories } from './schema/009_expense-categories';
-import { listingStatuses } from './schema/008_listing-statuses';
+import { listingStatuses, stocking_places, expenseCategories } from './schema';
 
 await db
 	.insert(listingStatuses)
@@ -17,4 +16,9 @@ await db
 await db
 	.insert(expenseCategories)
 	.values([{ name: 'Packaging' }, { name: 'Transport' }, { name: 'Fournitures' }])
+	.onConflictDoNothing();
+
+await db
+	.insert(stocking_places)
+	.values([{ name: "Appartement d'Enzo" }, { name: 'Maison de Sarah' }])
 	.onConflictDoNothing();

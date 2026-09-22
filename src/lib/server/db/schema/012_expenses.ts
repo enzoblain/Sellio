@@ -1,5 +1,5 @@
 import { generate_uuid } from '../../helpers';
-import { expenseObjects } from './010_expense-objects';
+import { expenseObjects } from './011_expense-objects';
 
 import { bigint, pgTable, uuid } from 'drizzle-orm/pg-core';
 

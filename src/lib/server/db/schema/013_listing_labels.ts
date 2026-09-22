@@ -1,5 +1,5 @@
 import { generate_label_code, generate_uuid } from '../../helpers';
-import { listings } from './007_listings';
+import { listings } from './008_listings';
 
 import { boolean, char, pgTable, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
