@@ -5,20 +5,26 @@
 		query,
 		limit = 5,
 		debounce = 100,
-		value = $bindable('')
+		model = $bindable<AutocompleteItem>({ value: '', uuid: null })
 	}: {
 		query: (search: string, offset: number, limit: number) => Promise<AutocompleteItem[]>;
 		limit?: number;
 		debounce?: number;
-		value?: string;
+		model?: AutocompleteItem;
 	} = $props();
 
 	const { state, oninput, onfocus, onscroll, additem, selectitem } = createAutocomplete(
 		() => query,
 		() => limit,
 		() => debounce,
-		(newValue) => (value = newValue)
+		(newModel) => (model = newModel)
 	);
+
+	$effect(() => {
+		if (state.value !== model.value) {
+			state.value = model.value;
+		}
+	});
 
 	const ITEM_HEIGHT = 40;
 	const maxHeight = $derived(limit * ITEM_HEIGHT - ITEM_HEIGHT / 2);

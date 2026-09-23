@@ -1,5 +1,5 @@
 export type AutocompleteItem = {
-	uuid: string;
+	uuid: string | null;
 	value: string;
 };
 
@@ -7,7 +7,7 @@ export function createAutocomplete(
 	getQuery: () => (search: string, offset: number, limit: number) => Promise<AutocompleteItem[]>,
 	getLimit: () => number,
 	getDebounce: () => number,
-	setValue?: (value: string) => void
+	setModel?: (model: AutocompleteItem) => void
 ) {
 	let state = $state({
 		value: '',
@@ -31,6 +31,8 @@ export function createAutocomplete(
 	}
 
 	function oninput() {
+		setModel?.({ value: state.value, uuid: null });
+
 		if (debounceTimer) {
 			clearTimeout(debounceTimer);
 		}
@@ -57,13 +59,15 @@ export function createAutocomplete(
 	}
 
 	function additem() {
+		const searchValue = getSearchValue();
 		state.focused = false;
+		setModel?.({ value: searchValue, uuid: null });
 	}
 
 	function selectitem(item: AutocompleteItem) {
 		state.value = item.value;
 		state.focused = false;
-		setValue?.(item.uuid);
+		setModel?.(item);
 	}
 
 	async function loadItems(reset = false) {

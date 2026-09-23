@@ -3,13 +3,9 @@
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
 	import { searchBrands } from '$lib/remote/brands.remote';
 
-	let selectedBrandUuid = $state('');
+	let selectedBrand = $state<AutocompleteItem>({ value: '', uuid: null });
 
-	const query = async (
-		search: string,
-		offset: number,
-		limit: number
-	): Promise<AutocompleteItem[]> => {
+	const query = async (search: string, offset: number, limit: number) => {
 		return searchBrands({
 			search,
 			offset,
@@ -18,4 +14,4 @@
 	};
 </script>
 
-<Autocomplete {query} limit={5} bind:value={selectedBrandUuid} />
+<Autocomplete {query} limit={5} bind:model={selectedBrand} />
