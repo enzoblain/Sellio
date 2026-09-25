@@ -2,14 +2,18 @@
 	import { createAutocomplete, type AutocompleteItem } from './Autocomplete.svelte.js';
 
 	let {
+		id,
 		query,
 		limit = 5,
 		debounce = 100,
+		disabled = false,
 		model = $bindable<AutocompleteItem>({ value: '', uuid: null })
 	}: {
+		id?: string;
 		query: (search: string, offset: number, limit: number) => Promise<AutocompleteItem[]>;
 		limit?: number;
 		debounce?: number;
+		disabled?: boolean;
 		model?: AutocompleteItem;
 	} = $props();
 
@@ -20,12 +24,6 @@
 		(newModel) => (model = newModel)
 	);
 
-	$effect(() => {
-		if (state.value !== model.value) {
-			state.value = model.value;
-		}
-	});
-
 	const ITEM_HEIGHT = 40;
 	const maxHeight = $derived(limit * ITEM_HEIGHT - ITEM_HEIGHT / 2);
 </script>
@@ -33,14 +31,16 @@
 <div class="w-full max-w-md">
 	<div class="relative">
 		<input
+			{id}
 			bind:value={state.value}
+			{disabled}
 			{oninput}
 			{onfocus}
-			class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+			class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
 			placeholder="Rechercher..."
 		/>
 
-		{#if state.focused}
+		{#if state.focused && !disabled}
 			<ul
 				{onscroll}
 				style:max-height={`${maxHeight}px`}

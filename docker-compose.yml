@@ -45,6 +45,7 @@ services:
       DATABASE_URL: postgres://sellio:sellio@db:5432/sellio
       PORT: 2509
       HOST: 0.0.0.0
+      ORIGIN: http://localhost:2509
 
     ports:
       - '2509:2509'

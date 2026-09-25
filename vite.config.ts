@@ -12,6 +12,9 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 			adapter: adapter(),
+			csrf: {
+				checkOrigin: true
+			},
 			experimental: {
 				remoteFunctions: true
 			},

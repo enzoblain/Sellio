@@ -11,11 +11,11 @@
 
 	const items: NavItem[] = [
 		{ label: 'Dashboard', href: '/', icon: 'dashboard' },
-		{ label: 'À récupérer', href: '/a-recuperer', icon: 'collect' },
+		{ label: 'À récupérer', href: '/to-collect', icon: 'collect' },
 		{ label: 'Stock', href: '/stock', icon: 'stock' },
-		{ label: 'À expédier', href: '/a-expedier', icon: 'toship' },
-		{ label: 'Expédié', href: '/expedie', icon: 'shipped' },
-		{ label: 'Dépenses', href: '/depenses', icon: 'expenses' }
+		{ label: 'À expédier', href: '/to-ship', icon: 'toship' },
+		{ label: 'Expédié', href: '/shipped', icon: 'shipped' },
+		{ label: 'Dépenses', href: '/expenses', icon: 'expenses' }
 	];
 
 	function isActive(href: string) {
