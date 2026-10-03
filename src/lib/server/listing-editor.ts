@@ -1,3 +1,4 @@
+import { getGarmentPhotos } from '$lib/server/photos';
 import { createHash } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import * as v from 'valibot';
@@ -76,6 +77,7 @@ export async function editableListing(db: Pick<ReturnType<typeof getDb>, 'select
 		.where(eq(listingStatusHistory.listing_id, id))
 		.orderBy(desc(listingStatusHistory.created_at), desc(listingStatusHistory.id))
 		.limit(1);
+	const photos = await getGarmentPhotos(db, row.garment.id);
 	const [label] = await db
 		.select()
 		.from(listingLabels)
@@ -86,11 +88,21 @@ export async function editableListing(db: Pick<ReturnType<typeof getDb>, 'select
 		status: history?.status ?? 0,
 		history,
 		label,
-		version: createHash('sha256').update(JSON.stringify({ row, history, label })).digest('hex')
+		photos,
+		version: createHash('sha256')
+			.update(JSON.stringify({ row, history, label, photos }))
+			.digest('hex')
 	};
 }
 
-export async function updateListing(input: EditListing) {
+export async function updateListing(
+	input: EditListing,
+	afterEdit?: (
+		tx: Parameters<Parameters<ReturnType<typeof getDb>['transaction']>[0]>[0],
+		originalGarmentId: string,
+		garmentId: string
+	) => Promise<void>
+) {
 	const error = statusError(input);
 	if (error) return { ok: false as const, error };
 	return getDb().transaction(async (tx) => {
@@ -161,14 +173,15 @@ export async function updateListing(input: EditListing) {
 				.select()
 				.from(images)
 				.where(eq(images.garment_id, current.row.garment.id));
-			for (const photo of photos) {
+			for (const photo of afterEdit ? [] : photos) {
 				const values = {
 					path: photo.path,
 					mime_type: photo.mime_type,
 					size_bytes: photo.size_bytes,
 					width: photo.width,
 					height: photo.height,
-					is_cover: photo.is_cover
+					is_cover: photo.is_cover,
+					position: photo.position
 				};
 				await tx.insert(images).values({ ...values, garment_id: garmentId });
 			}
@@ -209,13 +222,11 @@ export async function updateListing(input: EditListing) {
 				.values({ listing_id: input.listingId, status: 2, created_at: new Date(changedAt - 1) });
 		}
 		if (input.status !== current.status)
-			await tx
-				.insert(listingStatusHistory)
-				.values({
-					listing_id: input.listingId,
-					status: input.status,
-					created_at: new Date(changedAt)
-				});
+			await tx.insert(listingStatusHistory).values({
+				listing_id: input.listingId,
+				status: input.status,
+				created_at: new Date(changedAt)
+			});
 
 		let code = current.label?.code ?? null;
 		if (input.status >= 2 && input.status <= 4 && !code) {
@@ -229,6 +240,7 @@ export async function updateListing(input: EditListing) {
 			}
 			if (!code) throw new Error('Impossible de générer une référence disponible.');
 		}
+		if (afterEdit) await afterEdit(tx, current.row.garment.id, garmentId);
 		return { ok: true as const, code };
 	});
 }

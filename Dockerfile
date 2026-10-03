@@ -24,7 +24,7 @@ COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/src ./src
 
 RUN npm ci --omit=dev
-RUN chown -R node:node /app
+RUN mkdir -p /app/uploads && chown -R node:node /app
 
 USER node
 

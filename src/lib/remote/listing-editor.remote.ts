@@ -1,3 +1,4 @@
+import { removeUnusedPhotos } from '$lib/server/photos';
 import { command, query } from '$app/server';
 import * as v from 'valibot';
 import { eq } from 'drizzle-orm';
@@ -14,7 +15,7 @@ import { getDashboard } from './dashboard.remote';
 
 const idSchema = v.pipe(v.string(), v.uuid());
 export const getEditableListing = query(idSchema, async (id) => {
-	const { row, status, version, label } = await editableListing(getDb(), id);
+	const { row, status, version, label, photos } = await editableListing(getDb(), id);
 	return {
 		listingId: id,
 		version,
@@ -28,7 +29,8 @@ export const getEditableListing = query(idSchema, async (id) => {
 		salePrice: row.listing.sale_price === null ? null : row.listing.sale_price / 100,
 		stockingPlace: row.place ? { uuid: row.place.id, value: row.place.name } : null,
 		status,
-		reference: label?.code ?? null
+		reference: label?.code ?? null,
+		photos: photos.map((photo) => ({ id: photo.id, path: photo.path, isCover: photo.is_cover }))
 	};
 });
 async function refreshAll() {
@@ -66,9 +68,12 @@ export const deleteListing = command(
 				.where(eq(listings.garment_id, current.row.garment.id))
 				.limit(1);
 			if (!remaining) await tx.delete(garments).where(eq(garments.id, current.row.garment.id));
-			return { ok: true as const };
+			return { ok: true as const, paths: current.photos.map((photo) => photo.path) };
 		});
-		if (result.ok) await refreshAll();
+		if (result.ok) {
+			await removeUnusedPhotos(result.paths).catch(() => {});
+			await refreshAll();
+		}
 		return result;
 	}
 );

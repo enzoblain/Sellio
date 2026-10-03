@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ListingGallery from '$lib/components/images/ListingGallery.svelte';
 	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
 	import { getShippedListings } from '$lib/remote/listings.remote';
 	const orders = getShippedListings();
@@ -24,27 +25,7 @@
 				<article class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 					<div class="relative flex aspect-square items-center justify-center bg-violet-50">
 						<ListingEditor listingId={item.id} />
-						{#if item.image}
-							<img
-								src={item.image}
-								alt={`${item.brand} ${item.model}`}
-								class="h-full w-full object-cover"
-							/>
-						{:else}
-							<div class="px-6 text-center">
-								<svg
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="1.4"
-									class="mx-auto mb-4 h-14 w-14 text-violet-300"
-									aria-hidden="true"
-									><path d="m8 3-5 3-2 5 4 2 2-3v11h10V10l2 3 4-2-2-5-5-3a4 4 0 0 1-8 0Z" /></svg
-								>
-								<p class="font-medium text-violet-950">{item.brand}</p>
-								<p class="mt-1 text-sm text-gray-500">{item.model}</p>
-							</div>
-						{/if}
+						<ListingGallery listingId={item.id} brand={item.brand} model={item.model} />
 					</div>
 					<div class="px-4 py-3">
 						<h2 class="font-medium text-gray-900">{item.brand} · {item.model}</h2>

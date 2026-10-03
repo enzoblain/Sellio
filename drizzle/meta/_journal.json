@@ -22,6 +22,13 @@
       "when": 1791014298981,
       "tag": "0002_broad_puma",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791016150626,
+      "tag": "0003_sparkling_red_wolf",
+      "breakpoints": true
     }
   ]
 }

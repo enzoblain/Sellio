@@ -1,11 +1,11 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+	import PhotoPicker from '$lib/components/images/PhotoPicker.svelte';
+	import { photoForm, type PhotoDraft } from '$lib/components/images/photo-draft';
+	import { refreshListingViews } from './refresh-views';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
-	import {
-		getEditableListing,
-		editListing,
-		deleteListing
-	} from '$lib/remote/listing-editor.remote';
+	import { getEditableListing, deleteListing } from '$lib/remote/listing-editor.remote';
 	import { searchBrands } from '$lib/remote/brands.remote';
 	import { searchModels } from '$lib/remote/models.remote';
 	import { searchSizes } from '$lib/remote/sizes.remote';
@@ -29,7 +29,10 @@
 	let salePrice = $state<number | undefined>();
 	let status = $state(0);
 	let reference = $state<string | null>(null);
+	let photos = $state<PhotoDraft[]>([]);
+	let cover = $state<string | null>(null);
 	let formKey = $state(0);
+	let photoBusy = $state(false);
 	let previousBrand = $state('');
 	const statuses = [
 		'À récupérer',
@@ -57,6 +60,7 @@
 		}
 	});
 	const validation = $derived.by(() => {
+		if (photoBusy) return 'Vérification des photos en cours…';
 		if (![brand, model, size, color].every((field) => field.value.trim()))
 			return 'Renseigne la marque, le modèle, la taille et la couleur.';
 		if (
@@ -70,14 +74,14 @@
 			return 'Renseigne un prix d’achat et des frais de port positifs ou nuls.';
 		if (
 			[listingPrice, salePrice].some(
-				(price) => price !== undefined && (!Number.isFinite(price) || price < 0)
+				(price) => price !== undefined && Number.isFinite(price) && price < 0
 			)
 		)
 			return 'Les prix doivent être positifs ou nuls.';
-		if (status >= 1 && (listingPrice === undefined || listingPrice < 0.01))
+		if (status >= 1 && (!Number.isFinite(listingPrice) || listingPrice! < 0.01))
 			return 'Ce statut nécessite un prix de mise en vente.';
 		if (status >= 1 && !place.value.trim()) return 'Ce statut nécessite un lieu de stockage.';
-		if (status >= 2 && (salePrice === undefined || salePrice < 0.01))
+		if (status >= 2 && (!Number.isFinite(salePrice) || salePrice! < 0.01))
 			return 'Ce statut nécessite un prix vendu.';
 		return '';
 	});
@@ -102,6 +106,8 @@
 			salePrice = item.salePrice ?? undefined;
 			status = item.status;
 			reference = item.reference;
+			photos = item.photos.map((photo) => ({ token: photo.id, path: photo.path }));
+			cover = item.photos.find((photo) => photo.isCover)?.id ?? item.photos[0]?.id ?? null;
 			previousBrand = `${brand.uuid ?? ''}:${brand.value}`;
 			version = item.version;
 			formKey += 1;
@@ -116,25 +122,37 @@
 		saving = true;
 		errorMessage = '';
 		try {
-			const result =
-				mode === 'delete'
-					? await deleteListing({ listingId, version })
-					: await editListing({
-							listingId,
-							version,
-							brand,
-							model,
-							size,
-							color,
-							purchasePrice: purchasePrice!,
-							shippingPrice: shippingPrice!,
-							listingPrice: listingPrice ?? null,
-							salePrice: salePrice ?? null,
-							stockingPlace: place.value.trim() ? place : null,
-							status
-						});
+			let result: { ok: boolean; error?: string };
+			if (mode === 'delete') result = await deleteListing({ listingId, version });
+			else {
+				const form = photoForm(photos, cover);
+				form.append(
+					'article',
+					JSON.stringify({
+						listingId,
+						version,
+						brand,
+						model,
+						size,
+						color,
+						purchasePrice: purchasePrice!,
+						shippingPrice: shippingPrice!,
+						listingPrice: Number.isFinite(listingPrice) ? listingPrice : null,
+						salePrice: Number.isFinite(salePrice) ? salePrice : null,
+						stockingPlace: place.value.trim() ? place : null,
+						status
+					})
+				);
+				const response = await fetch(resolve('/api/listings/[id]', { id: listingId }), {
+					method: 'PUT',
+					body: form
+				});
+				result = await response.json();
+				if (result.ok) await refreshListingViews(listingId);
+			}
+
 			if (!result.ok) {
-				errorMessage = result.error;
+				errorMessage = result.error ?? 'Impossible d’enregistrer.';
 				return;
 			}
 			dialog.close();
@@ -337,6 +355,12 @@
 							/>
 						</div>
 					</div>{/key}
+				{#key formKey}<PhotoPicker
+						id={`edit-photos-${listingId}`}
+						bind:photos
+						bind:cover
+						disabled={saving}
+					/>{/key}
 				{#if reference}<p class="text-sm text-gray-500">
 						Référence : <span class="font-mono font-semibold text-violet-950">{reference}</span>
 					</p>{:else if status >= 2}<p class="text-sm text-gray-500">

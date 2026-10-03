@@ -16,7 +16,8 @@ export const images = pgTable(
 		size_bytes: bigint('size_bytes', { mode: 'number' }).notNull(),
 		width: integer('width'),
 		height: integer('height'),
-		is_cover: boolean('is_cover').notNull().default(false)
+		is_cover: boolean('is_cover').notNull().default(false),
+		position: integer('position').notNull().default(0)
 	},
 	(table) => [
 		uniqueIndex('images_one_cover_per_garment')

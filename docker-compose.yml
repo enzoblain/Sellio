@@ -46,6 +46,11 @@ services:
       PORT: 2509
       HOST: 0.0.0.0
       ORIGIN: http://localhost:2509
+      UPLOADS_DIR: /app/uploads
+      BODY_SIZE_LIMIT: 32M
+
+    volumes:
+      - images_data:/app/uploads
 
     ports:
       - '2509:2509'
@@ -56,3 +61,4 @@ services:
 
 volumes:
   postgres_data:
+  images_data:
