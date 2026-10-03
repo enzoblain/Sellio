@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
 	import { getToShipListings } from '$lib/remote/listings.remote';
 	import { shipListing } from '$lib/remote/sales.remote';
 	const orders = getToShipListings();
@@ -39,6 +40,7 @@
 				{@const profit = item.salePrice === null ? null : item.salePrice - total}
 				<article class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 					<div class="relative flex aspect-square items-center justify-center bg-violet-50">
+						<ListingEditor listingId={item.id} />
 						{#if item.image}
 							<img
 								src={item.image}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
 	import { getStockListings } from '$lib/remote/listings.remote';
 	import { sellListing } from '$lib/remote/sales.remote';
 
@@ -49,6 +50,7 @@
 			{#each items as item (item.id)}
 				<article class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 					<div class="relative flex aspect-square items-center justify-center bg-violet-50">
+						<ListingEditor listingId={item.id} />
 						{#if item.image}
 							<img
 								src={item.image}

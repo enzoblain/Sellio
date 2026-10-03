@@ -19,7 +19,7 @@ export const sellListing = command(
 	async ({ listingId, salePrice }) => {
 		const code = await getDb().transaction(async (tx) => {
 			const [listing] = await tx
-				.select({ id: listings.id })
+				.select()
 				.from(listings)
 				.where(eq(listings.id, listingId))
 				.for('update');
@@ -31,6 +31,8 @@ export const sellListing = command(
 				.orderBy(desc(listingStatusHistory.created_at), desc(listingStatusHistory.id))
 				.limit(1);
 			if (current?.status !== 1) throw new Error('Cet article n’est plus en vente.');
+			if (!listing.listing_price || !listing.stocking_place_id)
+				throw new Error('Renseigne le prix de mise en vente et le stockage avant de vendre.');
 			let [label] = await tx
 				.select({ code: listingLabels.code })
 				.from(listingLabels)
@@ -67,7 +69,7 @@ export const shipListing = command(
 	async ({ listingId }) => {
 		await getDb().transaction(async (tx) => {
 			const [listing] = await tx
-				.select({ id: listings.id })
+				.select()
 				.from(listings)
 				.where(eq(listings.id, listingId))
 				.for('update');
@@ -79,6 +81,10 @@ export const shipListing = command(
 				.orderBy(desc(listingStatusHistory.created_at), desc(listingStatusHistory.id))
 				.limit(1);
 			if (current?.status !== 2) throw new Error('Cet article n’est plus à expédier.');
+			if (!listing.sale_price || !listing.listing_price || !listing.stocking_place_id)
+				throw new Error(
+					'Renseigne le prix vendu, le prix de mise en vente et le stockage avant d’expédier.'
+				);
 			await tx.insert(listingStatuses).values({ id: 3, name: 'shipped' }).onConflictDoNothing();
 			await tx.insert(listingStatusHistory).values({ listing_id: listingId, status: 3 });
 		});

@@ -24,6 +24,10 @@
 		(newModel) => (model = newModel)
 	);
 
+	$effect(() => {
+		if (state.value !== model.value) state.value = model.value;
+	});
+
 	const ITEM_HEIGHT = 40;
 	const maxHeight = $derived(limit * ITEM_HEIGHT - ITEM_HEIGHT / 2);
 </script>
@@ -67,7 +71,7 @@
 						Aucun résultat trouvé
 					</li>
 				{:else}
-					{#each state.items as item}
+					{#each state.items as item (item.uuid ?? item.value)}
 						<li style:height={`${ITEM_HEIGHT}px`}>
 							<button
 								type="button"

@@ -357,7 +357,9 @@ export const listCollectedItem = command(
 				.update(listings)
 				.set({ listing_price: Math.round(listingPrice * 100), stocking_place_id: placeId })
 				.where(eq(listings.id, listingId));
-			await tx.insert(listingStatusHistory).values({ listing_id: listingId, status: 1 });
+			await tx
+				.insert(listingStatusHistory)
+				.values({ listing_id: listingId, status: 1, created_at: new Date() });
 		});
 		await getToCollectListings().refresh();
 		await getDashboard().refresh();
