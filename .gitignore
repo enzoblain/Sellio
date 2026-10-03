@@ -17,3 +17,7 @@ dist/
 coverage/
 
 uploads/
+
+deploy/nas/.state/
+deploy/nas/backups/
+deploy/nas/.env

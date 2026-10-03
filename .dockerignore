@@ -9,3 +9,6 @@ npm-debug.log*
 .env.*
 
 uploads
+deploy/nas/.state
+deploy/nas/backups
+**/.env
