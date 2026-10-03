@@ -1,6 +1,5 @@
 import { defineConfig } from 'drizzle-kit';
 
-// Generation only reads the schema; the database URL is required when migrating.
 const databaseUrl = process.env.DATABASE_URL;
 
 export default defineConfig({

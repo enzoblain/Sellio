@@ -93,7 +93,6 @@
 		dialog.showModal();
 		try {
 			const data = await getEditableListing(listingId).refresh();
-			// refresh updates the query cache; await the query to read its current value.
 			const item = data ?? (await getEditableListing(listingId));
 			brand = item.brand;
 			model = item.model;

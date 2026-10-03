@@ -36,10 +36,6 @@ export const createListing = command(
 		const db = getDb();
 
 		const result = await db.transaction(async (tx) => {
-			/*
-			 * BRAND
-			 */
-
 			let brandId = brand.uuid;
 
 			if (!brandId) {
@@ -81,11 +77,6 @@ export const createListing = command(
 
 				brandId = existingBrand.id;
 			}
-
-			/*
-			 * MODEL
-			 */
-
 			let modelId = model.uuid;
 
 			if (!modelId) {
@@ -128,11 +119,6 @@ export const createListing = command(
 
 				modelId = existingModel.id;
 			}
-
-			/*
-			 * SIZE
-			 */
-
 			let sizeId = size.uuid;
 
 			if (!sizeId) {
@@ -174,11 +160,6 @@ export const createListing = command(
 
 				sizeId = existingSize.id;
 			}
-
-			/*
-			 * COLOR
-			 */
-
 			let colorId = color.uuid;
 
 			if (!colorId) {
@@ -220,11 +201,6 @@ export const createListing = command(
 
 				colorId = existingColor.id;
 			}
-
-			/*
-			 * LISTING
-			 */
-
 			const [listing] = await tx
 				.insert(listings)
 				.values({
@@ -248,8 +224,6 @@ export const createListing = command(
 	}
 );
 
-// The latest history entry is the current status; older purchased entries must not
-// bring an already listed item back into the collection queue.
 export const getToCollectListings = query(async () => {
 	const db = getDb();
 	const latestStatus = db
@@ -298,7 +272,6 @@ export const listCollectedItem = command(
 	async ({ listingId, listingPrice, stockingPlace }) => {
 		const db = getDb();
 		await db.transaction(async (tx) => {
-			// Serialize transitions for the same listing to avoid duplicate history.
 			const [listing] = await tx
 				.select({ id: listings.id })
 				.from(listings)

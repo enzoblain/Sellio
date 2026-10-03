@@ -6,35 +6,35 @@
       "idx": 0,
       "version": "7",
       "when": 1791011909659,
-      "tag": "0000_empty_deadpool",
+      "tag": "0000_initial_schema",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
       "when": 1791013768906,
-      "tag": "0001_lush_rafael_vega",
+      "tag": "0001_add_expense_date",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
       "when": 1791014298981,
-      "tag": "0002_broad_puma",
+      "tag": "0002_use_expense_created_at",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
       "when": 1791016150626,
-      "tag": "0003_sparkling_red_wolf",
+      "tag": "0003_add_image_position",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
       "when": 1791017539966,
-      "tag": "0004_tan_marvel_zombies",
+      "tag": "0004_move_garment_fields_to_listings",
       "breakpoints": true
     }
   ]

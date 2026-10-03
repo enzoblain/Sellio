@@ -67,8 +67,6 @@ export const createExpense = command(
 				.values({ name, category_id: categoryId })
 				.onConflictDoNothing();
 			const [object] = await tx.select().from(expenseObjects).where(eq(expenseObjects.name, name));
-			// Names are globally unique in the existing schema: never silently move
-			// earlier expenses to a different category when reusing a name.
 			if (object.category_id !== categoryId)
 				throw new Error('Ce nom existe dans une autre catégorie. Choisis un autre nom.');
 			await tx.insert(expenses).values({ object_id: object.id, price: Math.round(price * 100) });

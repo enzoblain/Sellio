@@ -96,17 +96,30 @@ CREATE TABLE "listing_labels" (
 	"is_used" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "models" ADD CONSTRAINT "models_brand_id_brands_id_fk" FOREIGN KEY ("brand_id") REFERENCES "public"."brands"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "garments" ADD CONSTRAINT "garments_model_id_models_id_fk" FOREIGN KEY ("model_id") REFERENCES "public"."models"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "garments" ADD CONSTRAINT "garments_size_id_sizes_id_fk" FOREIGN KEY ("size_id") REFERENCES "public"."sizes"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "garments" ADD CONSTRAINT "garments_color_id_colors_id_fk" FOREIGN KEY ("color_id") REFERENCES "public"."colors"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "images" ADD CONSTRAINT "images_garment_id_garments_id_fk" FOREIGN KEY ("garment_id") REFERENCES "public"."garments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "listings" ADD CONSTRAINT "listings_garment_id_garments_id_fk" FOREIGN KEY ("garment_id") REFERENCES "public"."garments"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "listings" ADD CONSTRAINT "listings_stocking_place_id_stocking_places_id_fk" FOREIGN KEY ("stocking_place_id") REFERENCES "public"."stocking_places"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "listing_status_history" ADD CONSTRAINT "listing_status_history_listing_id_listings_id_fk" FOREIGN KEY ("listing_id") REFERENCES "public"."listings"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "listing_status_history" ADD CONSTRAINT "listing_status_history_status_listing_statuses_id_fk" FOREIGN KEY ("status") REFERENCES "public"."listing_statuses"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "expense_objects" ADD CONSTRAINT "expense_objects_category_id_expense_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."expense_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "expenses" ADD CONSTRAINT "expenses_object_id_expense_objects_id_fk" FOREIGN KEY ("object_id") REFERENCES "public"."expense_objects"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "listing_labels" ADD CONSTRAINT "listing_labels_listing_id_listings_id_fk" FOREIGN KEY ("listing_id") REFERENCES "public"."listings"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "images_one_cover_per_garment" ON "images" USING btree ("garment_id") WHERE "images"."is_cover" = true;--> statement-breakpoint
+ALTER TABLE "models" ADD CONSTRAINT "models_brand_id_brands_id_fk" FOREIGN KEY ("brand_id") REFERENCES "public"."brands"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "garments" ADD CONSTRAINT "garments_model_id_models_id_fk" FOREIGN KEY ("model_id") REFERENCES "public"."models"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "garments" ADD CONSTRAINT "garments_size_id_sizes_id_fk" FOREIGN KEY ("size_id") REFERENCES "public"."sizes"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "garments" ADD CONSTRAINT "garments_color_id_colors_id_fk" FOREIGN KEY ("color_id") REFERENCES "public"."colors"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "images" ADD CONSTRAINT "images_garment_id_garments_id_fk" FOREIGN KEY ("garment_id") REFERENCES "public"."garments"("id") ON DELETE cascade ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "listings" ADD CONSTRAINT "listings_garment_id_garments_id_fk" FOREIGN KEY ("garment_id") REFERENCES "public"."garments"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "listings" ADD CONSTRAINT "listings_stocking_place_id_stocking_places_id_fk" FOREIGN KEY ("stocking_place_id") REFERENCES "public"."stocking_places"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "listing_status_history" ADD CONSTRAINT "listing_status_history_listing_id_listings_id_fk" FOREIGN KEY ("listing_id") REFERENCES "public"."listings"("id") ON DELETE cascade ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "listing_status_history" ADD CONSTRAINT "listing_status_history_status_listing_statuses_id_fk" FOREIGN KEY ("status") REFERENCES "public"."listing_statuses"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "expense_objects" ADD CONSTRAINT "expense_objects_category_id_expense_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."expense_categories"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "expenses" ADD CONSTRAINT "expenses_object_id_expense_objects_id_fk" FOREIGN KEY ("object_id") REFERENCES "public"."expense_objects"("id") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+ALTER TABLE "listing_labels" ADD CONSTRAINT "listing_labels_listing_id_listings_id_fk" FOREIGN KEY ("listing_id") REFERENCES "public"."listings"("id") ON DELETE cascade ON UPDATE no action;
+--> statement-breakpoint
+CREATE UNIQUE INDEX "images_one_cover_per_garment" ON "images" USING btree ("garment_id") WHERE "images"."is_cover" = true;
+--> statement-breakpoint
 CREATE UNIQUE INDEX "listing_labels_code_available_unique" ON "listing_labels" USING btree ("code") WHERE "listing_labels"."is_used" = false;

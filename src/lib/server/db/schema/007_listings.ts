@@ -2,7 +2,7 @@ import { generate_uuid } from '../../helpers';
 import { models } from './003_models';
 import { sizes } from './004_sizes';
 import { colors } from './002_colors';
-import { stocking_places } from './007_stocking_places';
+import { stocking_places } from './006_stocking_places';
 
 import { pgTable, uuid, bigint } from 'drizzle-orm/pg-core';
 

@@ -38,7 +38,6 @@ export const sellListing = command(
 				.from(listingLabels)
 				.where(and(eq(listingLabels.listing_id, listingId), eq(listingLabels.is_used, false)))
 				.limit(1);
-			// A collision on an available code does not abort the sale transaction.
 			for (let attempt = 0; !label && attempt < 32; attempt++) {
 				[label] = await tx
 					.insert(listingLabels)
