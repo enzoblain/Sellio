@@ -19,14 +19,14 @@ export type PreparedPhoto = {
 	height: number;
 };
 export class PhotoError extends Error {}
-export async function getGarmentPhotos(
+export async function getListingPhotos(
 	db: Pick<ReturnType<typeof getDb>, 'select'>,
-	garmentId: string
+	listingId: string
 ) {
 	return db
 		.select()
 		.from(images)
-		.where(eq(images.garment_id, garmentId))
+		.where(eq(images.listing_id, listingId))
 		.orderBy(desc(images.is_cover), asc(images.position), asc(images.id));
 }
 export function validateManifest(manifest: ImageManifest, existing: string[], uploaded: string[]) {
@@ -121,29 +121,24 @@ export async function removeUnusedPhotos(paths: string[]) {
 }
 export async function applyPhotos(
 	tx: Parameters<Parameters<ReturnType<typeof getDb>['transaction']>[0]>[0],
-	originalGarmentId: string,
-	garmentId: string,
+	listingId: string,
 	manifest: ImageManifest,
 	prepared: PreparedPhoto[]
 ) {
-	const originals = await getGarmentPhotos(tx, originalGarmentId);
+	const originals = await getListingPhotos(tx, listingId);
 	validateManifest(
 		manifest,
 		originals.map((photo) => photo.id),
 		prepared.map((photo) => photo.token)
 	);
-	const shared = garmentId !== originalGarmentId;
-	if (!shared) {
-		await tx.update(images).set({ is_cover: false }).where(eq(images.garment_id, garmentId));
-		for (const photo of originals)
-			if (!manifest.order.includes(photo.id))
-				await tx.delete(images).where(eq(images.id, photo.id));
-	}
+	await tx.update(images).set({ is_cover: false }).where(eq(images.listing_id, listingId));
+	for (const photo of originals)
+		if (!manifest.order.includes(photo.id)) await tx.delete(images).where(eq(images.id, photo.id));
 	for (let position = 0; position < manifest.order.length; position++) {
 		const token = manifest.order[position];
 		const upload = prepared.find((photo) => photo.token === token);
 		const original = originals.find((photo) => photo.id === token);
-		const values = { garment_id: garmentId, position, is_cover: token === manifest.cover };
+		const values = { listing_id: listingId, position, is_cover: token === manifest.cover };
 		if (upload) {
 			await tx.insert(images).values({
 				...values,
@@ -153,15 +148,6 @@ export async function applyPhotos(
 				size_bytes: upload.size_bytes,
 				width: upload.width,
 				height: upload.height
-			});
-		} else if (original && shared) {
-			await tx.insert(images).values({
-				...values,
-				path: original.path,
-				mime_type: original.mime_type,
-				size_bytes: original.size_bytes,
-				width: original.width,
-				height: original.height
 			});
 		} else if (original) await tx.update(images).set(values).where(eq(images.id, original.id));
 	}

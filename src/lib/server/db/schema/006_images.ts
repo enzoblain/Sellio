@@ -1,5 +1,5 @@
 import { generate_uuid } from '../../helpers';
-import { garments } from './005_garments';
+import { listings } from './008_listings';
 
 import { pgTable, uuid, text, bigint, integer, boolean, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
@@ -8,9 +8,9 @@ export const images = pgTable(
 	'images',
 	{
 		id: uuid('id').default(generate_uuid).primaryKey(),
-		garment_id: uuid('garment_id')
+		listing_id: uuid('listing_id')
 			.notNull()
-			.references(() => garments.id, { onDelete: 'cascade' }),
+			.references(() => listings.id, { onDelete: 'cascade' }),
 		path: text('path').notNull(),
 		mime_type: text('mime_type').notNull(),
 		size_bytes: bigint('size_bytes', { mode: 'number' }).notNull(),
@@ -20,8 +20,8 @@ export const images = pgTable(
 		position: integer('position').notNull().default(0)
 	},
 	(table) => [
-		uniqueIndex('images_one_cover_per_garment')
-			.on(table.garment_id)
+		uniqueIndex('images_one_cover_per_listing')
+			.on(table.listing_id)
 			.where(sql`${table.is_cover} = true`)
 	]
 );

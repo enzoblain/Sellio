@@ -3,7 +3,7 @@ import { command, query } from '$app/server';
 import * as v from 'valibot';
 import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
-import { listings, garments } from '$lib/server/db/schema';
+import { listings } from '$lib/server/db/schema';
 import { editableListing, EditListingSchema, updateListing } from '$lib/server/listing-editor';
 import {
 	getToCollectListings,
@@ -62,12 +62,6 @@ export const deleteListing = command(
 					error: 'L’article a changé. Ferme puis rouvre la confirmation avant de supprimer.'
 				};
 			await tx.delete(listings).where(eq(listings.id, listingId));
-			const [remaining] = await tx
-				.select()
-				.from(listings)
-				.where(eq(listings.garment_id, current.row.garment.id))
-				.limit(1);
-			if (!remaining) await tx.delete(garments).where(eq(garments.id, current.row.garment.id));
 			return { ok: true as const, paths: current.photos.map((photo) => photo.path) };
 		});
 		if (result.ok) {

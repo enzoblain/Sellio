@@ -1,4 +1,4 @@
-import { getGarmentPhotos } from '$lib/server/photos';
+import { getListingPhotos } from '$lib/server/photos';
 import { createHash } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import * as v from 'valibot';
@@ -8,13 +8,11 @@ import {
 	models,
 	sizes,
 	colors,
-	garments,
 	listings,
 	stocking_places,
 	listingLabels,
 	listingStatuses,
-	listingStatusHistory,
-	images
+	listingStatusHistory
 } from '$lib/server/db/schema';
 
 const text = v.pipe(v.string(), v.trim(), v.minLength(1));
@@ -55,7 +53,6 @@ export async function editableListing(db: Pick<ReturnType<typeof getDb>, 'select
 	const [row] = await db
 		.select({
 			listing: listings,
-			garment: garments,
 			brand: brands,
 			model: models,
 			size: sizes,
@@ -63,11 +60,10 @@ export async function editableListing(db: Pick<ReturnType<typeof getDb>, 'select
 			place: stocking_places
 		})
 		.from(listings)
-		.innerJoin(garments, eq(listings.garment_id, garments.id))
-		.innerJoin(models, eq(garments.model_id, models.id))
+		.innerJoin(models, eq(listings.model_id, models.id))
 		.innerJoin(brands, eq(models.brand_id, brands.id))
-		.innerJoin(sizes, eq(garments.size_id, sizes.id))
-		.innerJoin(colors, eq(garments.color_id, colors.id))
+		.innerJoin(sizes, eq(listings.size_id, sizes.id))
+		.innerJoin(colors, eq(listings.color_id, colors.id))
 		.leftJoin(stocking_places, eq(listings.stocking_place_id, stocking_places.id))
 		.where(eq(listings.id, id));
 	if (!row) throw new Error('Article introuvable.');
@@ -77,7 +73,7 @@ export async function editableListing(db: Pick<ReturnType<typeof getDb>, 'select
 		.where(eq(listingStatusHistory.listing_id, id))
 		.orderBy(desc(listingStatusHistory.created_at), desc(listingStatusHistory.id))
 		.limit(1);
-	const photos = await getGarmentPhotos(db, row.garment.id);
+	const photos = await getListingPhotos(db, id);
 	const [label] = await db
 		.select()
 		.from(listingLabels)
@@ -99,8 +95,7 @@ export async function updateListing(
 	input: EditListing,
 	afterEdit?: (
 		tx: Parameters<Parameters<ReturnType<typeof getDb>['transaction']>[0]>[0],
-		originalGarmentId: string,
-		garmentId: string
+		listingId: string
 	) => Promise<void>
 ) {
 	const error = statusError(input);
@@ -155,44 +150,18 @@ export async function updateListing(
 				.where(and(eq(models.brand_id, brandId), eq(models.name, input.model.value)));
 			modelId = model.id;
 		}
-		const garmentValues = {
+		const articleValues = {
 			model_id: modelId,
 			size_id: await resolveSimple(sizes, input.size),
 			color_id: await resolveSimple(colors, input.color)
 		};
-		// A garment may be shared: editing a listing must not modify other articles.
-		const siblings = await tx
-			.select({ id: listings.id })
-			.from(listings)
-			.where(eq(listings.garment_id, current.row.garment.id));
-		let garmentId = current.row.garment.id;
-		if (siblings.length > 1) {
-			const [garment] = await tx.insert(garments).values(garmentValues).returning();
-			garmentId = garment.id;
-			const photos = await tx
-				.select()
-				.from(images)
-				.where(eq(images.garment_id, current.row.garment.id));
-			for (const photo of afterEdit ? [] : photos) {
-				const values = {
-					path: photo.path,
-					mime_type: photo.mime_type,
-					size_bytes: photo.size_bytes,
-					width: photo.width,
-					height: photo.height,
-					is_cover: photo.is_cover,
-					position: photo.position
-				};
-				await tx.insert(images).values({ ...values, garment_id: garmentId });
-			}
-		} else await tx.update(garments).set(garmentValues).where(eq(garments.id, garmentId));
 		const placeId = input.stockingPlace
 			? await resolveSimple(stocking_places, input.stockingPlace)
 			: null;
 		await tx
 			.update(listings)
 			.set({
-				garment_id: garmentId,
+				...articleValues,
 				purchase_price: Math.round(input.purchasePrice * 100),
 				shipping_price: Math.round(input.shippingPrice * 100),
 				listing_price: input.listingPrice === null ? null : Math.round(input.listingPrice * 100),
@@ -240,7 +209,7 @@ export async function updateListing(
 			}
 			if (!code) throw new Error('Impossible de générer une référence disponible.');
 		}
-		if (afterEdit) await afterEdit(tx, current.row.garment.id, garmentId);
+		if (afterEdit) await afterEdit(tx, input.listingId);
 		return { ok: true as const, code };
 	});
 }

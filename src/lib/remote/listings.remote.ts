@@ -9,7 +9,6 @@ import {
 	models,
 	sizes,
 	colors,
-	garments,
 	listings,
 	listingStatuses,
 	listingStatusHistory,
@@ -223,28 +222,15 @@ export const createListing = command(
 			}
 
 			/*
-			 * GARMENT
-			 */
-
-			const [garment] = await tx
-				.insert(garments)
-				.values({
-					model_id: modelId,
-					size_id: sizeId,
-					color_id: colorId
-				})
-				.returning({
-					id: garments.id
-				});
-
-			/*
 			 * LISTING
 			 */
 
 			const [listing] = await tx
 				.insert(listings)
 				.values({
-					garment_id: garment.id,
+					model_id: modelId,
+					size_id: sizeId,
+					color_id: colorId,
 					purchase_price: Math.round(purchasePrice * 100),
 					shipping_price: Math.round(shippingPrice * 100)
 				})
@@ -290,13 +276,12 @@ export const getToCollectListings = query(async () => {
 			image: images.path
 		})
 		.from(listings)
-		.innerJoin(garments, eq(listings.garment_id, garments.id))
-		.innerJoin(models, eq(garments.model_id, models.id))
+		.innerJoin(models, eq(listings.model_id, models.id))
 		.innerJoin(brands, eq(models.brand_id, brands.id))
-		.innerJoin(sizes, eq(garments.size_id, sizes.id))
-		.innerJoin(colors, eq(garments.color_id, colors.id))
+		.innerJoin(sizes, eq(listings.size_id, sizes.id))
+		.innerJoin(colors, eq(listings.color_id, colors.id))
 		.leftJoin(latestStatus, eq(latestStatus.listingId, listings.id))
-		.leftJoin(images, and(eq(images.garment_id, garments.id), eq(images.is_cover, true)))
+		.leftJoin(images, and(eq(images.listing_id, listings.id), eq(images.is_cover, true)))
 		.where(sql`(${latestStatus.status} = 0 or ${latestStatus.status} is null)`)
 		.orderBy(desc(listings.id));
 });
@@ -395,14 +380,13 @@ export const getStockListings = query(async () => {
 			image: images.path
 		})
 		.from(listings)
-		.innerJoin(garments, eq(listings.garment_id, garments.id))
-		.innerJoin(models, eq(garments.model_id, models.id))
+		.innerJoin(models, eq(listings.model_id, models.id))
 		.innerJoin(brands, eq(models.brand_id, brands.id))
-		.innerJoin(sizes, eq(garments.size_id, sizes.id))
-		.innerJoin(colors, eq(garments.color_id, colors.id))
+		.innerJoin(sizes, eq(listings.size_id, sizes.id))
+		.innerJoin(colors, eq(listings.color_id, colors.id))
 		.leftJoin(stocking_places, eq(listings.stocking_place_id, stocking_places.id))
 		.leftJoin(latestStatus, eq(latestStatus.listingId, listings.id))
-		.leftJoin(images, and(eq(images.garment_id, garments.id), eq(images.is_cover, true)))
+		.leftJoin(images, and(eq(images.listing_id, listings.id), eq(images.is_cover, true)))
 		.where(eq(latestStatus.status, 1))
 		.orderBy(desc(listings.id));
 });
@@ -438,14 +422,13 @@ export const getToShipListings = query(async () => {
 			image: images.path
 		})
 		.from(listings)
-		.innerJoin(garments, eq(listings.garment_id, garments.id))
-		.innerJoin(models, eq(garments.model_id, models.id))
+		.innerJoin(models, eq(listings.model_id, models.id))
 		.innerJoin(brands, eq(models.brand_id, brands.id))
-		.innerJoin(sizes, eq(garments.size_id, sizes.id))
-		.innerJoin(colors, eq(garments.color_id, colors.id))
+		.innerJoin(sizes, eq(listings.size_id, sizes.id))
+		.innerJoin(colors, eq(listings.color_id, colors.id))
 		.leftJoin(stocking_places, eq(listings.stocking_place_id, stocking_places.id))
 		.leftJoin(latestStatus, eq(latestStatus.listingId, listings.id))
-		.leftJoin(images, and(eq(images.garment_id, garments.id), eq(images.is_cover, true)))
+		.leftJoin(images, and(eq(images.listing_id, listings.id), eq(images.is_cover, true)))
 		.where(eq(latestStatus.status, 2))
 		.orderBy(desc(listings.id));
 });
@@ -478,14 +461,13 @@ export const getShippedListings = query(async () => {
 			image: images.path
 		})
 		.from(listings)
-		.innerJoin(garments, eq(listings.garment_id, garments.id))
-		.innerJoin(models, eq(garments.model_id, models.id))
+		.innerJoin(models, eq(listings.model_id, models.id))
 		.innerJoin(brands, eq(models.brand_id, brands.id))
-		.innerJoin(sizes, eq(garments.size_id, sizes.id))
-		.innerJoin(colors, eq(garments.color_id, colors.id))
+		.innerJoin(sizes, eq(listings.size_id, sizes.id))
+		.innerJoin(colors, eq(listings.color_id, colors.id))
 		.leftJoin(stocking_places, eq(listings.stocking_place_id, stocking_places.id))
 		.leftJoin(latestStatus, eq(latestStatus.listingId, listings.id))
-		.leftJoin(images, and(eq(images.garment_id, garments.id), eq(images.is_cover, true)))
+		.leftJoin(images, and(eq(images.listing_id, listings.id), eq(images.is_cover, true)))
 		.where(eq(latestStatus.status, 3))
 		.orderBy(desc(listings.id));
 });

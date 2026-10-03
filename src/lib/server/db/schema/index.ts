@@ -2,7 +2,6 @@ export * from './001_brands';
 export * from './002_colors';
 export * from './003_models';
 export * from './004_sizes';
-export * from './005_garments';
 export * from './006_images';
 export * from './007_stocking_places';
 export * from './008_listings';

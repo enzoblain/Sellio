@@ -1,14 +1,22 @@
 import { generate_uuid } from '../../helpers';
-import { garments } from './005_garments';
+import { models } from './003_models';
+import { sizes } from './004_sizes';
+import { colors } from './002_colors';
 import { stocking_places } from './007_stocking_places';
 
 import { pgTable, uuid, bigint } from 'drizzle-orm/pg-core';
 
 export const listings = pgTable('listings', {
 	id: uuid('id').default(generate_uuid).primaryKey(),
-	garment_id: uuid('garment_id')
+	model_id: uuid('model_id')
 		.notNull()
-		.references(() => garments.id),
+		.references(() => models.id),
+	size_id: uuid('size_id')
+		.notNull()
+		.references(() => sizes.id),
+	color_id: uuid('color_id')
+		.notNull()
+		.references(() => colors.id),
 	purchase_price: bigint('purchase_price', { mode: 'number' }).notNull(),
 	shipping_price: bigint('shipping_price', { mode: 'number' }).notNull().default(0),
 	listing_price: bigint('listing_price', { mode: 'number' }),

@@ -30,20 +30,14 @@ export const POST: RequestHandler = async ({ request, params, url }) => {
 				.where(eq(listings.id, params.id))
 				.for('update');
 			if (!listing) throw new PhotoError('Article introuvable.');
-			const siblings = await tx
-				.select({ id: listings.id })
-				.from(listings)
-				.where(eq(listings.garment_id, listing.garment_id));
-			if (siblings.length > 1)
-				throw new PhotoError('Utilise le formulaire de modification pour cet article.');
 			const [existing] = await tx
 				.select()
 				.from(images)
-				.where(eq(images.garment_id, listing.garment_id))
+				.where(eq(images.listing_id, listing.id))
 				.limit(1);
 			if (existing)
 				throw new PhotoError('Des photos existent déjà. Utilise le formulaire de modification.');
-			await applyPhotos(tx, listing.garment_id, listing.garment_id, manifest, prepared);
+			await applyPhotos(tx, listing.id, manifest, prepared);
 		});
 		return json({ ok: true });
 	} catch (error) {

@@ -25,8 +25,8 @@ export const PUT: RequestHandler = async ({ request, params, url }) => {
 		if (files.some((file) => typeof file === 'string')) throw new PhotoError('Photos invalides.');
 		prepared = await preparePhotos(files as File[]);
 		let removed: string[] = [];
-		const result = await updateListing(input, async (tx, originalGarmentId, garmentId) => {
-			removed = await applyPhotos(tx, originalGarmentId, garmentId, manifest, prepared);
+		const result = await updateListing(input, async (tx, listingId) => {
+			removed = await applyPhotos(tx, listingId, manifest, prepared);
 		});
 		if (!result.ok) {
 			await discardPhotos(prepared);
