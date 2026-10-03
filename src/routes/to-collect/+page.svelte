@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
 	import ListingGallery from '$lib/components/images/ListingGallery.svelte';
 	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
 	import { resolve } from '$app/paths';
@@ -67,19 +68,22 @@
 	{#await orders}
 		<p class="text-sm text-gray-500">Chargement des commandes…</p>
 	{:then items}
-		<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-			{#each items as item (item.id)}
+		<ListingStacks {items}>
+			{#snippet card(item, stackButton)}
 				<article class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 					<div class="relative flex aspect-square items-center justify-center bg-violet-50">
 						<ListingEditor listingId={item.id} />
 						<ListingGallery listingId={item.id} brand={item.brand} model={item.model} />
-						<button
-							type="button"
-							onclick={() => openTransition(item.id)}
-							aria-label={`Valider la récupération de ${item.brand} ${item.model}`}
-							class="absolute top-3 right-3 rounded-lg bg-violet-950 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-900"
-							>✓ Valider</button
-						>
+						<div class="absolute top-3 right-3 flex items-center gap-2">
+							<button
+								type="button"
+								onclick={() => openTransition(item.id)}
+								aria-label={`Valider la récupération de ${item.brand} ${item.model}`}
+								class="rounded-lg bg-violet-950 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-900"
+								>✓ Valider</button
+							>
+							{@render stackButton()}
+						</div>
 					</div>
 					<div class="px-4 py-3">
 						<h2 class="font-medium text-gray-900">{item.brand} · {item.model}</h2>
@@ -95,14 +99,15 @@
 						<p class="text-xs text-gray-500">Port : {euros(item.shippingPrice)}</p>
 					</div>
 				</article>
-			{:else}
+			{/snippet}
+			{#snippet empty()}
 				<p
 					class="col-span-full rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500"
 				>
 					Aucune commande à récupérer.
 				</p>
-			{/each}
-		</div>
+			{/snippet}
+		</ListingStacks>
 	{:catch}
 		<p role="alert" class="text-sm text-red-600">Impossible de charger les commandes.</p>
 		<button

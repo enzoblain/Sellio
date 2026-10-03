@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
 	import ListingGallery from '$lib/components/images/ListingGallery.svelte';
 	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
 	import { getShippedListings } from '$lib/remote/listings.remote';
@@ -18,14 +19,17 @@
 	{#await orders}
 		<p class="text-sm text-gray-500">Chargement des commandes…</p>
 	{:then items}
-		<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-			{#each items as item (item.id)}
+		<ListingStacks {items}>
+			{#snippet card(item, stackButton)}
 				{@const total = item.purchasePrice + item.shippingPrice}
 				{@const profit = item.salePrice === null ? null : item.salePrice - total}
 				<article class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 					<div class="relative flex aspect-square items-center justify-center bg-violet-50">
 						<ListingEditor listingId={item.id} />
 						<ListingGallery listingId={item.id} brand={item.brand} model={item.model} />
+						<div class="absolute top-3 right-3 flex items-center gap-2">
+							{@render stackButton()}
+						</div>
 					</div>
 					<div class="px-4 py-3">
 						<h2 class="font-medium text-gray-900">{item.brand} · {item.model}</h2>
@@ -74,14 +78,15 @@
 						</div>
 					</div>
 				</article>
-			{:else}
+			{/snippet}
+			{#snippet empty()}
 				<p
 					class="col-span-full rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500"
 				>
 					Aucun article expédié.
 				</p>
-			{/each}
-		</div>
+			{/snippet}
+		</ListingStacks>
 	{:catch}
 		<p role="alert" class="text-sm text-red-600">Impossible de charger les commandes.</p>
 		<button

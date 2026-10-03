@@ -267,6 +267,9 @@ export const getToCollectListings = query(async () => {
 	return db
 		.select({
 			id: listings.id,
+			modelId: listings.model_id,
+			sizeId: listings.size_id,
+			colorId: listings.color_id,
 			brand: brands.name,
 			model: models.name,
 			size: sizes.name,
@@ -369,6 +372,9 @@ export const getStockListings = query(async () => {
 	return db
 		.select({
 			id: listings.id,
+			modelId: listings.model_id,
+			sizeId: listings.size_id,
+			colorId: listings.color_id,
 			brand: brands.name,
 			model: models.name,
 			size: sizes.name,
@@ -408,6 +414,9 @@ export const getToShipListings = query(async () => {
 	return db
 		.select({
 			id: listings.id,
+			modelId: listings.model_id,
+			sizeId: listings.size_id,
+			colorId: listings.color_id,
 			brand: brands.name,
 			model: models.name,
 			size: sizes.name,
@@ -450,6 +459,9 @@ export const getShippedListings = query(async () => {
 	return db
 		.select({
 			id: listings.id,
+			modelId: listings.model_id,
+			sizeId: listings.size_id,
+			colorId: listings.color_id,
 			brand: brands.name,
 			model: models.name,
 			size: sizes.name,
