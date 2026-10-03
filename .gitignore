@@ -21,3 +21,4 @@ uploads/
 deploy/nas/.state/
 deploy/nas/backups/
 deploy/nas/.env
+!deploy/nas/.env.example

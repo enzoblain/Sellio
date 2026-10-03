@@ -1,5 +1,5 @@
 import { getDb, getClient } from './index';
-import { listingStatuses, stocking_places, expenseCategories } from './schema';
+import { listingStatuses, stocking_places } from './schema';
 
 const db = getDb();
 const client = getClient();
@@ -14,11 +14,6 @@ await db
 		{ id: 4, name: 'completed' },
 		{ id: 5, name: 'returned' }
 	])
-	.onConflictDoNothing();
-
-await db
-	.insert(expenseCategories)
-	.values([{ name: 'Packaging' }, { name: 'Transport' }, { name: 'Fournitures' }])
 	.onConflictDoNothing();
 
 await db
