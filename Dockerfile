@@ -7,7 +7,6 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run db:generate
 RUN npm run build
 
 FROM node:22-alpine AS runner

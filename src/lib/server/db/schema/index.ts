@@ -10,3 +10,4 @@ export * from './009_listing-statuses';
 export * from './010_expense-categories';
 export * from './011_expense-objects';
 export * from './012_expenses';
+export * from './013_listing_labels';

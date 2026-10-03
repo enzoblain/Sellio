@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
 
@@ -16,15 +18,20 @@
 	let price = $state<number | undefined>(undefined);
 	let shippingCost = $state<number | undefined>(undefined);
 
+	let saving = $state(false);
+	let errorMessage = $state('');
+
 	let previousBrandId = $state<string | null>(null);
 
 	const isValid = $derived(
-		selectedBrand.value !== null &&
-			selectedModel.value !== null &&
-			selectedSize.value !== null &&
-			selectedColor.value !== null &&
+		selectedBrand.value.trim().length > 0 &&
+			selectedModel.value.trim().length > 0 &&
+			selectedSize.value.trim().length > 0 &&
+			selectedColor.value.trim().length > 0 &&
 			price !== undefined &&
-			shippingCost !== undefined
+			price >= 0 &&
+			shippingCost !== undefined &&
+			shippingCost >= 0
 	);
 
 	const brandQuery = (search: string, offset: number, limit: number) =>
@@ -57,7 +64,9 @@
 	});
 
 	async function confirm() {
-		if (!isValid) return;
+		if (!isValid || saving) return;
+		saving = true;
+		errorMessage = '';
 
 		try {
 			await createListing({
@@ -68,8 +77,11 @@
 				purchasePrice: price!,
 				shippingPrice: shippingCost!
 			});
-		} catch (error) {
-			console.error('createListing error:', error);
+			await goto(resolve('/to-collect'));
+		} catch {
+			errorMessage = 'Impossible d’ajouter l’article. Réessaie.';
+		} finally {
+			saving = false;
 		}
 	}
 </script>
@@ -138,11 +150,12 @@
 		</div>
 	</div>
 
+	{#if errorMessage}<p role="alert" class="text-sm text-red-600">{errorMessage}</p>{/if}
 	<button
 		type="submit"
-		disabled={!isValid}
+		disabled={!isValid || saving}
 		class="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
 	>
-		Confirmer
+		{saving ? 'Ajout en cours…' : 'Confirmer'}
 	</button>
 </form>

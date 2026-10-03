@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"start": "npm run db:setup && node build",
+		"start": "node build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -19,7 +19,7 @@
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx src/lib/server/db/seed.ts",
-		"db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed"
+		"db:setup": "npm run db:migrate && npm run db:seed"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -40,7 +40,6 @@
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
 		"tailwindcss": "^4.3.0",
-		"tsx": "^4.20.0",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.60.1",
 		"vite": "^8.0.16"
@@ -49,6 +48,7 @@
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",
 		"postgres": "^3.4.9",
-		"valibot": "^1.5.0"
+		"valibot": "^1.5.0",
+		"tsx": "^4.20.0"
 	}
 }
