@@ -93,17 +93,17 @@
 			<div class="mb-5">
 				<h2 class="font-semibold text-violet-950">Revenus et dépenses par mois</h2>
 				<p class="mt-1 text-sm text-gray-500">
-					Les dépenses incluent les achats d’articles, leurs frais de port et tes dépenses par
-					catégorie.
+					Les dépenses regroupent les achats d’articles, leurs frais de port et tous les autres
+					frais.
 				</p>
 			</div>
 			<div class="mb-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-600">
 				<span class="flex items-center gap-2"
 					><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Revenus</span
-				>{#each stats.categories as category (category.id)}<span class="flex items-center gap-2"
-						><span class="h-2.5 w-2.5 rounded-sm" style:background={category.color}
-						></span>{category.name}</span
-					>{/each}
+				>
+				<span class="flex items-center gap-2"
+					><span class="h-2.5 w-2.5 rounded-sm bg-violet-500"></span>Dépenses</span
+				>
 			</div>
 			<div class="overflow-x-auto">
 				<svg
@@ -114,7 +114,7 @@
 				>
 					<title id="chart-title">Revenus et dépenses mensuels en {year}</title><desc
 						id="chart-description"
-						>Une barre verte pour les revenus et une barre de dépenses empilées par catégorie pour
+						>Une barre verte pour les revenus et une barre violette pour le total des dépenses de
 						chaque mois. Les chiffres détaillés figurent dans le tableau ci-dessous.</desc
 					>
 					{#each [0, 0.25, 0.5, 0.75, 1] as fraction (fraction)}
@@ -139,20 +139,15 @@
 							fill="#10b981"
 							><title>{monthNames[index]} : revenus {euros(month.revenue)}</title></rect
 						>
-						{#each stats.categories as category, categoryIndex (category.id)}
-							{@const amount = month.costs[category.id] ?? 0}
-							{@const previous = stats.categories
-								.slice(0, categoryIndex)
-								.reduce((sum, entry) => sum + (month.costs[entry.id] ?? 0), 0)}
-							<rect
-								x={x + 25}
-								y={250 - ((previous + amount) / maximum) * 210}
-								width="21"
-								height={(amount / maximum) * 210}
-								fill={category.color}
-								><title>{monthNames[index]} : {category.name}, {euros(amount)}</title></rect
-							>
-						{/each}
+						{@const totalCost = Object.values(month.costs).reduce((sum, amount) => sum + amount, 0)}
+						<rect
+							x={x + 25}
+							y={250 - (totalCost / maximum) * 210}
+							width="21"
+							height={(totalCost / maximum) * 210}
+							rx="3"
+							fill="#8b5cf6"><title>{monthNames[index]} : dépenses {euros(totalCost)}</title></rect
+						>
 						<text x={x + 23} y="278" text-anchor="middle" fill="#6b7280" font-size="11"
 							>{monthNames[index]}</text
 						>
