@@ -1,3 +1,4 @@
+import { insertExpense } from '$lib/server/expenses';
 import { getDashboard } from './dashboard.remote';
 import { command, query } from '$app/server';
 import * as v from 'valibot';
@@ -46,31 +47,7 @@ export const createExpense = command(
 		price: v.pipe(v.number(), v.finite(), v.minValue(0.01))
 	}),
 	async ({ category, name, price }) => {
-		await getDb().transaction(async (tx) => {
-			let categoryId = category.uuid;
-			if (categoryId) {
-				const [existing] = await tx
-					.select()
-					.from(expenseCategories)
-					.where(eq(expenseCategories.id, categoryId));
-				if (!existing) throw new Error('Catégorie introuvable.');
-			} else {
-				await tx.insert(expenseCategories).values({ name: category.value }).onConflictDoNothing();
-				const [existing] = await tx
-					.select()
-					.from(expenseCategories)
-					.where(eq(expenseCategories.name, category.value));
-				categoryId = existing.id;
-			}
-			await tx
-				.insert(expenseObjects)
-				.values({ name, category_id: categoryId })
-				.onConflictDoNothing();
-			const [object] = await tx.select().from(expenseObjects).where(eq(expenseObjects.name, name));
-			if (object.category_id !== categoryId)
-				throw new Error('Ce nom existe dans une autre catégorie. Choisis un autre nom.');
-			await tx.insert(expenses).values({ object_id: object.id, price: Math.round(price * 100) });
-		});
+		await getDb().transaction((tx) => insertExpense(tx, { category, name, price }));
 		await getExpenses().refresh();
 		await getDashboard().refresh();
 	}

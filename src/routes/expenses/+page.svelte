@@ -41,8 +41,7 @@
 			await createExpense({ category, name, price: price! });
 			dialog.close();
 		} catch {
-			errorMessage =
-				'Impossible d’ajouter la dépense. Vérifie les champs ; si ce nom existe dans une autre catégorie, choisis un autre nom.';
+			errorMessage = 'Impossible d’ajouter la dépense. Vérifie les champs et réessaie.';
 		} finally {
 			saving = false;
 		}
