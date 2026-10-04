@@ -9,12 +9,13 @@ export function createAutocomplete(
 	getDebounce: () => number,
 	setModel?: (model: AutocompleteItem) => void
 ) {
-	let state = $state({
+	const state = $state({
 		value: '',
 		focused: false,
 		items: [] as AutocompleteItem[],
 		page: 1,
 		loading: false,
+		error: '',
 		hasmore: true,
 		requestid: 0
 	});
@@ -30,7 +31,11 @@ export function createAutocomplete(
 		loadItems(true);
 	}
 
-	function oninput() {
+	function oninput(event: Event) {
+		state.value = (event.currentTarget as HTMLInputElement).value;
+		state.requestid += 1;
+		state.loading = false;
+		state.error = '';
 		setModel?.({ value: state.value, uuid: null });
 
 		if (debounceTimer) {
@@ -83,6 +88,7 @@ export function createAutocomplete(
 		}
 
 		state.loading = true;
+		state.error = '';
 
 		const currentPage = state.page;
 		const limit = getLimit();
@@ -100,6 +106,10 @@ export function createAutocomplete(
 
 			state.page = currentPage + 1;
 			state.hasmore = newItems.length === limit;
+		} catch {
+			if (currentRequest === state.requestid) {
+				state.error = 'Impossible de charger les suggestions. Tu peux saisir une nouvelle valeur.';
+			}
 		} finally {
 			if (currentRequest === state.requestid) {
 				state.loading = false;
@@ -107,7 +117,12 @@ export function createAutocomplete(
 		}
 	}
 
+	function destroy() {
+		if (debounceTimer) clearTimeout(debounceTimer);
+		state.requestid += 1;
+	}
 	return {
+		destroy,
 		state,
 		oninput,
 		onfocus,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy, untrack } from 'svelte';
 	import { createAutocomplete, type AutocompleteItem } from './Autocomplete.svelte.js';
 
 	let {
@@ -17,15 +18,19 @@
 		model?: AutocompleteItem;
 	} = $props();
 
-	const { state, oninput, onfocus, onscroll, additem, selectitem } = createAutocomplete(
+	const { state, oninput, onfocus, onscroll, additem, selectitem, destroy } = createAutocomplete(
 		() => query,
 		() => limit,
 		() => debounce,
 		(newModel) => (model = newModel)
 	);
 
+	onDestroy(destroy);
 	$effect(() => {
-		if (state.value !== model.value) state.value = model.value;
+		const value = model.value;
+		untrack(() => {
+			if (state.value !== value) state.value = value;
+		});
 	});
 
 	const ITEM_HEIGHT = 40;
@@ -66,6 +71,8 @@
 					<li style:height={`${ITEM_HEIGHT}px`} class="flex items-center px-4 text-gray-400">
 						Chargement...
 					</li>
+				{:else if state.error}
+					<li class="px-4 py-3 text-sm text-red-600" role="status">{state.error}</li>
 				{:else if state.items.length === 0}
 					<li style:height={`${ITEM_HEIGHT}px`} class="flex items-center px-4 text-gray-500">
 						Aucun résultat trouvé
