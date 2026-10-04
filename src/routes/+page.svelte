@@ -101,9 +101,12 @@
 				<span class="flex items-center gap-2"
 					><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Revenus</span
 				>
-				<span class="flex items-center gap-2"
-					><span class="h-2.5 w-2.5 rounded-sm bg-violet-500"></span>Dépenses</span
-				>
+				{#each stats.categories as category (category.id)}
+					<span class="flex items-center gap-2"
+						><span class="h-2.5 w-2.5 rounded-sm" style:background={category.color}
+						></span>{category.name}</span
+					>
+				{/each}
 			</div>
 			<div class="overflow-x-auto">
 				<svg
@@ -114,8 +117,9 @@
 				>
 					<title id="chart-title">Revenus et dépenses mensuels en {year}</title><desc
 						id="chart-description"
-						>Une barre verte pour les revenus et une barre violette pour le total des dépenses de
-						chaque mois. Les chiffres détaillés figurent dans le tableau ci-dessous.</desc
+						>Une barre verte pour les revenus et une barre empilée distinguant les achats
+						d’articles, les frais de port et les autres dépenses regroupées pour chaque mois. Les
+						chiffres détaillés figurent dans le tableau ci-dessous.</desc
 					>
 					{#each [0, 0.25, 0.5, 0.75, 1] as fraction (fraction)}
 						<line
@@ -139,15 +143,20 @@
 							fill="#10b981"
 							><title>{monthNames[index]} : revenus {euros(month.revenue)}</title></rect
 						>
-						{@const totalCost = Object.values(month.costs).reduce((sum, amount) => sum + amount, 0)}
-						<rect
-							x={x + 25}
-							y={250 - (totalCost / maximum) * 210}
-							width="21"
-							height={(totalCost / maximum) * 210}
-							rx="3"
-							fill="#8b5cf6"><title>{monthNames[index]} : dépenses {euros(totalCost)}</title></rect
-						>
+						{#each stats.categories as category, categoryIndex (category.id)}
+							{@const amount = month.costs[category.id] ?? 0}
+							{@const previous = stats.categories
+								.slice(0, categoryIndex)
+								.reduce((sum, entry) => sum + (month.costs[entry.id] ?? 0), 0)}
+							<rect
+								x={x + 25}
+								y={250 - ((previous + amount) / maximum) * 210}
+								width="21"
+								height={(amount / maximum) * 210}
+								fill={category.color}
+								><title>{monthNames[index]} : {category.name}, {euros(amount)}</title></rect
+							>
+						{/each}
 						<text x={x + 23} y="278" text-anchor="middle" fill="#6b7280" font-size="11"
 							>{monthNames[index]}</text
 						>
@@ -206,7 +215,7 @@
 						>
 					</div>
 					<p class="text-xs text-gray-400">
-						Bénéfice des articles vendus − dépenses des catégories de l’année.
+						Bénéfice des articles vendus − autres dépenses de l’année.
 					</p>
 					<div class="flex justify-between gap-4 text-sm">
 						<span class="text-gray-500">Solde revenus − dépenses</span><span

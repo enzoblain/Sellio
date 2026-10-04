@@ -22,15 +22,7 @@ export function calculateMetrics(data: DashboardData, year: number) {
 	const categories = [
 		{ id: 'purchases', name: 'Achats d’articles', color: '#7c3aed' },
 		{ id: 'shipping', name: 'Frais de port d’achat', color: '#c4b5fd' },
-		...Array.from(
-			new Map(data.expenses.map((expense) => [expense.categoryId, expense.category])).entries()
-		)
-			.sort((a, b) => a[1].localeCompare(b[1]))
-			.map(([id, name], index) => ({
-				id,
-				name,
-				color: ['#f59e0b', '#0ea5e9', '#f43f5e', '#14b8a6', '#a855f7', '#84cc16'][index % 6]
-			}))
+		{ id: 'expenses', name: 'Autres dépenses', color: '#f59e0b' }
 	];
 	const sold = data.listings.filter(
 		(item) =>
@@ -54,7 +46,7 @@ export function calculateMetrics(data: DashboardData, year: number) {
 	for (const expense of data.expenses) {
 		const month = months.find((month) => month.key === dateMonth(expense.date));
 		if (month) {
-			month.costs[expense.categoryId] = (month.costs[expense.categoryId] ?? 0) + expense.price;
+			month.costs.expenses = (month.costs.expenses ?? 0) + expense.price;
 			operatingExpenses += expense.price;
 		}
 	}
