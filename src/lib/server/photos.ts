@@ -2,9 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import sharp from 'sharp';
-import { asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
-import { images } from '$lib/server/db/schema';
+import { images, listings } from '$lib/server/db/schema';
 
 export const uploadsDirectory = () => resolve(process.env.UPLOADS_DIR ?? 'uploads');
 export const MAX_PHOTOS = 12;
@@ -126,9 +126,32 @@ export async function applyPhotos(
 	prepared: PreparedPhoto[]
 ) {
 	const originals = await getListingPhotos(tx, listingId);
+	const reuseTokens = Array.isArray(manifest.order)
+		? manifest.order.filter((token) => typeof token === 'string' && token.startsWith('reuse:'))
+		: [];
+	const reuseIds = reuseTokens.map((token) => token.slice(6));
+	if (
+		reuseIds.some(
+			(id) => !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+		)
+	)
+		throw new PhotoError('Référence de photo invalide.');
+	const [listing] = await tx
+		.select({ modelId: listings.model_id })
+		.from(listings)
+		.where(eq(listings.id, listingId));
+	if (!listing) throw new PhotoError('Article introuvable.');
+	const reusable = reuseIds.length
+		? await tx
+				.select({ photo: images })
+				.from(images)
+				.innerJoin(listings, eq(images.listing_id, listings.id))
+				.where(and(eq(listings.model_id, listing.modelId), inArray(images.id, reuseIds)))
+				.for('share')
+		: [];
 	validateManifest(
 		manifest,
-		originals.map((photo) => photo.id),
+		[...originals.map((photo) => photo.id), ...reusable.map(({ photo }) => `reuse:${photo.id}`)],
 		prepared.map((photo) => photo.token)
 	);
 	await tx.update(images).set({ is_cover: false }).where(eq(images.listing_id, listingId));
@@ -150,6 +173,20 @@ export async function applyPhotos(
 				height: upload.height
 			});
 		} else if (original) await tx.update(images).set(values).where(eq(images.id, original.id));
+		else {
+			const source = reusable.find(({ photo }) => `reuse:${photo.id}` === token)?.photo;
+			if (source)
+				await tx
+					.insert(images)
+					.values({
+						...values,
+						path: source.path,
+						mime_type: source.mime_type,
+						size_bytes: source.size_bytes,
+						width: source.width,
+						height: source.height
+					});
+		}
 	}
 	return originals.filter((photo) => !manifest.order.includes(photo.id)).map((photo) => photo.path);
 }

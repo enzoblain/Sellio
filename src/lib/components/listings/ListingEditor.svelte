@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ModelPhotos from '$lib/components/images/ModelPhotos.svelte';
 	import { resolve } from '$app/paths';
 	import PhotoPicker from '$lib/components/images/PhotoPicker.svelte';
 	import { photoForm, type PhotoDraft } from '$lib/components/images/photo-draft';
@@ -33,6 +34,7 @@
 	let cover = $state<string | null>(null);
 	let formKey = $state(0);
 	let photoBusy = $state(false);
+	let modelPhotoBusy = $state(false);
 	let previousBrand = $state('');
 	const statuses = [
 		'À récupérer',
@@ -60,7 +62,7 @@
 		}
 	});
 	const validation = $derived.by(() => {
-		if (photoBusy) return 'Vérification des photos en cours…';
+		if (photoBusy || modelPhotoBusy) return 'Vérification des photos en cours…';
 		if (![brand, model, size, color].every((field) => field.value.trim()))
 			return 'Renseigne la marque, le modèle, la taille et la couleur.';
 		if (
@@ -354,11 +356,19 @@
 							/>
 						</div>
 					</div>{/key}
+				<ModelPhotos
+					modelId={model.uuid}
+					enabled={!!version && !loading && mode === 'edit'}
+					bind:photos
+					bind:cover
+					bind:busy={modelPhotoBusy}
+				/>
 				{#key formKey}<PhotoPicker
 						id={`edit-photos-${listingId}`}
+						bind:busy={photoBusy}
 						bind:photos
 						bind:cover
-						disabled={saving}
+						disabled={saving || modelPhotoBusy}
 					/>{/key}
 				{#if reference}<p class="text-sm text-gray-500">
 						Référence : <span class="font-mono font-semibold text-violet-950">{reference}</span>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ModelPhotos from '$lib/components/images/ModelPhotos.svelte';
 	import PhotoPicker from '$lib/components/images/PhotoPicker.svelte';
 	import { photoForm, type PhotoDraft } from '$lib/components/images/photo-draft';
 	import { refreshListingViews } from '$lib/components/listings/refresh-views';
@@ -26,12 +27,14 @@
 	let photos = $state<PhotoDraft[]>([]);
 	let cover = $state<string | null>(null);
 	let photoBusy = $state(false);
+	let modelPhotoBusy = $state(false);
 	let createdId = $state<string | null>(null);
 
 	let previousBrandId = $state<string | null>(null);
 
 	const isValid = $derived(
 		!photoBusy &&
+			!modelPhotoBusy &&
 			selectedBrand.value.trim().length > 0 &&
 			selectedModel.value.trim().length > 0 &&
 			selectedSize.value.trim().length > 0 &&
@@ -179,12 +182,19 @@
 				</div>
 			</div>
 		</fieldset>
+		<ModelPhotos
+			modelId={selectedModel.uuid}
+			enabled={!createdId}
+			bind:photos
+			bind:cover
+			bind:busy={modelPhotoBusy}
+		/>
 		<PhotoPicker
 			id="new-article-photos"
 			bind:photos
 			bind:cover
 			bind:busy={photoBusy}
-			disabled={saving}
+			disabled={saving || modelPhotoBusy}
 		/>
 		{#if errorMessage}<p role="alert" class="text-sm text-red-600">{errorMessage}</p>{/if}
 		<button
