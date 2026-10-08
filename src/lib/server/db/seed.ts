@@ -18,7 +18,7 @@ await db
 
 await db
 	.insert(stocking_places)
-	.values([{ name: "Appartement d'Enzo" }, { name: 'Maison de Sarah' }])
+	.values([{ name: 'Cave' }, { name: 'Maison de Sarah' }])
 	.onConflictDoNothing();
 
 await client.end();

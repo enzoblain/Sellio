@@ -11,6 +11,7 @@ export function createAutocomplete(
 ) {
 	const state = $state({
 		value: '',
+		activeIndex: -1,
 		focused: false,
 		items: [] as AutocompleteItem[],
 		page: 1,
@@ -34,7 +35,10 @@ export function createAutocomplete(
 	function oninput(event: Event) {
 		state.value = (event.currentTarget as HTMLInputElement).value;
 		state.requestid += 1;
-		state.loading = false;
+		state.focused = true;
+		state.activeIndex = -1;
+		state.items = [];
+		state.loading = true;
 		state.error = '';
 		setModel?.({ value: state.value, uuid: null });
 
@@ -63,6 +67,57 @@ export function createAutocomplete(
 		}
 	}
 
+	const normalize = (value: string) => value.trim().toLocaleLowerCase('fr-FR');
+	function canAdd() {
+		return (
+			!!getSearchValue() &&
+			!state.loading &&
+			!state.items.some((item) => normalize(item.value) === normalize(state.value))
+		);
+	}
+	function options() {
+		return canAdd() ? [{ value: getSearchValue(), uuid: null }, ...state.items] : state.items;
+	}
+	function close() {
+		state.focused = false;
+		state.activeIndex = -1;
+		const exact = state.items.find((item) => normalize(item.value) === normalize(state.value));
+		if (exact) selectitem(exact);
+	}
+	function onkeydown(event: KeyboardEvent) {
+		if (event.isComposing) return;
+		if (event.key === 'Escape') {
+			if (state.focused) event.preventDefault();
+			close();
+			return;
+		}
+		if (event.key === 'Tab') {
+			close();
+			return;
+		}
+		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+			event.preventDefault();
+			if (!state.focused) {
+				onfocus();
+				return;
+			}
+			const count = options().length;
+			if (count)
+				state.activeIndex =
+					(state.activeIndex +
+						(event.key === 'ArrowDown' ? 1 : state.activeIndex < 0 ? 0 : -1) +
+						count) %
+					count;
+		} else if (event.key === 'Enter' && state.focused) {
+			event.preventDefault();
+			const entries = options();
+			const selected =
+				entries[state.activeIndex] ??
+				entries.find((item) => normalize(item.value) === normalize(state.value)) ??
+				(canAdd() ? entries[0] : undefined);
+			if (selected) selectitem(selected);
+		}
+	}
 	function additem() {
 		const searchValue = getSearchValue();
 		state.focused = false;
@@ -123,6 +178,9 @@ export function createAutocomplete(
 	}
 	return {
 		destroy,
+		canAdd,
+		close,
+		onkeydown,
 		state,
 		oninput,
 		onfocus,
