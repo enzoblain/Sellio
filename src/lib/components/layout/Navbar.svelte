@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 
-	type NavIcon = 'dashboard' | 'collect' | 'stock' | 'toship' | 'shipped' | 'expenses';
+	type NavIcon = 'dashboard' | 'collect' | 'stock' | 'listed' | 'toship' | 'shipped' | 'expenses';
 
 	type NavItem = {
 		label: string;
@@ -13,7 +13,7 @@
 		{ label: 'Dashboard', href: '/', icon: 'dashboard' },
 		{ label: 'À récupérer', href: '/to-collect', icon: 'collect' },
 		{ label: 'Stock', href: '/stock', icon: 'stock' },
-		{ label: 'En vente', href: '/listed', icon: 'stock' },
+		{ label: 'En vente', href: '/listed', icon: 'listed' },
 		{ label: 'À expédier', href: '/to-ship', icon: 'toship' },
 		{ label: 'Expédié', href: '/shipped', icon: 'shipped' },
 		{ label: 'Dépenses', href: '/expenses', icon: 'expenses' }
@@ -62,9 +62,21 @@
 			stroke-linejoin="round"
 			class="h-5 w-5"
 		>
-			<path d="M12 3 3.5 7.5 12 12l8.5-4.5L12 3Z" />
-			<path d="m3.5 12 8.5 4.5 8.5-4.5" />
-			<path d="m3.5 16.5 8.5 4.5 8.5-4.5" />
+			<rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+			<path d="M3.5 10h17M9 5v5m6-5v5M9 15.5h6" />
+		</svg>
+	{:else if icon === 'listed'}
+		<svg
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="1.6"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			class="h-5 w-5"
+		>
+			<path d="M20.5 13.5 13.5 20.5a2 2 0 0 1-2.8 0L3.5 13.3V3.5h9.8l7.2 7.2a2 2 0 0 1 0 2.8Z" />
+			<circle cx="8" cy="8" r="1.25" />
 		</svg>
 	{:else if icon === 'toship'}
 		<svg

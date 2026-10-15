@@ -29,6 +29,7 @@ export const getDashboard = query(async (): Promise<DashboardData> => {
 			.select({
 				id: listings.id,
 				purchasePrice: listings.purchase_price,
+				listingPrice: listings.listing_price,
 				shippingPrice: listings.shipping_price,
 				salePrice: listings.sale_price,
 				status: latest.status,

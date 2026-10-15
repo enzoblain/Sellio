@@ -3,6 +3,7 @@ export type DashboardData = {
 	listings: {
 		id: string;
 		purchasePrice: number;
+		listingPrice: number | null;
 		shippingPrice: number;
 		salePrice: number | null;
 		status: number | null;
@@ -50,6 +51,12 @@ export function calculateMetrics(data: DashboardData, year: number) {
 			operatingExpenses += expense.price;
 		}
 	}
+	const listed = data.listings.filter((item) => item.status === 1 && item.listingPrice !== null);
+	const potentialRevenue = listed.reduce((sum, item) => sum + item.listingPrice!, 0);
+	const potentialProfit = listed.reduce(
+		(sum, item) => sum + item.listingPrice! - item.purchasePrice - item.shippingPrice,
+		0
+	);
 	const revenue = sold.reduce((sum, item) => sum + item.salePrice!, 0);
 	const profit = sold.reduce(
 		(sum, item) => sum + item.salePrice! - item.purchasePrice - item.shippingPrice,
@@ -63,6 +70,9 @@ export function calculateMetrics(data: DashboardData, year: number) {
 		0
 	);
 	return {
+		potentialRevenue,
+		potentialProfit,
+		listedCount: listed.length,
 		months,
 		categories,
 		revenue,

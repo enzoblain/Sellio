@@ -101,6 +101,29 @@
 				</div>
 			{/each}
 		</div>
+		<section class="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+			<h2 class="font-semibold text-violet-950">Potentiel des articles en vente</h2>
+			<p class="mt-1 text-sm text-gray-500">
+				Tous les articles actuellement en vente, quelle que soit l’année d’achat. Estimation s’ils
+				sont vendus au prix affiché.
+			</p>
+			<div class="mt-4 grid gap-5 sm:grid-cols-2">
+				<div>
+					<p class="text-sm text-gray-500">Total des prix de mise en vente</p>
+					<p class="mt-2 text-2xl font-semibold text-violet-950">{euros(stats.potentialRevenue)}</p>
+					<p class="mt-2 text-xs text-gray-400">
+						{stats.listedCount} article{stats.listedCount === 1 ? '' : 's'} en vente
+					</p>
+				</div>
+				<div>
+					<p class="text-sm text-gray-500">Bénéfice potentiel</p>
+					<p class="mt-2 text-2xl font-semibold text-violet-950">{euros(stats.potentialProfit)}</p>
+					<p class="mt-2 text-xs text-gray-400">
+						Prix affichés − achats et ports de ces articles, avant autres frais
+					</p>
+				</div>
+			</div>
+		</section>
 		<section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
 			<div class="mb-5">
 				<h2 class="font-semibold text-violet-950">Revenus et dépenses par mois</h2>
