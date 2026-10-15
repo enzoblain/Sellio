@@ -43,6 +43,13 @@
       "when": 1791112125183,
       "tag": "0005_allow_expense_names_per_category",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792015200000,
+      "tag": "0006_add_stocked_status",
+      "breakpoints": true
     }
   ]
 }

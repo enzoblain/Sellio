@@ -43,8 +43,20 @@
 					.map((value) => (typeof value === 'number' ? value : Number(value!.slice(0, 4))))
 			)
 		].sort((a, b) => b - a);
-	const stockLabels = ['À récupérer', 'En vente', 'À expédier', 'Expédié'];
-	const stockLinks = ['/to-collect', '/stock', '/to-ship', '/shipped'] as const;
+	const stockLabels: Record<number, string> = {
+		0: 'À récupérer',
+		6: 'En stock',
+		1: 'En vente',
+		2: 'À expédier',
+		3: 'Expédié'
+	};
+	const stockLinks = {
+		0: '/to-collect',
+		6: '/stock',
+		1: '/listed',
+		2: '/to-ship',
+		3: '/shipped'
+	} as const;
 </script>
 
 <div class="min-h-screen bg-gray-50 px-6 py-6">
@@ -202,7 +214,7 @@
 				<h2 class="mb-5 font-semibold text-violet-950">Vue d’ensemble</h2>
 				<div class="grid grid-cols-2 gap-3">
 					{#each stats.stock as entry (entry.status)}<a
-							href={resolve(stockLinks[entry.status])}
+							href={resolve(stockLinks[entry.status as keyof typeof stockLinks])}
 							class="rounded-lg bg-violet-50 p-4 transition hover:bg-violet-100"
 							><p class="text-xs text-gray-500">{stockLabels[entry.status]}</p>
 							<p class="mt-2 text-xl font-semibold text-violet-950">{entry.count}</p></a

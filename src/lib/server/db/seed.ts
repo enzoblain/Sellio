@@ -12,7 +12,8 @@ await db
 		{ id: 2, name: 'to_ship' },
 		{ id: 3, name: 'shipped' },
 		{ id: 4, name: 'completed' },
-		{ id: 5, name: 'returned' }
+		{ id: 5, name: 'returned' },
+		{ id: 6, name: 'stocked' }
 	])
 	.onConflictDoNothing();
 

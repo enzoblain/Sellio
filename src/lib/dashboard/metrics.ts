@@ -74,7 +74,7 @@ export function calculateMetrics(data: DashboardData, year: number) {
 		averageRatio: ratios.length ? ratios.reduce((a, b) => a + b, 0) / ratios.length : null,
 		cashBalance: revenue - totalExpenses,
 		netProfit: profit - operatingExpenses,
-		stock: [0, 1, 2, 3].map((status) => ({
+		stock: [0, 6, 1, 2, 3].map((status) => ({
 			status,
 			count: data.listings.filter(
 				(item) => item.status === status || (status === 0 && item.status === null)

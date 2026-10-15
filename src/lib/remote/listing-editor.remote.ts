@@ -8,6 +8,7 @@ import { editableListing, EditListingSchema, updateListing } from '$lib/server/l
 import {
 	getToCollectListings,
 	getStockListings,
+	getListedListings,
 	getToShipListings,
 	getShippedListings
 } from './listings.remote';
@@ -37,6 +38,7 @@ async function refreshAll() {
 	await Promise.all([
 		getToCollectListings().refresh(),
 		getStockListings().refresh(),
+		getListedListings().refresh(),
 		getToShipListings().refresh(),
 		getShippedListings().refresh(),
 		getDashboard().refresh()

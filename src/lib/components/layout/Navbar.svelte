@@ -13,6 +13,7 @@
 		{ label: 'Dashboard', href: '/', icon: 'dashboard' },
 		{ label: 'À récupérer', href: '/to-collect', icon: 'collect' },
 		{ label: 'Stock', href: '/stock', icon: 'stock' },
+		{ label: 'En vente', href: '/listed', icon: 'stock' },
 		{ label: 'À expédier', href: '/to-ship', icon: 'toship' },
 		{ label: 'Expédié', href: '/shipped', icon: 'shipped' },
 		{ label: 'Dépenses', href: '/expenses', icon: 'expenses' }

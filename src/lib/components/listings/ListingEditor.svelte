@@ -42,7 +42,8 @@
 		'À expédier',
 		'Expédié',
 		'Terminé',
-		'Retourné'
+		'Retourné',
+		'En stock'
 	];
 	const brandQuery = (search: string, offset: number, limit: number) =>
 		searchBrands({ search, offset, limit });
@@ -80,10 +81,10 @@
 			)
 		)
 			return 'Les prix doivent être positifs ou nuls.';
-		if (status >= 1 && (!Number.isFinite(listingPrice) || listingPrice! < 0.01))
+		if (status >= 1 && status <= 5 && (!Number.isFinite(listingPrice) || listingPrice! < 0.01))
 			return 'Ce statut nécessite un prix de mise en vente.';
 		if (status >= 1 && !place.value.trim()) return 'Ce statut nécessite un lieu de stockage.';
-		if (status >= 2 && (!Number.isFinite(salePrice) || salePrice! < 0.01))
+		if (status >= 2 && status <= 5 && (!Number.isFinite(salePrice) || salePrice! < 0.01))
 			return 'Ce statut nécessite un prix vendu.';
 		return '';
 	});
@@ -327,13 +328,13 @@
 							<label
 								for={`edit-listing-${listingId}`}
 								class="mb-2 block text-sm font-medium text-gray-700"
-								>Prix de mise en vente (€){status >= 1 ? ' *' : ''}</label
+								>Prix de mise en vente (€){status >= 1 && status <= 5 ? ' *' : ''}</label
 							><input
 								id={`edit-listing-${listingId}`}
 								type="number"
-								min={status >= 1 ? '0.01' : '0'}
+								min={status >= 1 && status <= 5 ? '0.01' : '0'}
 								step="0.01"
-								required={status >= 1}
+								required={status >= 1 && status <= 5}
 								bind:value={listingPrice}
 								disabled={saving}
 								class="w-full rounded-lg border border-gray-300 px-4 py-2"
@@ -343,13 +344,13 @@
 							<label
 								for={`edit-sale-${listingId}`}
 								class="mb-2 block text-sm font-medium text-gray-700"
-								>Prix vendu (€){status >= 2 ? ' *' : ''}</label
+								>Prix vendu (€){status >= 2 && status <= 5 ? ' *' : ''}</label
 							><input
 								id={`edit-sale-${listingId}`}
 								type="number"
-								min={status >= 2 ? '0.01' : '0'}
+								min={status >= 2 && status <= 5 ? '0.01' : '0'}
 								step="0.01"
-								required={status >= 2}
+								required={status >= 2 && status <= 5}
 								bind:value={salePrice}
 								disabled={saving}
 								class="w-full rounded-lg border border-gray-300 px-4 py-2"
@@ -372,7 +373,7 @@
 					/>{/key}
 				{#if reference}<p class="text-sm text-gray-500">
 						Référence : <span class="font-mono font-semibold text-violet-950">{reference}</span>
-					</p>{:else if status >= 2}<p class="text-sm text-gray-500">
+					</p>{:else if status >= 2 && status <= 4}<p class="text-sm text-gray-500">
 						Une référence sera générée à l’enregistrement.
 					</p>{/if}
 				{#if validation}<p class="text-sm text-amber-700" role="status">{validation}</p>{/if}

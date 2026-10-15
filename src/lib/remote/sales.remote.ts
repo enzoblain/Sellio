@@ -9,7 +9,7 @@ import {
 	listingStatusHistory,
 	listingStatuses
 } from '$lib/server/db/schema';
-import { getStockListings, getToShipListings, getShippedListings } from './listings.remote';
+import { getListedListings, getToShipListings, getShippedListings } from './listings.remote';
 
 export const sellListing = command(
 	v.object({
@@ -54,7 +54,7 @@ export const sellListing = command(
 			await tx.insert(listingStatusHistory).values({ listing_id: listingId, status: 2 });
 			return label.code;
 		});
-		await getStockListings().refresh();
+		await getListedListings().refresh();
 		await getToShipListings().refresh();
 		await getDashboard().refresh();
 		return { code };

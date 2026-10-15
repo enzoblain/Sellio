@@ -35,17 +35,17 @@ export const EditListingSchema = v.object({
 	listingPrice: v.nullable(money),
 	salePrice: v.nullable(money),
 	stockingPlace: v.nullable(item),
-	status: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(5))
+	status: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))
 });
 export type EditListing = v.InferOutput<typeof EditListingSchema>;
 export function statusError(
 	input: Pick<EditListing, 'status' | 'listingPrice' | 'salePrice' | 'stockingPlace'>
 ) {
-	if (input.status >= 1 && (!input.listingPrice || input.listingPrice < 0.01))
+	if (input.status >= 1 && input.status <= 5 && (!input.listingPrice || input.listingPrice < 0.01))
 		return 'Un prix de mise en vente est obligatoire pour ce statut.';
 	if (input.status >= 1 && !input.stockingPlace?.value.trim())
 		return 'Un lieu de stockage est obligatoire pour ce statut.';
-	if (input.status >= 2 && (!input.salePrice || input.salePrice < 0.01))
+	if (input.status >= 2 && input.status <= 5 && (!input.salePrice || input.salePrice < 0.01))
 		return 'Un prix vendu est obligatoire pour ce statut.';
 	return null;
 }
@@ -177,7 +177,8 @@ export async function updateListing(
 				{ id: 2, name: 'to_ship' },
 				{ id: 3, name: 'shipped' },
 				{ id: 4, name: 'completed' },
-				{ id: 5, name: 'returned' }
+				{ id: 5, name: 'returned' },
+				{ id: 6, name: 'stocked' }
 			])
 			.onConflictDoNothing();
 		const changedAt = Math.max(Date.now(), (current.history?.created_at.getTime() ?? 0) + 3);
@@ -185,7 +186,12 @@ export async function updateListing(
 			await tx
 				.insert(listingStatusHistory)
 				.values({ listing_id: input.listingId, status: 0, created_at: new Date(changedAt - 2) });
-		if (input.status >= 2 && input.status <= 4 && current.status < 2 && input.status !== 2) {
+		if (
+			input.status >= 2 &&
+			input.status <= 4 &&
+			(current.status < 2 || current.status === 6) &&
+			input.status !== 2
+		) {
 			await tx
 				.insert(listingStatusHistory)
 				.values({ listing_id: input.listingId, status: 2, created_at: new Date(changedAt - 1) });

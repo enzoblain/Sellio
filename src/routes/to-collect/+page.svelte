@@ -5,23 +5,17 @@
 	import { resolve } from '$app/paths';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
-	import { getToCollectListings, listCollectedItem } from '$lib/remote/listings.remote';
+	import { getToCollectListings, collectItem } from '$lib/remote/listings.remote';
 	import { searchStockingPlaces } from '$lib/remote/stocking-places.remote';
 
 	const orders = getToCollectListings();
 	let selectedId = $state<string | null>(null);
-	let listingPrice = $state<number | undefined>();
 	let stockingPlace = $state<AutocompleteItem>({ value: '', uuid: null });
 	let saving = $state(false);
 	let transitionKey = $state(0);
 	let errorMessage = $state('');
 	let dialog: HTMLDialogElement;
-	const valid = $derived(
-		listingPrice !== undefined &&
-			Number.isFinite(listingPrice) &&
-			listingPrice >= 0.01 &&
-			stockingPlace.value.trim().length > 0
-	);
+	const valid = $derived(stockingPlace.value.trim().length > 0);
 	const euros = (cents: number) =>
 		new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 	const placeQuery = (search: string, offset: number, limit: number) =>
@@ -30,7 +24,6 @@
 	function openTransition(id: string) {
 		transitionKey += 1;
 		selectedId = id;
-		listingPrice = undefined;
 		stockingPlace = { value: '', uuid: null };
 		errorMessage = '';
 		dialog.showModal();
@@ -41,9 +34,8 @@
 		saving = true;
 		errorMessage = '';
 		try {
-			await listCollectedItem({
+			await collectItem({
 				listingId: selectedId,
-				listingPrice: listingPrice!,
 				stockingPlace
 			});
 			dialog.close();
@@ -125,8 +117,10 @@
 	}}
 	class="m-auto w-[calc(100%-2rem)] max-w-md overflow-visible rounded-xl bg-white p-6 shadow-xl backdrop:bg-violet-950/30"
 >
-	<h2 class="text-lg font-semibold text-violet-950">Passer l’article en listé</h2>
-	<p class="mt-1 text-sm text-gray-500">Indique le prix de mise en vente et le lieu de stockage.</p>
+	<h2 class="text-lg font-semibold text-violet-950">Récupérer l’article</h2>
+	<p class="mt-1 text-sm text-gray-500">
+		Indique le lieu de stockage pour placer l’article en stock.
+	</p>
 	<form
 		class="mt-6 space-y-5"
 		onsubmit={(event) => {
@@ -134,22 +128,6 @@
 			confirm();
 		}}
 	>
-		<div>
-			<label for="listing-price" class="mb-2 block text-sm font-medium text-gray-700"
-				>Prix de mise en vente (€)</label
-			>
-			<input
-				id="listing-price"
-				type="number"
-				min="0.01"
-				step="0.01"
-				required
-				bind:value={listingPrice}
-				disabled={saving}
-				placeholder="0,00"
-				class="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-			/>
-		</div>
 		<div>
 			<label for="stocking-place" class="mb-2 block text-sm font-medium text-gray-700"
 				>Lieu de stockage</label

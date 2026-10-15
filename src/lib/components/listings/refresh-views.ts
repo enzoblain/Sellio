@@ -1,6 +1,7 @@
 import {
 	getToCollectListings,
 	getStockListings,
+	getListedListings,
 	getToShipListings,
 	getShippedListings
 } from '$lib/remote/listings.remote';
@@ -10,6 +11,7 @@ export async function refreshListingViews(id: string) {
 	await Promise.all([
 		getToCollectListings().refresh(),
 		getStockListings().refresh(),
+		getListedListings().refresh(),
 		getToShipListings().refresh(),
 		getShippedListings().refresh(),
 		getDashboard().refresh(),
