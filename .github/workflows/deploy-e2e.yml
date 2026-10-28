@@ -24,4 +24,4 @@ jobs:
       - name: Update script, simulated docker
         run: bash deploy/nas/test-update.sh
       - name: Update script, real docker compose and PostgreSQL 17
-        run: bash deploy/nas/test-e2e.sh
+        run: SELLIO_E2E=1 bash scripts/test-update-e2e.sh

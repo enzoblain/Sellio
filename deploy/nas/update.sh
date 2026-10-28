@@ -54,8 +54,11 @@ failure() {
 }
 trap failure EXIT
 
-docker volume create sellio_nas_postgres_data >/dev/null
-docker volume create sellio_nas_images_data >/dev/null
+# Noms des volumes surchargeables uniquement par le test de bout en bout (scripts/test-update-e2e.sh).
+postgres_volume=${POSTGRES_VOLUME:-sellio_nas_postgres_data}
+images_volume=${IMAGES_VOLUME:-sellio_nas_images_data}
+docker volume create "$postgres_volume" >/dev/null
+docker volume create "$images_volume" >/dev/null
 compose up -d --wait db
 
 # 1. Sauvegarde, l'ancienne version reste en ligne. pg_dump 17 tourne dans le conteneur db.
@@ -65,7 +68,7 @@ mkdir "$backup"
 compose exec -T db pg_dump -U sellio -d sellio -Fc --no-owner > "$backup/database.dump"
 [[ -s "$backup/database.dump" ]] || { echo 'The database dump is empty.' >&2; exit 1; }
 docker run --rm --network none --user root --entrypoint tar \
-  -v sellio_nas_images_data:/data:ro "$target" -C /data -czf - . > "$backup/images.tar.gz"
+  -v "$images_volume":/data:ro "$target" -C /data -czf - . > "$backup/images.tar.gz"
 if [[ -f .state/deployed-image ]]; then cp .state/deployed-image "$backup/previous-image"; fi
 cp .env "$backup/config.env"
 partial=

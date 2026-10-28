@@ -2,14 +2,20 @@
 # Test de bout en bout de update.sh avec la vraie pile : docker compose, postgres:17-alpine, image construite
 # depuis le Dockerfile, registre local. Rejoue : installation, migration 0007 automatique, déjà à jour,
 # échec de migration (l'ancienne version reste en ligne), reprise avec --retry.
-# Nécessite docker, docker compose, flock. Utilise le port 2509, les volumes sellio_nas_* et le port 5000 : à ne PAS lancer sur le NAS.
-# Usage : bash deploy/nas/test-e2e.sh
+# Nécessite docker, docker compose, flock. Utilise des volumes sellio_e2e_*, le projet compose sellio-e2e et les
+# ports 25099 et 5000. Refuse de tourner sans SELLIO_E2E=1, ou si des volumes de prod (sellio_nas_*) existent.
+# Usage : SELLIO_E2E=1 bash scripts/test-update-e2e.sh
 set -Eeuo pipefail
 
-repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
+repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+[[ "${SELLIO_E2E:-}" == 1 ]] || { echo 'Refus : ce test crée et supprime des volumes Docker. Lancer avec SELLIO_E2E=1 sur une machine jetable (jamais le NAS).' >&2; exit 1; }
+for v in sellio_nas_postgres_data sellio_nas_images_data sellio_e2e_postgres_data sellio_e2e_images_data; do
+  ! docker volume inspect "$v" >/dev/null 2>&1 || { echo "Refus : le volume $v existe déjà (données à protéger)." >&2; exit 1; }
+done
 work="$(mktemp -d "${TMPDIR:-/tmp}/sellio-e2e.XXXXXX")"
 registry=localhost:5000
 export SELLIO_IMAGE="$registry/sellio:latest" SELLIO_IMAGE_PREFIX="$registry/"
+export COMPOSE_PROJECT_NAME=sellio-e2e POSTGRES_VOLUME=sellio_e2e_postgres_data IMAGES_VOLUME=sellio_e2e_images_data
 
 step() { printf '\n##### %s\n' "$*"; }
 fail() { echo "ÉCHEC : $*" >&2; exit 1; }
@@ -25,14 +31,14 @@ publish() { # publish N : construit une image distincte (étiquette) et la pouss
 }
 cleanup() {
   compose down -v --remove-orphans >/dev/null 2>&1 || true
-  docker volume rm -f sellio_nas_postgres_data sellio_nas_images_data >/dev/null 2>&1 || true
+  docker volume rm -f sellio_e2e_postgres_data sellio_e2e_images_data >/dev/null 2>&1 || true
   docker rm -f sellio-e2e-registry >/dev/null 2>&1 || true
   rm -rf "$work"
 }
 trap cleanup EXIT
 
 cp "$repo"/deploy/nas/{update.sh,compose.yml} "$work/"
-printf 'SELLIO_IMAGE=%s\nPOSTGRES_PASSWORD=%s\nORIGIN=http://localhost:2509\n' "$SELLIO_IMAGE" "$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')" >"$work/.env"
+printf 'SELLIO_IMAGE=%s\nPOSTGRES_PASSWORD=%s\nORIGIN=http://localhost:25099\nSELLIO_PORT=25099\n' "$SELLIO_IMAGE" "$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')" >"$work/.env"
 docker run -d --name sellio-e2e-registry -p 5000:5000 registry:2 >/dev/null
 
 step "0. Installation : image 1 sur une base vide (toutes les migrations)"
