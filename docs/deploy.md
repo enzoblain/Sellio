@@ -32,13 +32,10 @@ Avant toute publication de l'image (push sur `master`, `.github/workflows/publis
 
 Les sections suivantes décrivent les scripts `scripts/` pour une mise en prod pilotée à la main.
 
-## PR dev → master automatique
+## Releases dev → master
 
-À chaque push sur `dev`, le workflow `Open the dev to master PR` (`.github/workflows/open-release-pr.yml`) ouvre une PR `dev` → `master`, ou met à jour la description de celle qui est déjà ouverte (jamais de doublon). La description rappelle que le merge déclenche le déploiement automatique et liste les commits de `dev` absents de `master`. S'il n'y a rien à livrer, aucune PR n'est créée. Il reste à relire et accepter la PR.
+Aucun workflow ne crée la PR `dev` → `master`. Les releases passent par la proposition du lead : l'outil de release ouvre la PR et la soumet à Enzo en un clic. Un workflow `GITHUB_TOKEN` doublonnait ce flux, échouait à chaque push et risquait d'ouvrir une seconde PR : il a été retiré, et le réglage « Actions » associé n'est plus nécessaire.
 
-Le workflow n'utilise que le `GITHUB_TOKEN` (permissions `contents: read` et `pull-requests: write`), aucun secret ajouté, et aucune action tierce : il appelle seulement la CLI `gh` déjà présente sur le runner. Réglage requis une fois : Settings → Actions → General → « Allow GitHub Actions to create and approve pull requests ». Sans ce réglage, `gh pr create` répond 403 et le job échoue : le message d'erreur est alors repris en annotation du run (visible même sans accès aux logs). On peut aussi le lancer à la main (`workflow_dispatch`).
-
-Limite à connaître : une PR ouverte avec le `GITHUB_TOKEN` ne déclenche pas les workflows (règle de GitHub contre les boucles), donc aucun check CI ne tourne sur la PR `dev` → `master`. La protection vient du push sur `master` : le job `e2e` de `publish-nas.yml` doit passer avant la publication de l'image (`publish` en dépend), donc un code cassé n'est jamais publié. Si on ajoute un jour une protection de branche qui exige des checks, cette PR restera bloquée faute de checks. Une solution possible est de l'ouvrir avec un token d'application GitHub (qui, lui, déclenche les workflows) ; à décider le moment venu.
 
 ## Prérequis
 
