@@ -18,8 +18,34 @@ jobs:
     if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/deploy-e2e.yml
 
+  test:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  lint:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
   publish:
-    needs: e2e
+    needs: [e2e, test, lint]
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     services:
