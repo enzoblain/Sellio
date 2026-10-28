@@ -58,7 +58,8 @@
 						<Button
 							onclick={() => openTransition(item.id)}
 							aria-label={`Enregistrer la vente de ${item.brand} ${item.model}`}
-							class="px-3 shadow-sm">✓ Valider</Button
+							size="sm"
+							class="shadow-sm">✓ Valider</Button
 						>
 					{/snippet}
 					<h2 class="font-medium text-fg">{item.brand} · {item.model}</h2>

@@ -52,7 +52,8 @@
 						aria-controls={`stack-${group.articles[0].id}`}
 						aria-label={`${open ? 'Replier' : 'Déplier'} les ${group.articles.length} articles`}
 						title={open ? 'Replier la pile' : 'Déplier la pile'}
-						class="px-2.5 shadow-sm"
+						size="sm"
+						class="shadow-sm"
 					>
 						<span aria-hidden="true">▱ {group.articles.length} {open ? '↑' : '↓'}</span>
 					</Button>

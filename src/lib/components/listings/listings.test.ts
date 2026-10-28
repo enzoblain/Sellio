@@ -1,11 +1,16 @@
 import { render, screen } from '@testing-library/svelte';
+import { createRawSnippet } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/stock') } }));
 vi.mock('$app/paths', () => ({ resolve: (path: string) => path }));
 
 import Navbar from '$lib/components/layout/Navbar.svelte';
+import ListingCard from './ListingCard.svelte';
 import Stat from './Stat.svelte';
+
+vi.mock('./ListingEditor.svelte', () => ({ default: () => {} }));
+vi.mock('$lib/components/images/ListingGallery.svelte', () => ({ default: () => {} }));
 
 describe('Stat', () => {
 	it('affiche libellé, valeur et ton', () => {
@@ -46,5 +51,37 @@ describe('Navbar', () => {
 		const toggles = await screen.findAllByRole('button', { name: /thème/ });
 		expect(toggles).toHaveLength(2);
 		for (const toggle of toggles) expect(toggle.closest('.fixed.right-2')).toBeNull();
+	});
+});
+
+describe('ListingCard', () => {
+	const text = (value: string) =>
+		createRawSnippet(() => ({ render: () => `<span>${value}</span>` }));
+	const item = { id: 'a1', brand: 'Nike', model: 'Air' };
+
+	it('rend le contenu, l’action à côté de la pile, et omet footer/extra par défaut', () => {
+		const { container } = render(ListingCard, {
+			item,
+			stackButton: text('PILE'),
+			action: text('ACTION'),
+			children: text('CORPS')
+		});
+		expect(screen.getByText('CORPS')).toBeInTheDocument();
+		const action = screen.getByText('ACTION').parentElement!;
+		expect(action).toBe(screen.getByText('PILE').parentElement);
+		expect(container.querySelectorAll('.border-t')).toHaveLength(0);
+	});
+
+	it('affiche footer et extra seulement s’ils sont fournis', () => {
+		const { container } = render(ListingCard, {
+			item,
+			stackButton: text('PILE'),
+			children: text('CORPS'),
+			footer: text('FOOTER'),
+			extra: text('EXTRA')
+		});
+		expect(screen.getByText('FOOTER')).toBeInTheDocument();
+		expect(screen.getByText('EXTRA')).toBeInTheDocument();
+		expect(container.querySelectorAll('.border-t')).toHaveLength(2);
 	});
 });

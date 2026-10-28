@@ -46,8 +46,8 @@
 							onclick={() => markShipped(item.id)}
 							disabled={pendingIds.includes(item.id)}
 							aria-label={`Marquer comme expédié : ${item.brand} ${item.model}`}
-							class="px-3 shadow-sm"
-							>{pendingIds.includes(item.id) ? 'Validation…' : '✓ Expédié'}</Button
+							size="sm"
+							class="shadow-sm">{pendingIds.includes(item.id) ? 'Validation…' : '✓ Expédié'}</Button
 						>
 					{/snippet}
 					<p class="mb-2 font-mono text-sm font-semibold tracking-widest text-fg">
