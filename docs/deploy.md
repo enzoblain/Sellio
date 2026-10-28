@@ -34,7 +34,7 @@ Les sections suivantes décrivent les scripts `scripts/` pour une mise en prod p
 
 ## Releases dev → master
 
-Aucun workflow ne crée la PR `dev` → `master`. Les releases passent par la proposition du lead : l'outil de release ouvre la PR et la soumet à Enzo en un clic. Un workflow `GITHUB_TOKEN` doublonnait ce flux, échouait à chaque push et risquait d'ouvrir une seconde PR : il a été retiré, et le réglage « Actions » associé n'est plus nécessaire.
+Aucun workflow ne crée la PR `dev` → `master`. Les releases passent par la proposition du lead : l'outil de release ouvre la PR et la soumet à Enzo en un clic. Un workflow `GITHUB_TOKEN` doublonnait ce flux, échouait à chaque push et risquait d'ouvrir une seconde PR : il a été retiré.
 
 
 ## Prérequis
