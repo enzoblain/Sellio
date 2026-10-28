@@ -18,12 +18,22 @@
 	// Mode navigation : chaque onglet est une route, l'actif est donné par `value`.
 	const navigation = $derived(tabs.length > 0 && tabs.every((tab) => tab.href !== undefined));
 	const tabClass = (selected: boolean) =>
-		`-mb-px flex min-h-11 items-center border-b-2 px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+		`flex min-h-11 shrink-0 items-center border-b-2 px-3 whitespace-nowrap md:px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
 			selected ? 'border-accent text-fg' : 'border-transparent text-fg-muted hover:text-fg'
 		}`;
 
 	const uid = $props.id();
 	let list = $state<HTMLElement>();
+	let nav = $state<HTMLElement>();
+
+	// Sur mobile la barre défile : l'onglet actif doit rester visible.
+	$effect(() => {
+		if (!nav || !value) return;
+		const active = nav.querySelector<HTMLElement>('[aria-current="page"]');
+		if (!active) return;
+		const left = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+		nav.scrollLeft = Math.max(0, left);
+	});
 
 	function select(id: string) {
 		value = id;
@@ -44,7 +54,11 @@
 </script>
 
 {#if navigation}
-	<nav aria-label={label} class="flex gap-1 border-b border-border">
+	<nav
+		bind:this={nav}
+		aria-label={label}
+		class="flex [scrollbar-width:none] gap-1 overflow-x-auto overflow-y-hidden border-b border-border [&::-webkit-scrollbar]:hidden"
+	>
 		{#each tabs as tab (tab.id)}
 			{@const selected = tab.id === value}
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href déjà résolu par l'appelant -->
@@ -63,7 +77,7 @@
 		aria-label={label}
 		tabindex="-1"
 		{onkeydown}
-		class="flex gap-1 border-b border-border"
+		class="flex [scrollbar-width:none] gap-1 overflow-x-auto overflow-y-hidden border-b border-border [&::-webkit-scrollbar]:hidden"
 	>
 		{#each tabs as tab (tab.id)}
 			{@const selected = tab.id === value}
@@ -75,7 +89,7 @@
 				aria-controls="{uid}-panel-{tab.id}"
 				tabindex={selected ? 0 : -1}
 				onclick={() => select(tab.id)}
-				class="-mb-px min-h-11 border-b-2 px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none {selected
+				class="min-h-11 shrink-0 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:px-4 {selected
 					? 'border-accent text-fg'
 					: 'border-transparent text-fg-muted hover:text-fg'}"
 			>

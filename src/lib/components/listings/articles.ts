@@ -43,6 +43,7 @@ export type ArticleFilters = {
 	sort: SortKey;
 	places: string[];
 	brands: string[];
+	models: string[];
 };
 
 export const NO_PLACE = 'Non renseigné';
@@ -109,7 +110,8 @@ export function filterArticles<T extends Article>(
 		(item) =>
 			matchesQuery(item, filters.q) &&
 			(filters.places.length === 0 || filters.places.includes(item.stockingPlace ?? NO_PLACE)) &&
-			(filters.brands.length === 0 || filters.brands.includes(item.brand))
+			(filters.brands.length === 0 || filters.brands.includes(item.brand)) &&
+			(filters.models.length === 0 || filters.models.includes(item.model))
 	);
 }
 
@@ -149,7 +151,8 @@ export function filtersFromParams(params: URLSearchParams, status?: ArticleStatu
 		sort: allowed.includes(sort) ? sort : 'recent',
 		// Pas de stockage avant la récupération : le filtre n'a pas de sens (et serait invisible).
 		places: status === 'to-collect' ? [] : params.getAll('place'),
-		brands: params.getAll('brand')
+		brands: params.getAll('brand'),
+		models: params.getAll('model')
 	};
 }
 
@@ -159,5 +162,6 @@ export function paramsFromFilters(filters: ArticleFilters) {
 	if (filters.sort !== 'recent') params.set('sort', filters.sort);
 	for (const place of filters.places) params.append('place', place);
 	for (const brand of filters.brands) params.append('brand', brand);
+	for (const model of filters.models) params.append('model', model);
 	return params;
 }

@@ -60,7 +60,7 @@ describe('recherche', () => {
 });
 
 describe('filtres', () => {
-	const none = { q: '', places: [], brands: [] };
+	const none = { q: '', places: [], brands: [], models: [] };
 
 	it('sans filtre, tout passe', () => {
 		expect(filterArticles(items, none)).toHaveLength(3);
@@ -79,9 +79,16 @@ describe('filtres', () => {
 		]);
 	});
 
+	it('filtre par modèle', () => {
+		expect(
+			filterArticles(items, { ...none, models: ['Air Max', 'Dunk'] }).map((i) => i.id)
+		).toEqual(['2', '1']);
+		expect(filterArticles(items, { ...none, brands: ['Adidas'], models: ['Dunk'] })).toEqual([]);
+	});
+
 	it('combine recherche et filtres', () => {
 		expect(
-			filterArticles(items, { q: 'max', places: [], brands: ['Nike'] }).map((i) => i.id)
+			filterArticles(items, { q: 'max', places: [], brands: ['Nike'], models: [] }).map((i) => i.id)
 		).toEqual(['2']);
 	});
 });
@@ -126,13 +133,16 @@ describe('piles', () => {
 });
 
 describe('URL', () => {
-	it('lit q, sort, place et brand', () => {
-		const params = new URLSearchParams('q=nike&sort=price-asc&place=Cave&place=Garage&brand=Nike');
+	it('lit q, sort, place, brand et model', () => {
+		const params = new URLSearchParams(
+			'q=nike&sort=price-asc&place=Cave&place=Garage&brand=Nike&model=Dunk'
+		);
 		expect(filtersFromParams(params, 'stock')).toEqual({
 			q: 'nike',
 			sort: 'price-asc',
 			places: ['Cave', 'Garage'],
-			brands: ['Nike']
+			brands: ['Nike'],
+			models: ['Dunk']
 		});
 	});
 
@@ -143,7 +153,13 @@ describe('URL', () => {
 	});
 
 	it('aller-retour, et rien dans l’URL par défaut', () => {
-		const filters = { q: 'a b', sort: 'price-desc' as const, places: ['Cave'], brands: ['Nike'] };
+		const filters = {
+			q: 'a b',
+			sort: 'price-desc' as const,
+			places: ['Cave'],
+			brands: ['Nike'],
+			models: ['Air Max']
+		};
 		expect(filtersFromParams(paramsFromFilters(filters), 'stock')).toEqual(filters);
 		expect(paramsFromFilters(filtersFromParams(new URLSearchParams())).toString()).toBe('');
 	});
