@@ -1,0 +1,27 @@
+name: Deployment end-to-end
+
+on:
+  pull_request:
+    paths:
+      - 'deploy/**'
+      - 'scripts/**'
+      - 'drizzle/**'
+      - 'Dockerfile'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Shellcheck
+        run: shellcheck -x deploy/nas/*.sh scripts/*.sh
+      - name: Update script, simulated docker
+        run: bash deploy/nas/test-update.sh
+      - name: Update script, real docker compose and PostgreSQL 17
+        run: SELLIO_E2E=1 bash scripts/test-update-e2e.sh

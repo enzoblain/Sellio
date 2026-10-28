@@ -39,6 +39,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - name: Test the NAS update script
+        run: bash deploy/nas/test-update.sh
       - run: npm run db:setup
         env:
           DATABASE_URL: postgres://sellio:ci_test_only@localhost:5432/sellio_test
