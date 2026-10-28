@@ -28,6 +28,8 @@ app_health() { docker inspect --format '{{.State.Health.Status}}' "$(compose ps 
 publish() { # publish N : construit une image distincte (étiquette) et la pousse sur le registre local
   docker build -q --label "e2e=$1" -t "$SELLIO_IMAGE" "$repo" >/dev/null
   docker push -q "$SELLIO_IMAGE" >/dev/null
+  published=$(docker image inspect --format '{{index .RepoDigests 0}}' "$SELLIO_IMAGE") # digest réel de l'image publiée
+  [[ "$published" == "$registry/sellio@sha256:"* ]] || fail "digest de l'image $1 introuvable"
 }
 cleanup() {
   compose down -v --remove-orphans >/dev/null 2>&1 || true
@@ -54,8 +56,9 @@ sql <"$repo/drizzle/rollback/0007_add_parcels.down.sql" >/dev/null
 sql -c "INSERT INTO brands (name) VALUES ('AvantMigration') RETURNING 1" >/dev/null
 before=$(backups)
 publish 2
+image2=$published
 update
-image2=$(cat "$work/.state/deployed-image")
+[[ "$(cat "$work/.state/deployed-image")" == "$image2" ]] || fail "deployed-image différent du digest publié (image 2)"
 [[ "$(sql -c "SELECT to_regclass('public.parcels') IS NOT NULL")" == t ]] || fail "0007 non appliquée"
 [[ "$(sql -c 'SELECT count(*) FROM carriers')" == 4 ]] || fail "transporteurs absents"
 [[ "$(sql -c "SELECT count(*) FROM brands WHERE name='AvantMigration'")" == 1 ]] || fail "donnée perdue"
@@ -78,11 +81,13 @@ sql -c 'CREATE TABLE carriers (id int)' >/dev/null
 old_container=$(compose ps -q app)
 before=$(backups)
 publish 3
+image3=$published
+[[ "$image3" != "$image2" ]] || fail "les images 2 et 3 ont le même digest"
 if update >"$work/out.log" 2>&1; then cat "$work/out.log"; fail "update.sh aurait dû échouer"; fi
 cat "$work/out.log"
 [[ "$(compose ps -q app)" == "$old_container" && "$(app_image)" == "$image2" && "$(app_health)" == healthy ]] || fail "l'ancienne version n'est plus en ligne"
 [[ "$(cat "$work/.state/deployed-image")" == "$image2" ]] || fail "deployed-image modifié"
-[[ "$(cat "$work/.state/failed-image")" != "$image2" ]] || fail "image en échec non marquée"
+[[ "$(cat "$work/.state/failed-image")" == "$image3" ]] || fail "failed-image différent du digest publié (image 3)"
 grep -qi 'already exists' "$work/.state/last-error.log" || fail "erreur de migration absente de last-error.log"
 (( $(backups) == before + 1 )) || fail "la sauvegarde d'avant migration aurait dû être conservée"
 echo "OK : ancienne version toujours en ligne ($(app_image)), échec visible"
@@ -92,7 +97,7 @@ if update >"$work/out.log" 2>&1; then fail "une image en échec ne doit pas êtr
 sql -c 'DROP TABLE carriers' >/dev/null
 update --retry
 [[ "$(sql -c "SELECT to_regclass('public.parcels') IS NOT NULL")" == t && "$(app_health)" == healthy ]] || fail "reprise incomplète"
-[[ "$(cat "$work/.state/deployed-image")" != "$image2" ]] || fail "image 3 non déployée"
+[[ "$(cat "$work/.state/deployed-image")" == "$image3" ]] || fail "deployed-image différent du digest publié (image 3)"
 [[ ! -e "$work/.state/failed-image" ]] || fail "failed-image aurait dû être effacé"
 echo OK
 

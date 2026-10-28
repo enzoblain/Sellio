@@ -26,6 +26,7 @@ exit 0
 STUB
 cat >"$work/bin/flock" <<'STUB'
 #!/usr/bin/env bash
+[[ -z "${REAL_FLOCK:-}" ]] || exec "$REAL_FLOCK" "$@"
 exit 0
 STUB
 cp "$work/bin/docker" "$work/docker.full"
@@ -121,6 +122,22 @@ bash "$work/site/restore.sh" --yes "$work/site/backups/x" >/dev/null 2>&1 && fai
 grep -q psql "$STUB_LOG" && fail "psql lancé malgré l'échec de pg_restore"
 grep -q 'stop app' "$STUB_LOG" && fail "app arrêtée malgré l'échec de pg_restore"
 cp "$work/docker.full" "$work/bin/docker"
+echo OK
+
+echo '##### 5c. Restauration refusée si update.sh tient le verrou'
+reset
+cp "$src/restore.sh" "$work/site/"
+mkdir -p "$work/site/backups/x" "$work/site/.state"
+echo DUMP >"$work/site/backups/x/database.dump"
+: >"$STUB_LOG"
+(
+  export REAL_FLOCK=/usr/bin/flock
+  exec 8>"$work/site/.state/update.lock"
+  /usr/bin/flock -n 8
+  bash "$work/site/restore.sh" --yes "$work/site/backups/x" >/dev/null 2>&1 && exit 1
+  exit 0
+) || fail "restore.sh aurait dû être refusé pendant une mise à jour"
+[[ ! -s "$STUB_LOG" ]] || fail "docker appelé malgré le verrou"
 echo OK
 
 echo '##### 6. Rétention : seules les 10 plus récentes sont gardées'

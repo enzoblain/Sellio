@@ -14,7 +14,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  e2e:
+    if: github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/deploy-e2e.yml
+
   publish:
+    needs: e2e
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     services:

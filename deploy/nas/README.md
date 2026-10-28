@@ -64,7 +64,13 @@ bash update.sh --retry
 
 Une nouvelle image peut aussi être déployée après correction du code. Seules les 10 dernières sauvegardes sont conservées : copier celles à garder vers un autre support. Elles contiennent les données et le mot de passe de la base ; conserver leurs permissions privées.
 
-Revenir à une ancienne image ne restaure pas le schéma de la base. En cas de restauration, arrêter l’application, lancer `bash restore.sh backups/<date>` (il vide les schémas avant de rejouer le dump, via le conteneur `db`, après confirmation ; `pg_restore --clean` seul laisserait les tables d’une migration récente), restaurer les photos de `images.tar.gz` si besoin, puis relancer l’image indiquée dans `previous-image`. Ne pas restaurer automatiquement une sauvegarde : cela peut perdre les données ajoutées depuis.
+Revenir à une ancienne image ne restaure pas le schéma de la base. En cas de restauration, commencer par **mettre en pause la tâche planifiée** : sinon, dans les 5 minutes, elle redéploie `latest` et rejoue ses migrations sur la base restaurée, ce qui annule le retour arrière (`restore.sh` refuse de tourner pendant un `update.sh`, mais ne protège pas ce qui suit). Ne la réactiver qu’une fois la cause corrigée et une nouvelle image publiée. Ensuite, arrêter l’application, lancer `bash restore.sh backups/<date>` (il vide les schémas avant de rejouer le dump, via le conteneur `db`, après confirmation ; `pg_restore --clean` seul laisserait les tables d’une migration récente), restaurer les photos de `images.tar.gz` si besoin, puis redéployer l’image indiquée dans `previous-image` (digest `ghcr.io/…@sha256:…`) :
+
+```bash
+SELLIO_IMAGE=$(cat backups/<date>/previous-image) bash update.sh --retry
+```
+
+La variable d’environnement l’emporte sur `SELLIO_IMAGE` de `.env`, qui n’est pas modifié : tant que la tâche planifiée est en pause, rien ne remplace cette image. `--retry` est nécessaire si cette image est marquée en échec ; l’application étant arrêtée, le script ne la considère pas à jour. Il fait d’abord une nouvelle sauvegarde (de la base restaurée). Ne pas restaurer automatiquement une sauvegarde : cela peut perdre les données ajoutées depuis.
 
 ## Données présentes sur l’ordinateur
 
