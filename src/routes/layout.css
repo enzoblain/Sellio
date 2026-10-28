@@ -43,6 +43,8 @@
 	--danger: #dc2626;
 	--ring: color-mix(in srgb, var(--accent) 40%, transparent);
 	--overlay: rgb(9 9 11 / 0.4);
+	/* Fond des codes-barres : clair dans les deux thèmes pour rester scannable. */
+	--scan: #ffffff;
 
 	--chart-revenue: var(--success);
 	--chart-purchases: var(--accent);
@@ -91,6 +93,7 @@
 	--color-danger: var(--danger);
 	--color-ring: var(--ring);
 	--color-overlay: var(--overlay);
+	--color-scan: var(--scan);
 
 	--color-chart-revenue: var(--chart-revenue);
 	--color-chart-purchases: var(--chart-purchases);

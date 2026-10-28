@@ -4,6 +4,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/stock') } }));
 vi.mock('$app/paths', () => ({ resolve: (path: string) => path }));
+const parcels = vi.hoisted(() => ({ current: undefined as unknown[] | undefined }));
+vi.mock('$lib/remote/parcels.remote', () => ({
+	getParcelsToCollect: () => ({
+		get current() {
+			return parcels.current;
+		}
+	})
+}));
 
 import Navbar from '$lib/components/layout/Navbar.svelte';
 import ListingCard from './ListingCard.svelte';
@@ -28,19 +36,29 @@ describe('Stat', () => {
 });
 
 describe('Navbar', () => {
-	it('liste les 3 sections et le bouton Nouvel article, Articles actif sur /stock', () => {
+	it('liste les 4 sections et le bouton Nouvel article, Articles actif sur /stock', () => {
 		window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as never;
 		const { container } = render(Navbar);
 		const labels = [...container.querySelectorAll('nav')[0].querySelectorAll('a')].map((a) =>
 			a.textContent?.trim()
 		);
-		expect(labels).toEqual(['Nouvel article', 'Tableau de bord', 'Articles', 'Dépenses']);
+		expect(labels).toEqual(['Nouvel article', 'Tableau de bord', 'Articles', 'Colis', 'Dépenses']);
 		const articles = screen.getAllByRole('link', { name: 'Articles' })[0];
 		expect(articles).toHaveClass('bg-surface-2');
 		expect(articles).toHaveAttribute('aria-current', 'page');
 		expect(screen.getAllByRole('link', { name: 'Dépenses' })[0]).not.toHaveAttribute(
 			'aria-current'
 		);
+	});
+
+	it('affiche le compteur de colis à récupérer', () => {
+		parcels.current = [{}, {}];
+		render(Navbar);
+		expect(screen.getAllByTestId('parcel-count').map((el) => el.textContent?.trim())).toEqual([
+			'Colis à récupérer :2',
+			'Colis à récupérer :2'
+		]);
+		parcels.current = undefined;
 	});
 
 	it('la barre latérale se replie et mémorise son état', async () => {
