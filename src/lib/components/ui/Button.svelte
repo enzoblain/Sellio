@@ -38,7 +38,7 @@
 {/snippet}
 
 {#if href !== undefined}
-	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href déjà résolu par l'appelant -->
+	<!-- eslint-disable svelte/no-navigation-without-resolve -- href déjà résolu par l'appelant -->
 	<a
 		{href}
 		class="{base} {sizes[size]} {variants[variant]} {className}"
@@ -46,6 +46,7 @@
 	>
 		{@render content()}
 	</a>
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 {:else}
 	<button
 		type="button"
