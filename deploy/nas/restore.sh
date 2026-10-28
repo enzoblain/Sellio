@@ -13,6 +13,11 @@ dump="${1%/}/database.dump"
 [[ -f .env ]] || { echo 'Create .env from .env.example first.' >&2; exit 1; }
 compose() { docker compose --env-file .env -f compose.yml "$@"; }
 
+# Même verrou qu'update.sh : pas de restauration pendant une mise à jour, ni l'inverse.
+mkdir -p .state
+exec 9>.state/update.lock
+flock -n 9 || { echo 'update.sh is running: wait for it to finish, then retry.' >&2; exit 1; }
+
 if (( yes == 0 )); then
   [[ -t 0 ]] || { echo 'No terminal to confirm: use --yes.' >&2; exit 1; }
   printf 'The database will be REPLACED by %s. Data added since is lost.\nType "oui" to continue: ' "$dump"
