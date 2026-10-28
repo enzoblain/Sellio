@@ -30,6 +30,12 @@ Tests : `deploy/nas/test-update.sh` simule docker (rapide) ; `scripts/test-updat
 
 Les sections suivantes décrivent les scripts `scripts/` pour une mise en prod pilotée à la main.
 
+## PR dev → master automatique
+
+À chaque push sur `dev`, le workflow `Open the dev to master PR` (`.github/workflows/open-release-pr.yml`) ouvre une PR `dev` → `master`, ou met à jour la description de celle qui est déjà ouverte (jamais de doublon). La description rappelle que le merge déclenche le déploiement automatique et liste les commits de `dev` absents de `master`. S'il n'y a rien à livrer, aucune PR n'est créée. Il reste à relire et accepter la PR.
+
+Le workflow n'utilise que le `GITHUB_TOKEN` (permissions `contents: read` et `pull-requests: write`), aucun secret ajouté, et aucune action tierce : il appelle seulement la CLI `gh` déjà présente sur le runner. Réglage requis une fois : Settings → Actions → General → « Allow GitHub Actions to create and approve pull requests ». On peut aussi le lancer à la main (`workflow_dispatch`).
+
 ## Prérequis
 
 - `psql`, `pg_dump` et `pg_restore` (client PostgreSQL dont la version majeure est la même que celle du serveur : 17 en prod) et `npm` (dépendances installées avec `npm ci`).
