@@ -99,17 +99,21 @@
 	}
 </script>
 
+<!-- Un dépôt raté ne doit pas faire ouvrir l'image et perdre le formulaire -->
+<svelte:window ondragover={(e) => e.preventDefault()} ondrop={(e) => e.preventDefault()} />
+
 <section
 	class="space-y-3 rounded-lg border-2 border-dashed p-3 {dragging
 		? 'border-accent bg-surface-2'
 		: 'border-transparent'}"
 	aria-label="Zone de dépôt des photos"
 	ondragover={(event) => {
-		if (disabled || busy) return;
 		event.preventDefault();
-		dragging = true;
+		dragging = !disabled && !busy;
 	}}
-	ondragleave={() => (dragging = false)}
+	ondragleave={(event) => {
+		if (!event.currentTarget.contains(event.relatedTarget as Node | null)) dragging = false;
+	}}
 	ondrop={drop}
 >
 	<div class="flex flex-wrap items-center justify-between gap-3">

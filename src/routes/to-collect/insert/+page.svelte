@@ -3,6 +3,7 @@
 	import PhotoPicker from '$lib/components/images/PhotoPicker.svelte';
 	import { photoForm, type PhotoDraft } from '$lib/components/images/photo-draft';
 	import { refreshListingViews } from '$lib/components/listings/refresh-views';
+	import { tick } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -125,6 +126,8 @@
 				cover = null;
 				createdId = null;
 				resetKey++;
+				await tick();
+				document.getElementById('size')?.focus();
 			} else await goto(resolve('/to-collect'));
 		} catch {
 			errorMessage = createdId
