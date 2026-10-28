@@ -124,6 +124,7 @@ Données saisies : marque, modèle, taille, couleur (autocomplete, 5 suggestions
 - Mêmes données que `/to-ship` sans la référence ni l'action (seul le bouton de pile est présent). Vide : « Aucun article expédié. »
 
 ### 4.8 `/expenses` — Dépenses (P2)
+- (UX v2, #18) Tableau dense Date / Catégorie / Nom / Montant, recherche (nom ou catégorie), filtre par catégories en chips et total de la sélection en haut ; barre d'outils collante avec « + Ajouter » toujours visible ; Toast « Dépense ajoutée » après ajout. Date absente = « — » (infobulle « Date non renseignée »). Autres règles ci-dessous inchangées.
 - Liste triée par date de création décroissante : badge catégorie, nom, prix, date (`fr-FR`, fuseau Europe/Paris) ou « Date non renseignée ».
 - Bouton « + Ajouter » → modale « Ajouter une dépense » : catégorie (autocomplete, création possible), nom, prix (€, ≥ 0,01). Bouton désactivé tant que invalide ; « Ajout… » pendant l'envoi ; erreur « Impossible d'ajouter la dépense… ». Le formulaire est réinitialisé à chaque ouverture.
 - Un même nom peut exister dans des catégories différentes. Après ajout : liste et dashboard rafraîchis.
