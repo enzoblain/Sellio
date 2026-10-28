@@ -16,6 +16,7 @@
 		],
 		moon: ['M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z'],
 		articles: ['M4 7.5 12 3l8 4.5v9L12 21l-8-4.5Z', 'm4 7.5 8 4.5 8-4.5M12 12v9'],
+		parcel: ['M7 8.5v4', 'M11 8.5v4', 'M14 8.5v4', 'M17 8.5v4'],
 		plus: ['M12 5v14M5 12h14'],
 		search: ['m20 20-3.5-3.5'],
 		close: ['M6 6l12 12M18 6 6 18'],
@@ -52,6 +53,8 @@
 		<rect x="3" y="9.5" width="12.5" height="11.5" rx="1.5" />
 	{:else if name === 'shipped'}
 		<rect x="3" y="7.5" width="18" height="13" rx="2" />
+	{:else if name === 'parcel'}
+		<rect x="3" y="5" width="18" height="14" rx="2" />
 	{:else if name === 'expenses'}
 		<circle cx="12" cy="12" r="8.5" />
 	{:else if name === 'search'}
