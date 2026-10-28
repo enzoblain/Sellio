@@ -1,21 +1,27 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { HTMLButtonAttributes } from 'svelte/elements';
+	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
-	type Props = HTMLButtonAttributes & {
+	type Common = {
 		variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
 		size?: 'sm' | 'md';
 		children: Snippet;
 	};
+	type Props =
+		| (HTMLButtonAttributes & Common & { href?: undefined })
+		| (HTMLAnchorAttributes & Common & { href: string });
 
 	let {
 		variant = 'primary',
 		size = 'md',
-		type = 'button',
+		href,
 		class: className = '',
 		children,
 		...rest
 	}: Props = $props();
+
+	const base =
+		'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none';
 
 	const sizes = { sm: 'px-3 py-2', md: 'px-4 py-2' };
 
@@ -27,12 +33,27 @@
 	};
 </script>
 
-<button
-	{type}
-	class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 {sizes[
-		size
-	]} {variants[variant]} {className}"
-	{...rest}
->
+{#snippet content()}
 	{@render children()}
-</button>
+{/snippet}
+
+{#if href !== undefined}
+	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href déjà résolu par l'appelant -->
+	<a
+		{href}
+		class="{base} {sizes[size]} {variants[variant]} {className}"
+		{...rest as HTMLAnchorAttributes}
+	>
+		{@render content()}
+	</a>
+{:else}
+	<button
+		type="button"
+		class="{base} {sizes[size]} {variants[
+			variant
+		]} disabled:cursor-not-allowed disabled:opacity-40 {className}"
+		{...rest as HTMLButtonAttributes}
+	>
+		{@render content()}
+	</button>
+{/if}
