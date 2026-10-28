@@ -30,7 +30,8 @@
 			(function () {
 				try {
 					var view = localStorage.getItem('articles-view');
-					if (view === 'list' || view === 'grid') document.documentElement.dataset.articlesView = view;
+					if (view === 'list' || view === 'grid')
+						document.documentElement.dataset.articlesView = view;
 				} catch (e) {}
 			})();
 		</script>

@@ -89,8 +89,9 @@
 
 	// Posée avant le premier rendu par app.html : pas de saut liste → grille au chargement.
 	const initialView = (): ArticleView =>
-		typeof document !== 'undefined' &&
-		document.documentElement.dataset.articlesView === 'grid' ? 'grid' : 'list';
+		typeof document !== 'undefined' && document.documentElement.dataset.articlesView === 'grid'
+			? 'grid'
+			: 'list';
 	let view = $state<ArticleView>(initialView());
 	const viewOptions = [
 		{ value: 'list', label: 'Liste' },

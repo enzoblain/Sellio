@@ -317,13 +317,11 @@ export const collectItem = command(
 				.update(listings)
 				.set({ stocking_place_id: placeId })
 				.where(eq(listings.id, listingId));
-			await tx
-				.insert(listingStatusHistory)
-				.values({
-					listing_id: listingId,
-					status: 6,
-					created_at: new Date(Math.max(Date.now(), (current?.created_at.getTime() ?? 0) + 1))
-				});
+			await tx.insert(listingStatusHistory).values({
+				listing_id: listingId,
+				status: 6,
+				created_at: new Date(Math.max(Date.now(), (current?.created_at.getTime() ?? 0) + 1))
+			});
 		});
 		await getToCollectListings().refresh();
 		await getDashboard().refresh();
