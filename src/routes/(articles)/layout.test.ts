@@ -187,6 +187,18 @@ describe('layout Articles', () => {
 		);
 	});
 
+	it('retire les modèles qui n’appartiennent plus aux marques cochées', async () => {
+		state.url = new URL('http://localhost/stock?brand=Nike&brand=Adidas&model=Mod%C3%A8le+2');
+		remote.data.stock = resource([row('1', 'Nike'), row('2', 'Adidas')]);
+		render(Layout, { children });
+		await openFilters();
+		const marques = screen.getByRole('group', { name: 'Filtrer par marque' });
+		await fireEvent.click(within(marques).getByRole('button', { name: 'Adidas' }));
+		await waitFor(() =>
+			expect(goto).toHaveBeenLastCalledWith('/stock?brand=Nike', expect.anything())
+		);
+	});
+
 	it('retire un filtre depuis son chip, ou tout via Réinitialiser', async () => {
 		state.url = new URL('http://localhost/stock?brand=Nike&model=Mod%C3%A8le+1&place=Cave');
 		render(Layout, { children });

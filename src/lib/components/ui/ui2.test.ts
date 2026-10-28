@@ -100,6 +100,13 @@ describe('Chip et FilterBar', () => {
 		expect(screen.getByRole('button', { name: 'Nike' })).toHaveAttribute('aria-pressed', 'true');
 	});
 
+	it('Chip removable : croix, sans aria-pressed', () => {
+		render(Chip, { removable: true, children: text('Nike') });
+		const chip = screen.getByRole('button', { name: 'Nike' });
+		expect(chip).not.toHaveAttribute('aria-pressed');
+		expect(chip.querySelector('svg')).not.toBeNull();
+	});
+
 	it('FilterBar bascule les sélections', async () => {
 		render(FilterBar, {
 			label: 'Marques',

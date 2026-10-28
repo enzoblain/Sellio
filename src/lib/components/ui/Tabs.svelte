@@ -25,6 +25,21 @@
 	const uid = $props.id();
 	let list = $state<HTMLElement>();
 	let nav = $state<HTMLElement>();
+	// Un fondu sur le bord droit signale d'autres onglets hors de l'écran.
+	let more = $state(false);
+	function measure(el: HTMLElement | undefined) {
+		more = !!el && el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+	}
+	$effect(() => {
+		const el = nav ?? list;
+		if (!el) return;
+		void tabs;
+		measure(el);
+		if (typeof ResizeObserver === 'undefined') return;
+		const observer = new ResizeObserver(() => measure(el));
+		observer.observe(el);
+		return () => observer.disconnect();
+	});
 
 	// Sur mobile la barre défile : l'onglet actif doit rester visible.
 	$effect(() => {
@@ -33,6 +48,7 @@
 		if (!active) return;
 		const left = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
 		nav.scrollLeft = Math.max(0, left);
+		measure(nav);
 	});
 
 	function select(id: string) {
@@ -53,49 +69,66 @@
 	}
 </script>
 
+{#snippet fade()}
+	<div
+		aria-hidden="true"
+		class="pointer-events-none absolute inset-y-0 right-0 z-20 w-8 bg-gradient-to-l from-bg to-transparent transition-opacity {more
+			? 'opacity-100'
+			: 'opacity-0'}"
+	></div>
+{/snippet}
+
 {#if navigation}
-	<nav
-		bind:this={nav}
-		aria-label={label}
-		class="flex [scrollbar-width:none] gap-1 overflow-x-auto overflow-y-hidden border-b border-border [&::-webkit-scrollbar]:hidden"
-	>
-		{#each tabs as tab (tab.id)}
-			{@const selected = tab.id === value}
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href déjà résolu par l'appelant -->
-			<a href={tab.href} aria-current={selected ? 'page' : undefined} class={tabClass(selected)}>
-				{tab.label}
-			</a>
-		{/each}
-	</nav>
+	<div class="relative border-b border-border">
+		<nav
+			bind:this={nav}
+			aria-label={label}
+			class="relative z-10 -mb-px flex [scrollbar-width:none] gap-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
+			onscroll={(e) => measure(e.currentTarget)}
+		>
+			{#each tabs as tab (tab.id)}
+				{@const selected = tab.id === value}
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href déjà résolu par l'appelant -->
+				<a href={tab.href} aria-current={selected ? 'page' : undefined} class={tabClass(selected)}>
+					{tab.label}
+				</a>
+			{/each}
+		</nav>
+		{@render fade()}
+	</div>
 	{#if children}
 		<div class="pt-4">{@render children(value)}</div>
 	{/if}
 {:else}
-	<div
-		bind:this={list}
-		role="tablist"
-		aria-label={label}
-		tabindex="-1"
-		{onkeydown}
-		class="flex [scrollbar-width:none] gap-1 overflow-x-auto overflow-y-hidden border-b border-border [&::-webkit-scrollbar]:hidden"
-	>
-		{#each tabs as tab (tab.id)}
-			{@const selected = tab.id === value}
-			<button
-				type="button"
-				role="tab"
-				id="{uid}-tab-{tab.id}"
-				aria-selected={selected}
-				aria-controls="{uid}-panel-{tab.id}"
-				tabindex={selected ? 0 : -1}
-				onclick={() => select(tab.id)}
-				class="min-h-11 shrink-0 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:px-4 {selected
-					? 'border-accent text-fg'
-					: 'border-transparent text-fg-muted hover:text-fg'}"
-			>
-				{tab.label}
-			</button>
-		{/each}
+	<div class="relative border-b border-border">
+		<div
+			bind:this={list}
+			role="tablist"
+			aria-label={label}
+			tabindex="-1"
+			{onkeydown}
+			class="relative z-10 -mb-px flex [scrollbar-width:none] gap-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
+			onscroll={(e) => measure(e.currentTarget)}
+		>
+			{#each tabs as tab (tab.id)}
+				{@const selected = tab.id === value}
+				<button
+					type="button"
+					role="tab"
+					id="{uid}-tab-{tab.id}"
+					aria-selected={selected}
+					aria-controls="{uid}-panel-{tab.id}"
+					tabindex={selected ? 0 : -1}
+					onclick={() => select(tab.id)}
+					class="min-h-11 shrink-0 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:px-4 {selected
+						? 'border-accent text-fg'
+						: 'border-transparent text-fg-muted hover:text-fg'}"
+				>
+					{tab.label}
+				</button>
+			{/each}
+		</div>
+		{@render fade()}
 	</div>
 	{#if children}
 		<div

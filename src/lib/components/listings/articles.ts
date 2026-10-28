@@ -46,6 +46,8 @@ export type ArticleFilters = {
 	models: string[];
 };
 
+export type FilterKey = 'places' | 'brands' | 'models';
+
 export const NO_PLACE = 'Non renseigné';
 
 export function statusFromPath(pathname: string): ArticleStatus | undefined {
