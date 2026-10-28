@@ -83,6 +83,8 @@ Layout commun (`+layout.svelte`) : navigation `Navbar`.
 
 ## 4. Écrans, par priorité de refonte
 
+<!-- prettier-ignore-start -->
+
 Ordre proposé : du plus transverse (briques réutilisées) au plus isolé, en gardant le dashboard pour la fin car il dépend des données de tous les autres.
 
 | Priorité | Écran / brique                                                                                     | Justification                                                                      |
@@ -112,30 +114,30 @@ Données saisies : marque, modèle, taille, couleur (autocomplete, 5 suggestions
 
 ### 4.3 `/to-collect` — À récupérer (P1)
 
-- En-tête : titre + bouton « + Ajouter » → `/to-collect/insert`.
+- En-tête (commun aux 5 statuts, #16) : titre « Articles », onglets de statut, bouton « + Ajouter » → `/to-collect/insert`. Le détail d'un article s'ouvre dans le panneau latéral (§ Panneau latéral d'article).
 - Carte : galerie, marque · modèle, taille · couleur, « Prix acheté », « Port : X ».
 - Inclut les articles sans historique de statut.
-- Action « ✓ Valider » → modale « Récupérer l'article » : champ « Lieu de stockage » (autocomplete, obligatoire, création possible). Valider → statut En stock, lieu enregistré. Erreur si l'article n'est plus à récupérer. Vide : « Aucune commande à récupérer. »
+- Action « Récupéré » → modale « Récupérer l'article » : champ « Lieu de stockage » (autocomplete, obligatoire, création possible). Valider → statut En stock, lieu enregistré, toast « {article} récupéré, placé en stock. ». Erreur si l'article n'est plus à récupérer. Vide : « Aucune commande à récupérer. »
 
 ### 4.4 `/stock` — Stock (P1)
 
 - Carte : + « Stockage : X » (ou « Non renseigné »), « Achat total » (achat + port).
-- Action « ✓ Valider » → modale « Mettre l'article en vente » : « Prix de mise en vente (€) » ≥ 0,01. Valider → statut En vente. Erreur si l'article n'est plus en stock ou sans lieu. Vide : « Aucun article en stock. »
+- Action « Mettre en vente » → modale « Mettre l'article en vente » : « Prix de mise en vente (€) » ≥ 0,01. Valider → statut En vente. Erreur si l'article n'est plus en stock ou sans lieu. Vide : « Aucun article en stock. »
 
 ### 4.5 `/listed` — En vente (P1)
 
 - Carte : stockage, « Achat total », « Prix de vente » (— si absent).
-- Action « ✓ Valider » → modale « Enregistrer la vente » : « Prix vendu (€) » ≥ 0,01. Valider → statut À expédier, génération (ou réutilisation) d'un code de référence unique, affiché en grand dans la modale « Vente enregistrée » avec bouton « Fermer ».
+- Action « Vendu » → modale « Enregistrer la vente » : « Prix vendu (€) » ≥ 0,01. Valider → statut À expédier, génération (ou réutilisation) d'un code de référence unique, affiché en grand dans la modale « Vente enregistrée » avec bouton « Fermer ».
 - Garde-fous serveur : article encore en vente, prix de mise en vente et stockage renseignés. Vide : « Aucun article en vente. »
 
 ### 4.6 `/to-ship` — À expédier (P2)
 
 - Carte : « Réf. {code} » (ou « Non renseignée »), stockage, « Achat total », « Prix vendu », « Bénéfice » (vendu − achat total, rouge si négatif, vert sinon), « Multiplicateur » (×N, 2 décimales max, — si achat total nul avec infobulle explicative).
-- Action « ✓ Expédié » directe (sans modale) : désactivée et « Validation… » pendant l'appel ; erreur affichée en haut de page. Garde-fous serveur : statut À expédier, prix vendu, prix de mise en vente et stockage. Vide : « Aucun article à expédier. »
+- Action « Expédié » directe (sans modale) : désactivée et « Validation… » pendant l'appel ; toast « {article} expédié. » ; erreur affichée en haut de page. Garde-fous serveur : statut À expédier, prix vendu, prix de mise en vente et stockage. Vide : « Aucun article à expédier. »
 
 ### 4.7 `/shipped` — Expédié (P2)
 
-- Mêmes données que `/to-ship` sans la référence ni l'action (seul le bouton de pile est présent). Vide : « Aucun article expédié. »
+- Mêmes données que `/to-ship` sans la référence ni l'action (seul le bouton de pile est présent). Vide : « Aucun article expédié. » (Recherche sans résultat : « Aucun article ne correspond à ta recherche. »)
 
 ### 4.8 `/expenses` — Dépenses (P2)
 
@@ -170,6 +172,8 @@ Blocs :
 7. Note de bas de page : règles de comptage + avertissements conditionnels (ventes sans coût d'achat exclues, dépenses sans date et montant exclus, achats sans date). Note : la date d'une dépense vient de `created_at`, donc « dépenses sans date » n'arrive en pratique jamais (inutile de chercher à le reproduire) ; un achat sans date correspond à un article sans historique de statut 0.
    États : chargement (« Chargement des statistiques… »), erreur + « Réessayer ».
 
+<!-- prettier-ignore-end -->
+
 ## 5. Modèle de données affiché (pour mémoire)
 
 Article : marque, modèle, taille, couleur, lieu de stockage, prix d'achat, frais de port d'achat, prix de mise en vente, prix vendu, référence (code d'étiquette), photos (couverture, ordre), historique de statuts. Dépense : catégorie, nom, prix, date.
@@ -198,10 +202,10 @@ Cocher chaque ligne sur l'ancienne et la nouvelle version, en desktop et mobile.
 
 ### Transitions
 
-- [ ] À récupérer → Valider sans lieu : bouton désactivé ; avec lieu existant ou nouveau : l'article passe en Stock avec le lieu.
-- [ ] Stock → Valider : prix < 0,01 impossible ; ensuite l'article apparaît dans En vente avec le bon prix.
-- [ ] En vente → Valider : prix vendu requis ; code de référence affiché ; l'article apparaît dans À expédier avec la même référence.
-- [ ] À expédier → ✓ Expédié : passe dans Expédié, bouton désactivé pendant l'appel.
+- [ ] À récupérer → Récupéré sans lieu : bouton désactivé ; avec lieu existant ou nouveau : l'article passe en Stock avec le lieu.
+- [ ] Stock → Mettre en vente : prix < 0,01 impossible ; ensuite l'article apparaît dans En vente avec le bon prix.
+- [ ] En vente → Vendu : prix vendu requis ; code de référence affiché ; l'article apparaît dans À expédier avec la même référence.
+- [ ] À expédier → Expédié : passe dans Expédié, bouton désactivé pendant l'appel.
 - [ ] Un article déjà transitionné (autre onglet) : message d'erreur, pas de double transition.
 - [ ] Compteurs du dashboard mis à jour après chaque transition.
 

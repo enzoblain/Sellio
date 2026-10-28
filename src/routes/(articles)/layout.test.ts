@@ -58,6 +58,7 @@ beforeEach(() => {
 	state.url = new URL('http://localhost/stock');
 	goto.mockReset();
 	localStorage.clear();
+	delete document.documentElement.dataset.articlesView;
 	remote.data = {
 		toCollect: resource([row('9', 'Nike'), row('8', 'Nike')]),
 		stock: resource([row('1', 'Nike'), row('2', 'Adidas'), row('3', 'Adidas')]),
@@ -188,9 +189,9 @@ describe('layout Articles', () => {
 	});
 
 	it('relit la vue mémorisée', async () => {
-		localStorage.setItem('articles-view', 'grid');
+		document.documentElement.dataset.articlesView = 'grid';
 		render(Layout, { children });
-		await waitFor(() => expect(screen.getByRole('radio', { name: 'Grille' })).toBeChecked());
+		expect(screen.getByRole('radio', { name: 'Grille' })).toBeChecked();
 	});
 
 	it('partage aux pages les articles filtrés et triés', () => {

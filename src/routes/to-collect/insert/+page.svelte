@@ -90,6 +90,7 @@
 		if (!isValid || saving) return;
 		saving = true;
 		errorMessage = '';
+		let focusSize = false;
 
 		try {
 			if (!createdId) {
@@ -126,8 +127,7 @@
 				cover = null;
 				createdId = null;
 				resetKey++;
-				await tick();
-				document.getElementById('size')?.focus();
+				focusSize = true;
 			} else await goto(resolve('/to-collect'));
 		} catch {
 			errorMessage = createdId
@@ -135,6 +135,11 @@
 				: 'Impossible d’ajouter l’article. Réessaie.';
 		} finally {
 			saving = false;
+		}
+		// Le fieldset est désactivé tant que `saving` est vrai : le focus n'est possible qu'après.
+		if (focusSize) {
+			await tick();
+			document.getElementById('size')?.focus();
 		}
 	}
 </script>

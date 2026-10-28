@@ -5,8 +5,7 @@
 		saving = $bindable(false),
 		onsaved,
 		oncancel
-	}: { listingId: string; saving?: boolean; onsaved: () => void; oncancel: () => void } =
-		$props();
+	}: { listingId: string; saving?: boolean; onsaved: () => void; oncancel: () => void } = $props();
 </script>
 
 <p data-testid="editor-stub">{listingId}</p>
