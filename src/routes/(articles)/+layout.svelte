@@ -15,6 +15,7 @@
 		statusFromPath,
 		type Article,
 		type ArticleFilters,
+		type FilterKey,
 		type ArticleStatus
 	} from '$lib/components/listings/articles';
 	import { setArticlesContext, type ArticleView } from '$lib/components/listings/context';
@@ -23,7 +24,6 @@
 	import ErrorState from '$lib/components/ui/ErrorState.svelte';
 	import FilterBar from '$lib/components/ui/FilterBar.svelte';
 	import Drawer from '$lib/components/ui/Drawer.svelte';
-	import Icon from '$lib/components/ui/Icon.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import SegmentedControl from '$lib/components/ui/SegmentedControl.svelte';
@@ -150,6 +150,15 @@
 			})
 		)
 	);
+	// Un modèle dont la marque n'est plus cochée n'a plus lieu d'être filtré.
+	$effect(() => {
+		if (!loaded || filters.brands.length === 0 || filters.models.length === 0) return;
+		const allowed = new Set(
+			all.filter((item) => filters.brands.includes(item.brand)).map((item) => item.model)
+		);
+		const kept = filters.models.filter((model) => allowed.has(model));
+		if (kept.length !== filters.models.length) untrack(() => (filters.models = kept));
+	});
 	// Les modèles proposés suivent les marques cochées (tous si aucune).
 	const modelOptions = $derived(
 		distinct([
@@ -173,36 +182,44 @@
 
 	let filtersOpen = $state(false);
 	const sections = $derived(
-		[
-			{
-				key: 'places',
-				title: 'Lieu',
-				label: 'Filtrer par stockage',
-				options: placeOptions,
-				show: hasPlaces && (placeOptions.length > 1 || filters.places.length > 0)
-			},
-			{
-				key: 'brands',
-				title: 'Marque',
-				label: 'Filtrer par marque',
-				options: brandOptions,
-				show: brandOptions.length > 1 || filters.brands.length > 0
-			},
-			{
-				key: 'models',
-				title: 'Modèle',
-				label: 'Filtrer par modèle',
-				options: modelOptions,
-				show: modelOptions.length > 1 || filters.models.length > 0
-			}
-		].filter((section) => section.show)
+		(
+			[
+				{
+					key: 'places',
+					title: 'Lieu',
+					label: 'Filtrer par stockage',
+					options: placeOptions,
+					show: hasPlaces && (placeOptions.length > 1 || filters.places.length > 0)
+				},
+				{
+					key: 'brands',
+					title: 'Marque',
+					label: 'Filtrer par marque',
+					options: brandOptions,
+					show: brandOptions.length > 1 || filters.brands.length > 0
+				},
+				{
+					key: 'models',
+					title: 'Modèle',
+					label: 'Filtrer par modèle',
+					options: modelOptions,
+					show: modelOptions.length > 1 || filters.models.length > 0
+				}
+			] satisfies {
+				key: FilterKey;
+				title: string;
+				label: string;
+				options: { value: string; label: string }[];
+				show: boolean;
+			}[]
+		).filter((section) => section.show)
 	);
 	const activeChips = $derived([
-		...filters.places.map((value) => ({ key: 'places' as const, value })),
-		...filters.brands.map((value) => ({ key: 'brands' as const, value })),
-		...filters.models.map((value) => ({ key: 'models' as const, value }))
+		...filters.places.map((value) => ({ key: 'places' as FilterKey, value })),
+		...filters.brands.map((value) => ({ key: 'brands' as FilterKey, value })),
+		...filters.models.map((value) => ({ key: 'models' as FilterKey, value }))
 	]);
-	const removeChip = (key: 'places' | 'brands' | 'models', value: string) => {
+	const removeChip = (key: FilterKey, value: string) => {
 		filters[key] = filters[key].filter((item) => item !== value);
 	};
 
@@ -272,12 +289,11 @@
 			<div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filtres actifs">
 				{#each activeChips as chip (`${chip.key}:${chip.value}`)}
 					<Chip
-						selected
+						removable
 						aria-label="Retirer le filtre {chip.value}"
 						onclick={() => removeChip(chip.key, chip.value)}
 					>
 						{chip.value}
-						<Icon name="close" class="h-4 w-4" />
 					</Chip>
 				{/each}
 				<Button variant="ghost" onclick={reset}>Réinitialiser</Button>
@@ -290,9 +306,9 @@
 				<details open class="rounded-lg border border-border px-4 py-2">
 					<summary class="flex min-h-11 cursor-pointer items-center justify-between font-medium">
 						{section.title}
-						{#if filters[section.key as 'places' | 'brands' | 'models'].length > 0}
+						{#if filters[section.key as FilterKey].length > 0}
 							<span class="text-sm text-fg-muted">
-								{filters[section.key as 'places' | 'brands' | 'models'].length}
+								{filters[section.key as FilterKey].length}
 							</span>
 						{/if}
 					</summary>
@@ -300,7 +316,7 @@
 						<FilterBar
 							label={section.label}
 							options={section.options}
-							bind:selected={filters[section.key as 'places' | 'brands' | 'models']}
+							bind:selected={filters[section.key as FilterKey]}
 						/>
 					</div>
 				</details>
