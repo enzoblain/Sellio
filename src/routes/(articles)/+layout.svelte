@@ -150,14 +150,18 @@
 			})
 		)
 	);
-	// Un modèle dont la marque n'est plus cochée n'a plus lieu d'être filtré.
+	// Un modèle dont la marque n'est plus cochée n'a plus lieu d'être filtré. On ne réagit qu'au
+	// changement de marques : un changement des données ne doit pas retirer un filtre actif (#16).
 	$effect(() => {
-		if (!loaded || filters.brands.length === 0 || filters.models.length === 0) return;
-		const allowed = new Set(
-			all.filter((item) => filters.brands.includes(item.brand)).map((item) => item.model)
-		);
-		const kept = filters.models.filter((model) => allowed.has(model));
-		if (kept.length !== filters.models.length) untrack(() => (filters.models = kept));
+		const brands = [...filters.brands];
+		untrack(() => {
+			if (!loaded || brands.length === 0 || filters.models.length === 0) return;
+			const allowed = new Set(
+				all.filter((item) => brands.includes(item.brand)).map((item) => item.model)
+			);
+			const kept = filters.models.filter((model) => allowed.has(model));
+			if (kept.length !== filters.models.length) filters.models = kept;
+		});
 	});
 	// Les modèles proposés suivent les marques cochées (tous si aucune).
 	const modelOptions = $derived(
@@ -306,9 +310,9 @@
 				<details open class="rounded-lg border border-border px-4 py-2">
 					<summary class="flex min-h-11 cursor-pointer items-center justify-between font-medium">
 						{section.title}
-						{#if filters[section.key as FilterKey].length > 0}
+						{#if filters[section.key].length > 0}
 							<span class="text-sm text-fg-muted">
-								{filters[section.key as FilterKey].length}
+								{filters[section.key].length}
 							</span>
 						{/if}
 					</summary>
@@ -316,7 +320,7 @@
 						<FilterBar
 							label={section.label}
 							options={section.options}
-							bind:selected={filters[section.key as FilterKey]}
+							bind:selected={filters[section.key]}
 						/>
 					</div>
 				</details>

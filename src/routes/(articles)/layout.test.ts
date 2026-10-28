@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const state = vi.hoisted(() => ({
@@ -36,6 +37,18 @@ const resource = (current: unknown[] | undefined, error?: unknown) => ({
 	error,
 	refresh: vi.fn()
 });
+// Ressource dont les données peuvent changer après le rendu (comme un refresh de la requête).
+const liveResource = (initial: unknown[]) => {
+	const store = new SvelteMap<string, unknown[]>([['current', initial]]);
+	return {
+		get current() {
+			return store.get('current');
+		},
+		set: (next: unknown[]) => store.set('current', next),
+		error: undefined,
+		refresh: vi.fn()
+	};
+};
 const remote = vi.hoisted(() => ({ data: {} as Record<string, unknown> }));
 vi.mock('$lib/remote/listings.remote', () => ({
 	getToCollectListings: () => remote.data.toCollect,
@@ -197,6 +210,19 @@ describe('layout Articles', () => {
 		await waitFor(() =>
 			expect(goto).toHaveBeenLastCalledWith('/stock?brand=Nike', expect.anything())
 		);
+	});
+
+	it('garde le filtre modèle actif quand les données changent et que son dernier article disparaît', async () => {
+		state.url = new URL('http://localhost/stock?brand=Nike&model=Mod%C3%A8le+1');
+		const stock = liveResource([row('1', 'Nike'), row('2', 'Nike')]);
+		remote.data.stock = stock;
+		render(Layout, { children });
+		stock.set([row('2', 'Nike')]);
+		await waitFor(() =>
+			expect(screen.getByText('Stock (1)', { exact: false })).toBeInTheDocument()
+		);
+		expect(screen.getByRole('button', { name: 'Retirer le filtre Modèle 1' })).toBeInTheDocument();
+		expect(goto).not.toHaveBeenCalled();
 	});
 
 	it('retire un filtre depuis son chip, ou tout via Réinitialiser', async () => {
