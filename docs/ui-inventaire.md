@@ -144,10 +144,10 @@ Blocs :
 1. Quatre cartes : Revenus (+ nombre d'articles vendus, accord singulier/pluriel), Bénéfice des articles, Bénéfice moyen / article (— si aucune vente), Multiplicateur moyen (×N, — si aucune donnée).
 2. « Potentiel des articles en vente » : total des prix de mise en vente, bénéfice potentiel (prix affichés − achats − ports), nombre d'articles en vente (toutes années).
 3. Graphe SVG « Revenus et dépenses par mois » : 12 mois, par mois une barre verte de revenus et une barre empilée (Achats d'articles, Frais de port d'achat, Autres dépenses) ; échelle auto sur 5 graduations (min 100 €) en format compact ; infobulles par barre ; légende ; défilement horizontal en mobile ; message « Aucune activité datée pour cette année. » si tout est à zéro ; titre/description accessibles.
-4. « Répartition des dépenses » : par catégorie, montant + barre proportionnelle, total des dépenses.
-5. « Vue d'ensemble » : compteurs par statut (À récupérer, En stock, En vente, À expédier, Expédié) cliquables vers les écrans, « Bénéfice après dépenses » (bénéfice articles − autres dépenses de l'année), « Solde revenus − dépenses » (inclut les achats d'articles en stock).
+4. « Répartition des dépenses » : toujours 3 lignes fixes (pas les catégories saisies dans `/expenses`) : Achats d'articles, Frais de port d'achat, Autres dépenses (= somme des dépenses de `/expenses`). Pour chacune : montant de l'année + barre proportionnelle. « Total dépenses » = achats + ports + autres dépenses de l'année.
+5. « Vue d'ensemble » : compteurs par statut (À récupérer, En stock, En vente, À expédier, Expédié) cliquables vers les écrans, « Bénéfice après dépenses » (bénéfice articles − autres dépenses de l'année), « Solde revenus − dépenses » = revenus de l'année − total dépenses, où le total inclut les achats et ports de tous les articles achetés dans l'année, quel que soit leur statut (à récupérer, en stock, vendus, retournés…). Le libellé de l'UI (« inclut aussi les achats des articles encore en stock ») est approximatif : c'est la règle réelle qui fait foi.
 6. Détail repliable « Détail des montants mensuels » : tableau Mois / Revenus / Dépenses / Solde.
-7. Note de bas de page : règles de comptage + avertissements conditionnels (ventes sans coût d'achat exclues, dépenses sans date et montant exclus, achats sans date).
+7. Note de bas de page : règles de comptage + avertissements conditionnels (ventes sans coût d'achat exclues, dépenses sans date et montant exclus, achats sans date). Note : la date d'une dépense vient de `created_at`, donc « dépenses sans date » n'arrive en pratique jamais (inutile de chercher à le reproduire) ; un achat sans date correspond à un article sans historique de statut 0.
 États : chargement (« Chargement des statistiques… »), erreur + « Réessayer ».
 
 ## 5. Modèle de données affiché (pour mémoire)
@@ -203,12 +203,12 @@ Cocher chaque ligne sur l'ancienne et la nouvelle version, en desktop et mobile.
 
 ### Dashboard
 - [ ] Changer d'année met à jour toutes les valeurs ; années listées correctes.
-- [ ] Jeu de données de test avec résultats attendus calculés à la main : revenus, bénéfice, bénéfice moyen, multiplicateur (avec une vente à coût nul), potentiel, dépenses par catégorie, bénéfice après dépenses, solde.
+- [ ] Jeu de données de test avec résultats attendus calculés à la main : revenus, bénéfice, bénéfice moyen, multiplicateur (avec une vente à coût nul), potentiel, répartition en 3 lignes fixes (achats, ports, autres dépenses) et total, bénéfice après dépenses, solde (achats + ports de tous les articles achetés dans l'année, tous statuts).
 - [ ] Une vente d'un autre mois/année est comptée dans le bon mois/la bonne année ; un article retourné est exclu.
 - [ ] Graphe : 12 barres de revenus, empilement des 3 catégories, graduations compactes, infobulles, scroll horizontal mobile, message d'absence d'activité.
 - [ ] Compteurs de « Vue d'ensemble » cliquables vers les bons écrans.
 - [ ] Tableau mensuel repliable cohérent avec le graphe.
-- [ ] Notes conditionnelles (dépenses/achats sans date, ventes sans coût).
+- [ ] Notes conditionnelles (achats sans date, ventes sans coût ; « dépenses sans date » non reproductible, la date vient de `created_at`).
 - [ ] Erreur de chargement → message + Réessayer.
 
 ### Images
