@@ -16,6 +16,15 @@
 				} catch (e) {}
 			})();
 		</script>
+		<script>
+			// Idem pour la barre latérale repliée : évite le saut de mise en page au chargement.
+			(function () {
+				try {
+					if (localStorage.getItem('sidebar-collapsed') === '1')
+						document.documentElement.dataset.sidebar = 'collapsed';
+				} catch (e) {}
+			})();
+		</script>
 		<link
 			rel="preload"
 			href="/fonts/inter-latin-wght-normal.woff2"

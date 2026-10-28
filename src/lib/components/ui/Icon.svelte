@@ -14,7 +14,13 @@
 		sun: [
 			'M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4'
 		],
-		moon: ['M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z']
+		moon: ['M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z'],
+		articles: ['M4 7.5 12 3l8 4.5v9L12 21l-8-4.5Z', 'm4 7.5 8 4.5 8-4.5M12 12v9'],
+		plus: ['M12 5v14M5 12h14'],
+		search: ['m20 20-3.5-3.5'],
+		close: ['M6 6l12 12M18 6 6 18'],
+		chevronLeft: ['m14.5 6-6 6 6 6'],
+		chevronRight: ['m9.5 6 6 6-6 6']
 	} as const;
 
 	export type IconName = keyof typeof icons;
@@ -48,6 +54,8 @@
 		<rect x="3" y="7.5" width="18" height="13" rx="2" />
 	{:else if name === 'expenses'}
 		<circle cx="12" cy="12" r="8.5" />
+	{:else if name === 'search'}
+		<circle cx="11" cy="11" r="6.5" />
 	{:else if name === 'sun'}
 		<circle cx="12" cy="12" r="4" />
 	{/if}

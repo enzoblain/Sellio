@@ -14,7 +14,7 @@ Reprise de la décision #8 (validée par Enzo) : design system en CSS variables 
 - Tailwind v4 conservé, aucune nouvelle lib UI (ni shadcn-svelte, ni bits-ui, ni lib de charts).
 - Tokens = CSS variables sémantiques dans `src/routes/layout.css`, exposées à Tailwind via `@theme inline` (`bg-surface`, `text-fg-muted`, `border-border`, `rounded-lg`…).
 - Dark mode : `@custom-variant dark` sur la classe `.dark` de `<html>`. Défaut = `prefers-color-scheme`, choix mémorisé en `localStorage` (clé `theme`). Un script inline dans `app.html` applique la classe avant le premier rendu (pas de flash). Logique dans `src/lib/theme.ts`, bouton `ui/ThemeToggle.svelte`.
-- Composants dans `src/lib/components/ui` : Page, Card, Button (primary/secondary/ghost), Input, Field, Dialog, Badge, EmptyState, ErrorState, Icon, ThemeToggle.
+- Composants dans `src/lib/components/ui` : Page, Card, Button (primary/secondary/ghost), Input, Field, Dialog, Badge, EmptyState, ErrorState, Icon, ThemeToggle, puis (#15) Tabs, Drawer (Dialog plein écran mobile), SearchInput, Chip, FilterBar, SegmentedControl, DataList, Toaster (`toast()`).
 - Formatage monétaire : `euros()` dans `src/lib/format.ts`.
 - Police : Inter variable (OFL) self-hostée en woff2 dans `static/fonts/` (licence incluse), fallback `system-ui`.
 - Graphes : SVG maison, couleurs via `var(--chart-*)`.

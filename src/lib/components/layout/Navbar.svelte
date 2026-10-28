@@ -1,54 +1,76 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import Icon, { type IconName } from '$lib/components/ui/Icon.svelte';
+	import Icon from '$lib/components/ui/Icon.svelte';
 	import ThemeToggle from '$lib/components/ui/ThemeToggle.svelte';
 	import { DARK_MODE_ENABLED } from '$lib/theme';
+	import { isActive, navItems, NEW_ARTICLE_HREF } from './nav';
+	import { restoreSidebar, sidebar, toggleSidebar } from './sidebar.svelte';
 
-	const items = [
-		{ label: 'Dashboard', href: '/', icon: 'dashboard' },
-		{ label: 'À récupérer', href: '/to-collect', icon: 'collect' },
-		{ label: 'Stock', href: '/stock', icon: 'stock' },
-		{ label: 'En vente', href: '/listed', icon: 'listed' },
-		{ label: 'À expédier', href: '/to-ship', icon: 'toship' },
-		{ label: 'Expédié', href: '/shipped', icon: 'shipped' },
-		{ label: 'Dépenses', href: '/expenses', icon: 'expenses' }
-	] as const satisfies { label: string; href: string; icon: IconName }[];
-
-	function isActive(href: string) {
-		return href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href);
-	}
+	onMount(restoreSidebar);
 </script>
 
+<!-- Repli piloté par CSS (data-sidebar sur <html>) : rendu correct dès le premier affichage. -->
 <nav
-	class="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r border-border bg-surface px-3 py-6 md:flex"
+	aria-label="Navigation principale"
+	class="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r border-border bg-surface px-3 py-6 transition-[width] duration-150 md:flex sidebar-collapsed:w-16"
 >
-	<div class="mb-8 flex items-center justify-between px-3">
-		<span class="text-base font-semibold tracking-tight text-fg">Sellio</span>
-		{#if DARK_MODE_ENABLED}<ThemeToggle />{/if}
+	<div
+		class="mb-6 flex items-center justify-between px-3 sidebar-collapsed:justify-center sidebar-collapsed:px-0"
+	>
+		<span class="text-base font-semibold tracking-tight text-fg sidebar-collapsed:hidden"
+			>Sellio</span
+		>
+		<button
+			type="button"
+			onclick={toggleSidebar}
+			aria-label={sidebar.collapsed ? 'Déplier la barre latérale' : 'Replier la barre latérale'}
+			aria-expanded={!sidebar.collapsed}
+			class="flex items-center justify-center rounded-md p-2 text-fg-muted transition hover:bg-surface-2 hover:text-fg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+		>
+			<Icon name="chevronLeft" class="h-5 w-5 sidebar-collapsed:hidden" />
+			<Icon name="chevronRight" class="hidden h-5 w-5 sidebar-collapsed:block" />
+		</button>
 	</div>
 
+	<a
+		href={resolve(NEW_ARTICLE_HREF)}
+		title="Nouvel article"
+		class="mb-6 flex items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+	>
+		<Icon name="plus" />
+		<span class="sidebar-collapsed:sr-only">Nouvel article</span>
+	</a>
+
 	<ul class="flex flex-1 flex-col gap-0.5">
-		{#each items as item (item.href)}
+		{#each navItems as item (item.href)}
+			{@const active = isActive(item, page.url.pathname)}
 			<li class="relative">
-				{#if isActive(item.href)}
+				{#if active}
 					<span class="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent"
 					></span>
 				{/if}
 				<a
 					href={resolve(item.href)}
-					class="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 {isActive(
-						item.href
-					)
+					aria-current={active ? 'page' : undefined}
+					title={item.label}
+					class="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 sidebar-collapsed:justify-center {active
 						? 'bg-surface-2 text-fg'
 						: 'text-fg-muted hover:bg-surface-2 hover:text-fg'}"
 				>
 					<Icon name={item.icon} />
-					{item.label}
+					<span class="sidebar-collapsed:sr-only">{item.label}</span>
 				</a>
 			</li>
 		{/each}
 	</ul>
+
+	{#if DARK_MODE_ENABLED}
+		<div class="flex px-3 sidebar-collapsed:justify-center sidebar-collapsed:px-0">
+			<ThemeToggle />
+		</div>
+	{/if}
 </nav>
 
 {#if DARK_MODE_ENABLED}
@@ -59,23 +81,34 @@
 {/if}
 
 <nav
-	class="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"
+	aria-label="Navigation principale"
+	class="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 items-stretch border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"
 >
-	{#each items as item (item.href)}
-		<a
-			href={resolve(item.href)}
-			aria-label={item.label}
-			class="flex flex-1 items-center justify-center py-3"
-		>
-			<span
-				class="flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-150 {isActive(
-					item.href
-				)
-					? 'bg-surface-2 text-accent'
-					: 'text-fg-muted'}"
-			>
-				<Icon name={item.icon} />
-			</span>
-		</a>
+	{#each navItems.slice(0, 2) as item (item.href)}
+		{@render tab(item)}
 	{/each}
+	<a
+		href={resolve(NEW_ARTICLE_HREF)}
+		aria-label="Nouvel article"
+		class="flex min-h-14 items-center justify-center"
+	>
+		<span class="flex h-11 w-11 items-center justify-center rounded-full bg-accent text-accent-fg">
+			<Icon name="plus" />
+		</span>
+	</a>
+	{@render tab(navItems[2])}
 </nav>
+
+{#snippet tab(item: (typeof navItems)[number])}
+	{@const active = isActive(item, page.url.pathname)}
+	<a
+		href={resolve(item.href)}
+		aria-current={active ? 'page' : undefined}
+		class="flex min-h-14 min-w-11 flex-col items-center justify-center gap-0.5 text-xs transition-colors duration-150 {active
+			? 'text-accent'
+			: 'text-fg-muted'}"
+	>
+		<Icon name={item.icon} />
+		{item.shortLabel}
+	</a>
+{/snippet}

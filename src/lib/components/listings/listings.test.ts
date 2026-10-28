@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -28,22 +28,33 @@ describe('Stat', () => {
 });
 
 describe('Navbar', () => {
-	it('liste les 7 entrées dans l’ordre et marque l’active', () => {
+	it('liste les 3 sections et le bouton Nouvel article, Articles actif sur /stock', () => {
 		window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as never;
 		const { container } = render(Navbar);
 		const labels = [...container.querySelectorAll('nav')[0].querySelectorAll('a')].map((a) =>
 			a.textContent?.trim()
 		);
-		expect(labels).toEqual([
-			'Dashboard',
-			'À récupérer',
-			'Stock',
-			'En vente',
-			'À expédier',
-			'Expédié',
-			'Dépenses'
-		]);
-		expect(screen.getAllByRole('link', { name: 'Stock' })[0]).toHaveClass('bg-surface-2');
+		expect(labels).toEqual(['Nouvel article', 'Tableau de bord', 'Articles', 'Dépenses']);
+		const articles = screen.getAllByRole('link', { name: 'Articles' })[0];
+		expect(articles).toHaveClass('bg-surface-2');
+		expect(articles).toHaveAttribute('aria-current', 'page');
+		expect(screen.getAllByRole('link', { name: 'Dépenses' })[0]).not.toHaveAttribute(
+			'aria-current'
+		);
+	});
+
+	it('la barre latérale se replie et mémorise son état', async () => {
+		localStorage.clear();
+		render(Navbar);
+		const toggle = screen.getAllByRole('button', { name: 'Replier la barre latérale' })[0];
+		await fireEvent.click(toggle);
+		expect(localStorage.getItem('sidebar-collapsed')).toBe('1');
+		expect(screen.getAllByRole('button', { name: 'Déplier la barre latérale' })[0]).toHaveAttribute(
+			'aria-expanded',
+			'false'
+		);
+		await fireEvent.click(screen.getAllByRole('button', { name: 'Déplier la barre latérale' })[0]);
+		expect(localStorage.getItem('sidebar-collapsed')).toBe('0');
 	});
 
 	it('place le ThemeToggle mobile dans une barre en flux normal', async () => {

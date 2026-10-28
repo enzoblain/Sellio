@@ -38,9 +38,8 @@ Layout commun (`+layout.svelte`) : navigation `Navbar`.
 ## 3. Éléments transverses
 
 ### Navbar
-- Barre latérale fixe ≥ md (largeur 14 rem), barre d'icônes en bas sur mobile.
-- 7 entrées dans l'ordre : Dashboard, À récupérer, Stock, En vente, À expédier, Expédié, Dépenses.
-- L'entrée active est mise en évidence (`/` strictement, les autres par préfixe).
+- 3 entrées : Tableau de bord, Articles, Dépenses. « Articles » est active sur les 5 routes de statut (`/to-collect`, `/stock`, `/listed`, `/to-ship`, `/shipped`) et leurs sous-routes ; `/` est strict.
+- Desktop : barre latérale repliable (icônes seules, état en `localStorage`, appliqué avant le premier rendu), « + Nouvel article » en haut, thème en bas. Mobile : tab bar Dashboard, Articles, +, Dépenses.
 
 ### Cartes article et piles (`ListingStacks`)
 - Les articles ayant même modèle + taille + couleur sont regroupés en pile (effet visuel décalé). Un bouton `▱ N ↓/↑` déplie/replie ; déplié, le groupe occupe toute la largeur.
@@ -90,7 +89,7 @@ Ordre proposé : du plus transverse (briques réutilisées) au plus isolé, en g
 | P3 | `/` Dashboard | Le plus complexe (calculs, graphe SVG) ; dépend des autres écrans pour ses données |
 
 ### 4.1 Layout + Navbar (P0)
-Voir §3. À conserver : 7 entrées, ordre, actif, version mobile.
+Voir §3. À conserver : 3 entrées, ordre, actif (Articles sur les 5 routes de statut), version mobile.
 
 ### 4.2 `/to-collect/insert` — Ajouter un article (P1)
 Données saisies : marque, modèle, taille, couleur (autocomplete, 5 suggestions), prix de l'article (€), frais de port (€), photos.
@@ -158,8 +157,10 @@ Article : marque, modèle, taille, couleur, lieu de stockage, prix d'achat, frai
 Cocher chaque ligne sur l'ancienne et la nouvelle version, en desktop et mobile.
 
 ### Navigation
-- [ ] 7 entrées dans l'ordre ; clic → bonne page ; entrée active surlignée (dont `/to-collect/insert` → « À récupérer »).
-- [ ] Barre latérale en desktop, barre d'icônes en bas en mobile.
+- [ ] 3 entrées dans l'ordre (Tableau de bord, Articles, Dépenses) ; clic → bonne page ; « Articles » actif sur `/to-collect`, `/stock`, `/listed`, `/to-ship`, `/shipped` et `/to-collect/insert`.
+- [ ] Desktop : barre latérale avec « + Nouvel article » en haut (→ `/to-collect/insert`) et le thème en bas ; bouton de repli → icônes seules (libellés en infobulle), état conservé après rechargement sans saut de mise en page.
+- [ ] Mobile : tab bar en bas (Dashboard, Articles, +, Dépenses), cibles tactiles ≥ 44 px, « + » → `/to-collect/insert`.
+- [ ] Toutes les URL existantes répondent toujours (aucune redirection).
 
 ### Création d'un article
 - [ ] Bouton Confirmer désactivé avec champ vide / prix vide / prix négatif ; activé avec prix = 0.
