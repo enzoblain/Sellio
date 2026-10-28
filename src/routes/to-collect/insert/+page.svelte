@@ -9,6 +9,9 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Field from '$lib/components/ui/Field.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
+	import { euros } from '$lib/format';
+	import { toast } from '$lib/components/ui/toast.svelte';
+	import { totalCents } from '$lib/components/listings/insert-total';
 	import Page from '$lib/components/ui/Page.svelte';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
@@ -34,6 +37,9 @@
 	let photoBusy = $state(false);
 	let modelPhotoBusy = $state(false);
 	let createdId = $state<string | null>(null);
+	// Change à chaque « Ajouter et en créer un autre » : remonte les photos du modèle
+	let resetKey = $state(0);
+	const total = $derived(totalCents(price, shippingCost));
 
 	let previousBrandId = $state<string | null>(null);
 
@@ -79,7 +85,7 @@
 		}
 	});
 
-	async function confirm() {
+	async function confirm(another = false) {
 		if (!isValid || saving) return;
 		saving = true;
 		errorMessage = '';
@@ -108,7 +114,18 @@
 				}
 			}
 			await refreshListingViews(createdId);
-			await goto(resolve('/to-collect'));
+			toast('Article ajouté');
+			if (another) {
+				// On garde marque et modèle, on vide le reste
+				selectedSize = { value: '', uuid: null };
+				selectedColor = { value: '', uuid: null };
+				price = undefined;
+				shippingCost = undefined;
+				photos = [];
+				cover = null;
+				createdId = null;
+				resetKey++;
+			} else await goto(resolve('/to-collect'));
 		} catch {
 			errorMessage = createdId
 				? 'L’article est enregistré. Réessaie d’envoyer les photos.'
@@ -120,80 +137,107 @@
 </script>
 
 <Page title="Ajouter un article">
-	<Card class="max-w-2xl">
-		<form
-			class="space-y-5"
-			onsubmit={(event) => {
-				event.preventDefault();
-				confirm();
-			}}
-		>
-			<fieldset disabled={saving || !!createdId} class="space-y-4">
-				<Field label="Marque" id="brand">
-					<Autocomplete id="brand" query={brandQuery} limit={5} bind:model={selectedBrand} />
-				</Field>
-				<Field label="Modèle" id="model">
-					<Autocomplete
-						id="model"
-						query={modelQuery}
-						limit={5}
-						bind:model={selectedModel}
-						disabled={!selectedBrand.value}
+	<form
+		onsubmit={(event) => {
+			event.preventDefault();
+			confirm();
+		}}
+	>
+		<div class="grid gap-6 lg:grid-cols-2">
+			<Card class="space-y-3 self-start">
+				{#key resetKey}
+					<ModelPhotos
+						modelId={selectedModel.uuid}
+						enabled={!createdId}
+						bind:photos
+						bind:cover
+						bind:busy={modelPhotoBusy}
 					/>
-				</Field>
-				<Field label="Taille" id="size">
-					<Autocomplete id="size" query={sizeQuery} limit={5} bind:model={selectedSize} />
-				</Field>
-				<Field label="Couleur" id="color">
-					<Autocomplete id="color" query={colorQuery} limit={5} bind:model={selectedColor} />
-				</Field>
-				<Field label="Prix de l'article" id="price">
-					<div class="relative">
-						<Input
-							id="price"
-							type="number"
-							min="0"
-							step="0.01"
-							bind:value={price}
-							placeholder="0,00"
-							class="pr-10"
+				{/key}
+				<PhotoPicker
+					id="new-article-photos"
+					bind:photos
+					bind:cover
+					bind:busy={photoBusy}
+					disabled={saving || modelPhotoBusy}
+				/>
+			</Card>
+			<fieldset disabled={saving || !!createdId} class="space-y-6">
+				<Card class="space-y-4">
+					<h2 class="text-base font-medium text-fg">Article</h2>
+					<Field label="Marque" id="brand">
+						<Autocomplete id="brand" query={brandQuery} limit={5} bind:model={selectedBrand} />
+					</Field>
+					<Field label="Modèle" id="model">
+						<Autocomplete
+							id="model"
+							query={modelQuery}
+							limit={5}
+							bind:model={selectedModel}
+							disabled={!selectedBrand.value}
 						/>
-						<span class="absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted">€</span>
+					</Field>
+					<div class="grid gap-4 sm:grid-cols-2">
+						<Field label="Taille" id="size">
+							<Autocomplete id="size" query={sizeQuery} limit={5} bind:model={selectedSize} />
+						</Field>
+						<Field label="Couleur" id="color">
+							<Autocomplete id="color" query={colorQuery} limit={5} bind:model={selectedColor} />
+						</Field>
 					</div>
-				</Field>
-				<Field label="Frais de port" id="shipping-cost">
-					<div class="relative">
-						<Input
-							id="shipping-cost"
-							type="number"
-							min="0"
-							step="0.01"
-							bind:value={shippingCost}
-							placeholder="0,00"
-							class="pr-10"
-						/>
-						<span class="absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted">€</span>
+				</Card>
+				<Card class="space-y-4">
+					<h2 class="text-base font-medium text-fg">Coût</h2>
+					<div class="grid gap-4 sm:grid-cols-2">
+						<Field label="Prix de l'article" id="price">
+							<div class="relative">
+								<Input
+									id="price"
+									type="number"
+									min="0"
+									step="0.01"
+									bind:value={price}
+									placeholder="0,00"
+									class="pr-10"
+								/>
+								<span class="absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted">€</span>
+							</div>
+						</Field>
+						<Field label="Frais de port" id="shipping-cost">
+							<div class="relative">
+								<Input
+									id="shipping-cost"
+									type="number"
+									min="0"
+									step="0.01"
+									bind:value={shippingCost}
+									placeholder="0,00"
+									class="pr-10"
+								/>
+								<span class="absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted">€</span>
+							</div>
+						</Field>
 					</div>
-				</Field>
+					<p class="flex items-center justify-between text-sm text-fg-muted">
+						Total <strong class="text-base text-fg" data-testid="total">{euros(total)}</strong>
+					</p>
+				</Card>
 			</fieldset>
-			<ModelPhotos
-				modelId={selectedModel.uuid}
-				enabled={!createdId}
-				bind:photos
-				bind:cover
-				bind:busy={modelPhotoBusy}
-			/>
-			<PhotoPicker
-				id="new-article-photos"
-				bind:photos
-				bind:cover
-				bind:busy={photoBusy}
-				disabled={saving || modelPhotoBusy}
-			/>
-			{#if errorMessage}<p role="alert" class="text-sm text-danger">{errorMessage}</p>{/if}
-			<Button type="submit" class="w-full" disabled={!isValid || saving}>
-				{saving ? 'Ajout en cours…' : 'Confirmer'}
+		</div>
+		{#if errorMessage}<p role="alert" class="mt-4 text-sm text-danger">{errorMessage}</p>{/if}
+		<div
+			class="sticky bottom-16 z-10 mt-6 flex flex-wrap justify-end gap-3 rounded-lg border border-border bg-surface p-3 md:bottom-4"
+		>
+			<Button variant="secondary" href={resolve('/to-collect')}>Annuler</Button>
+			<Button
+				type="button"
+				variant="secondary"
+				disabled={!isValid || saving || !!createdId}
+				onclick={() => confirm(true)}>Ajouter et en créer un autre</Button
+			>
+			<Button type="submit" disabled={!isValid || saving}>
+				{saving ? 'Ajout en cours…' : 'Ajouter'}
 			</Button>
-		</form>
-	</Card>
+		</div>
+	</form>
 </Page>
