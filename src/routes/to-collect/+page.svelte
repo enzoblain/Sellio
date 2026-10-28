@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { euros } from '$lib/format';
 	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
 	import ListingGallery from '$lib/components/images/ListingGallery.svelte';
 	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
@@ -16,8 +17,6 @@
 	let errorMessage = $state('');
 	let dialog: HTMLDialogElement;
 	const valid = $derived(stockingPlace.value.trim().length > 0);
-	const euros = (cents: number) =>
-		new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 	const placeQuery = (search: string, offset: number, limit: number) =>
 		searchStockingPlaces({ search, offset, limit });
 

@@ -1,11 +1,10 @@
 <script lang="ts">
+	import { euros } from '$lib/format';
 	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
 	import ListingGallery from '$lib/components/images/ListingGallery.svelte';
 	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
 	import { getShippedListings } from '$lib/remote/listings.remote';
 	const orders = getShippedListings();
-	const euros = (cents: number) =>
-		new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 	const multiplier = (salePrice: number, total: number) =>
 		total > 0
 			? `×${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(salePrice / total)}`

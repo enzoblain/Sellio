@@ -88,9 +88,9 @@
 		content: '';
 		position: absolute;
 		inset: 0;
-		border: 1px solid #ddd6fe;
+		border: 1px solid var(--border);
 		border-radius: 0.75rem;
-		background: #ede9fe;
+		background: var(--surface-2);
 		pointer-events: none;
 	}
 	.stacked::before {
@@ -100,6 +100,6 @@
 	.stacked::after {
 		transform: translate(4px, 6px);
 		z-index: -1;
-		background: #f5f3ff;
+		background: var(--surface);
 	}
 </style>

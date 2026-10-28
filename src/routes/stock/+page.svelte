@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { euros } from '$lib/format';
 	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
 	import ListingGallery from '$lib/components/images/ListingGallery.svelte';
 	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
@@ -14,8 +15,6 @@
 	const valid = $derived(
 		salePrice !== undefined && Number.isFinite(salePrice) && salePrice >= 0.01
 	);
-	const euros = (cents: number) =>
-		new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 
 	function openTransition(id: string) {
 		selectedId = id;
