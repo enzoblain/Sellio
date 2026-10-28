@@ -5,6 +5,11 @@
 	import { refreshListingViews } from '$lib/components/listings/refresh-views';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Card from '$lib/components/ui/Card.svelte';
+	import Field from '$lib/components/ui/Field.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Page from '$lib/components/ui/Page.svelte';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
 
@@ -114,95 +119,81 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-50 px-6 py-6">
-	<h1 class="mb-6 text-xl font-semibold text-violet-950">Ajouter un article</h1>
-	<form
-		class="max-w-2xl space-y-5 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
-		onsubmit={(event) => {
-			event.preventDefault();
-			confirm();
-		}}
-	>
-		<fieldset disabled={saving || !!createdId} class="space-y-4">
-			<div>
-				<label for="brand">Marque</label>
-				<Autocomplete id="brand" query={brandQuery} limit={5} bind:model={selectedBrand} />
-			</div>
-
-			<div>
-				<label for="model">Modèle</label>
-				<Autocomplete
-					id="model"
-					query={modelQuery}
-					limit={5}
-					bind:model={selectedModel}
-					disabled={!selectedBrand.value}
-				/>
-			</div>
-
-			<div>
-				<label for="size">Taille</label>
-				<Autocomplete id="size" query={sizeQuery} limit={5} bind:model={selectedSize} />
-			</div>
-
-			<div>
-				<label for="color">Couleur</label>
-				<Autocomplete id="color" query={colorQuery} limit={5} bind:model={selectedColor} />
-			</div>
-
-			<div>
-				<label for="price">Prix de l'article</label>
-				<div class="relative">
-					<input
-						id="price"
-						type="number"
-						min="0"
-						step="0.01"
-						bind:value={price}
-						placeholder="0,00"
-						class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 pr-10 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-					/>
-					<span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400">€</span>
-				</div>
-			</div>
-
-			<div>
-				<label for="shipping-cost">Frais de port</label>
-				<div class="relative">
-					<input
-						id="shipping-cost"
-						type="number"
-						min="0"
-						step="0.01"
-						bind:value={shippingCost}
-						placeholder="0,00"
-						class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 pr-10 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-					/>
-					<span class="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400">€</span>
-				</div>
-			</div>
-		</fieldset>
-		<ModelPhotos
-			modelId={selectedModel.uuid}
-			enabled={!createdId}
-			bind:photos
-			bind:cover
-			bind:busy={modelPhotoBusy}
-		/>
-		<PhotoPicker
-			id="new-article-photos"
-			bind:photos
-			bind:cover
-			bind:busy={photoBusy}
-			disabled={saving || modelPhotoBusy}
-		/>
-		{#if errorMessage}<p role="alert" class="text-sm text-red-600">{errorMessage}</p>{/if}
-		<button
-			type="submit"
-			disabled={!isValid || saving}
-			class="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+<Page title="Ajouter un article">
+	<Card class="max-w-2xl">
+		<form
+			class="space-y-5"
+			onsubmit={(event) => {
+				event.preventDefault();
+				confirm();
+			}}
 		>
-			{saving ? 'Ajout en cours…' : 'Confirmer'}
-		</button>
-	</form>
-</div>
+			<fieldset disabled={saving || !!createdId} class="space-y-4">
+				<Field label="Marque" id="brand">
+					<Autocomplete id="brand" query={brandQuery} limit={5} bind:model={selectedBrand} />
+				</Field>
+				<Field label="Modèle" id="model">
+					<Autocomplete
+						id="model"
+						query={modelQuery}
+						limit={5}
+						bind:model={selectedModel}
+						disabled={!selectedBrand.value}
+					/>
+				</Field>
+				<Field label="Taille" id="size">
+					<Autocomplete id="size" query={sizeQuery} limit={5} bind:model={selectedSize} />
+				</Field>
+				<Field label="Couleur" id="color">
+					<Autocomplete id="color" query={colorQuery} limit={5} bind:model={selectedColor} />
+				</Field>
+				<Field label="Prix de l'article" id="price">
+					<div class="relative">
+						<Input
+							id="price"
+							type="number"
+							min="0"
+							step="0.01"
+							bind:value={price}
+							placeholder="0,00"
+							class="pr-10"
+						/>
+						<span class="absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted">€</span>
+					</div>
+				</Field>
+				<Field label="Frais de port" id="shipping-cost">
+					<div class="relative">
+						<Input
+							id="shipping-cost"
+							type="number"
+							min="0"
+							step="0.01"
+							bind:value={shippingCost}
+							placeholder="0,00"
+							class="pr-10"
+						/>
+						<span class="absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted">€</span>
+					</div>
+				</Field>
+			</fieldset>
+			<ModelPhotos
+				modelId={selectedModel.uuid}
+				enabled={!createdId}
+				bind:photos
+				bind:cover
+				bind:busy={modelPhotoBusy}
+			/>
+			<PhotoPicker
+				id="new-article-photos"
+				bind:photos
+				bind:cover
+				bind:busy={photoBusy}
+				disabled={saving || modelPhotoBusy}
+			/>
+			{#if errorMessage}<p role="alert" class="text-sm text-danger">{errorMessage}</p>{/if}
+			<Button type="submit" class="w-full" disabled={!isValid || saving}>
+				{saving ? 'Ajout en cours…' : 'Confirmer'}
+			</Button>
+		</form>
+	</Card>
+</Page>

@@ -2,8 +2,8 @@ export type Theme = 'light' | 'dark';
 
 export const THEME_KEY = 'theme';
 
-/** Le sombre reste invisible tant que les écrans ne sont pas migrés vers les tokens (#14). */
-export const DARK_MODE_ENABLED = false;
+/** Écrans migrés vers les tokens (#14) : le thème sombre est proposé. */
+export const DARK_MODE_ENABLED = true;
 
 /** Thème mémorisé, sinon préférence système. */
 export function resolveTheme(): Theme {

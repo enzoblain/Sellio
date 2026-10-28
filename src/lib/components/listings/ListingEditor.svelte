@@ -4,6 +4,11 @@
 	import PhotoPicker from '$lib/components/images/PhotoPicker.svelte';
 	import { photoForm, type PhotoDraft } from '$lib/components/images/photo-draft';
 	import { refreshListingViews } from './refresh-views';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import Field from '$lib/components/ui/Field.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
 	import { getEditableListing, deleteListing } from '$lib/remote/listing-editor.remote';
@@ -13,7 +18,7 @@
 	import { searchColors } from '$lib/remote/colors.remote';
 	import { searchStockingPlaces } from '$lib/remote/stocking-places.remote';
 	let { listingId }: { listingId: string } = $props();
-	let dialog: HTMLDialogElement;
+	let dialog = $state<HTMLDialogElement>();
 	let mode = $state<'edit' | 'delete'>('edit');
 	let loading = $state(false);
 	let saving = $state(false);
@@ -93,7 +98,7 @@
 		loading = true;
 		errorMessage = '';
 		version = '';
-		dialog.showModal();
+		dialog?.showModal();
 		try {
 			const data = await getEditableListing(listingId).refresh();
 			const item = data ?? (await getEditableListing(listingId));
@@ -157,7 +162,7 @@
 				errorMessage = result.error ?? 'Impossible d’enregistrer.';
 				return;
 			}
-			dialog.close();
+			dialog?.close();
 		} catch {
 			errorMessage = 'Impossible d’enregistrer. Vérifie les champs et réessaie.';
 		} finally {
@@ -172,7 +177,7 @@
 		onclick={() => open('edit')}
 		aria-label="Modifier l’article"
 		title="Modifier"
-		class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white/95 text-violet-950 shadow-sm hover:bg-violet-50"
+		class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface/95 text-fg shadow-sm hover:bg-surface-2"
 		><svg
 			viewBox="0 0 24 24"
 			fill="none"
@@ -187,7 +192,7 @@
 		onclick={() => open('delete')}
 		aria-label="Supprimer l’article"
 		title="Supprimer"
-		class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white/95 text-red-600 shadow-sm hover:bg-red-50"
+		class="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface/95 text-danger shadow-sm hover:bg-surface-2"
 		><svg
 			viewBox="0 0 24 24"
 			fill="none"
@@ -198,106 +203,75 @@
 		></button
 	>
 </div>
-<dialog
-	bind:this={dialog}
-	oncancel={(event) => {
-		if (saving) event.preventDefault();
-	}}
-	class="m-auto max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl backdrop:bg-violet-950/30"
+<Dialog
+	bind:element={dialog}
+	dismissible={!saving}
+	size="lg"
+	title={mode === 'edit' ? 'Modifier l’article' : 'Supprimer l’article'}
 >
-	<h2 class="text-lg font-semibold text-violet-950">
-		{mode === 'edit' ? 'Modifier l’article' : 'Supprimer l’article'}
-	</h2>
-	{#if loading}<p class="my-6 text-sm text-gray-500">Chargement…</p>
+	{#if loading}<p class="text-sm text-fg-muted">Chargement…</p>
 	{:else if version}
 		<form
-			class="mt-5 space-y-5"
+			class="space-y-5"
 			onsubmit={(event) => {
 				event.preventDefault();
 				confirm();
 			}}
 		>
 			{#if mode === 'delete'}
-				<p class="text-sm text-gray-600">
+				<p class="text-sm text-fg-muted">
 					Supprimer {brand.value} · {model.value} ? L’article, son historique et sa référence seront supprimés.
 					Cette action est définitive.
 				</p>
 			{:else}
 				{#key formKey}<div class="grid gap-4 sm:grid-cols-2">
-						<div>
-							<label
-								for={`edit-brand-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700">Marque</label
-							><Autocomplete
+						<Field label="Marque" id={`edit-brand-${listingId}`}>
+							<Autocomplete
 								id={`edit-brand-${listingId}`}
 								query={brandQuery}
 								bind:model={brand}
 								disabled={saving}
 							/>
-						</div>
-						<div>
-							<label
-								for={`edit-model-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700">Modèle</label
-							><Autocomplete
+						</Field>
+						<Field label="Modèle" id={`edit-model-${listingId}`}>
+							<Autocomplete
 								id={`edit-model-${listingId}`}
 								query={modelQuery}
 								bind:model
 								disabled={saving || !brand.value.trim()}
 							/>
-						</div>
-						<div>
-							<label
-								for={`edit-size-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700">Taille</label
-							><Autocomplete
+						</Field>
+						<Field label="Taille" id={`edit-size-${listingId}`}>
+							<Autocomplete
 								id={`edit-size-${listingId}`}
 								query={sizeQuery}
 								bind:model={size}
 								disabled={saving}
 							/>
-						</div>
-						<div>
-							<label
-								for={`edit-color-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700">Couleur</label
-							><Autocomplete
+						</Field>
+						<Field label="Couleur" id={`edit-color-${listingId}`}>
+							<Autocomplete
 								id={`edit-color-${listingId}`}
 								query={colorQuery}
 								bind:model={color}
 								disabled={saving}
 							/>
-						</div>
-						<div>
-							<label
-								for={`edit-place-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700"
-								>Stockage{status >= 1 ? ' *' : ''}</label
-							><Autocomplete
+						</Field>
+						<Field label={`Stockage${status >= 1 ? ' *' : ''}`} id={`edit-place-${listingId}`}>
+							<Autocomplete
 								id={`edit-place-${listingId}`}
 								query={placeQuery}
 								bind:model={place}
 								disabled={saving}
 							/>
-						</div>
-						<div>
-							<label
-								for={`edit-status-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700">Statut</label
-							><select
-								id={`edit-status-${listingId}`}
-								bind:value={status}
-								disabled={saving}
-								class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm"
-								>{#each statuses as label, value (value)}<option {value}>{label}</option
-									>{/each}</select
-							>
-						</div>
-						<div>
-							<label
-								for={`edit-purchase-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700">Prix acheté (€)</label
-							><input
+						</Field>
+						<Field label="Statut" id={`edit-status-${listingId}`}>
+							<Select id={`edit-status-${listingId}`} bind:value={status} disabled={saving}>
+								{#each statuses as label, value (value)}<option {value}>{label}</option>{/each}
+							</Select>
+						</Field>
+						<Field label="Prix acheté (€)" id={`edit-purchase-${listingId}`}>
+							<Input
 								id={`edit-purchase-${listingId}`}
 								type="number"
 								min="0"
@@ -305,15 +279,10 @@
 								required
 								bind:value={purchasePrice}
 								disabled={saving}
-								class="w-full rounded-lg border border-gray-300 px-4 py-2"
 							/>
-						</div>
-						<div>
-							<label
-								for={`edit-shipping-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700"
-								>Frais de port d’achat (€)</label
-							><input
+						</Field>
+						<Field label="Frais de port d’achat (€)" id={`edit-shipping-${listingId}`}>
+							<Input
 								id={`edit-shipping-${listingId}`}
 								type="number"
 								min="0"
@@ -321,15 +290,13 @@
 								required
 								bind:value={shippingPrice}
 								disabled={saving}
-								class="w-full rounded-lg border border-gray-300 px-4 py-2"
 							/>
-						</div>
-						<div>
-							<label
-								for={`edit-listing-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700"
-								>Prix de mise en vente (€){status >= 1 && status <= 5 ? ' *' : ''}</label
-							><input
+						</Field>
+						<Field
+							label={`Prix de mise en vente (€)${status >= 1 && status <= 5 ? ' *' : ''}`}
+							id={`edit-listing-${listingId}`}
+						>
+							<Input
 								id={`edit-listing-${listingId}`}
 								type="number"
 								min={status >= 1 && status <= 5 ? '0.01' : '0'}
@@ -337,15 +304,13 @@
 								required={status >= 1 && status <= 5}
 								bind:value={listingPrice}
 								disabled={saving}
-								class="w-full rounded-lg border border-gray-300 px-4 py-2"
 							/>
-						</div>
-						<div>
-							<label
-								for={`edit-sale-${listingId}`}
-								class="mb-2 block text-sm font-medium text-gray-700"
-								>Prix vendu (€){status >= 2 && status <= 5 ? ' *' : ''}</label
-							><input
+						</Field>
+						<Field
+							label={`Prix vendu (€)${status >= 2 && status <= 5 ? ' *' : ''}`}
+							id={`edit-sale-${listingId}`}
+						>
+							<Input
 								id={`edit-sale-${listingId}`}
 								type="number"
 								min={status >= 2 && status <= 5 ? '0.01' : '0'}
@@ -353,9 +318,8 @@
 								required={status >= 2 && status <= 5}
 								bind:value={salePrice}
 								disabled={saving}
-								class="w-full rounded-lg border border-gray-300 px-4 py-2"
 							/>
-						</div>
+						</Field>
 					</div>{/key}
 				<ModelPhotos
 					modelId={model.uuid}
@@ -371,35 +335,26 @@
 						bind:cover
 						disabled={saving || modelPhotoBusy}
 					/>{/key}
-				{#if reference}<p class="text-sm text-gray-500">
-						Référence : <span class="font-mono font-semibold text-violet-950">{reference}</span>
-					</p>{:else if status >= 2 && status <= 4}<p class="text-sm text-gray-500">
+				{#if reference}<p class="text-sm text-fg-muted">
+						Référence : <span class="font-mono font-semibold text-fg">{reference}</span>
+					</p>{:else if status >= 2 && status <= 4}<p class="text-sm text-fg-muted">
 						Une référence sera générée à l’enregistrement.
 					</p>{/if}
-				{#if validation}<p class="text-sm text-amber-700" role="status">{validation}</p>{/if}
+				{#if validation}<p class="text-sm text-warning" role="status">{validation}</p>{/if}
 			{/if}
-			{#if errorMessage}<p class="text-sm text-red-600" role="alert">{errorMessage}</p>{/if}
+			{#if errorMessage}<p class="text-sm text-danger" role="alert">{errorMessage}</p>{/if}
 			<div class="flex justify-end gap-3">
-				<button
-					type="button"
-					disabled={saving}
-					onclick={() => dialog.close()}
-					class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600">Annuler</button
-				><button
+				<Button variant="secondary" disabled={saving} onclick={() => dialog?.close()}
+					>Annuler</Button
+				>
+				<Button
 					type="submit"
+					variant={mode === 'delete' ? 'danger' : 'primary'}
 					disabled={saving || (mode === 'edit' && !!validation)}
-					class="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 {mode ===
-					'delete'
-						? 'bg-red-600 hover:bg-red-700'
-						: 'bg-violet-950 hover:bg-violet-900'}"
-					>{saving ? 'Enregistrement…' : mode === 'delete' ? 'Supprimer' : 'Enregistrer'}</button
+					>{saving ? 'Enregistrement…' : mode === 'delete' ? 'Supprimer' : 'Enregistrer'}</Button
 				>
 			</div>
 		</form>
-	{:else}<p role="alert" class="my-5 text-sm text-red-600">{errorMessage}</p>
-		<button
-			type="button"
-			onclick={() => dialog.close()}
-			class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Fermer</button
-		>{/if}
-</dialog>
+	{:else}<p role="alert" class="mb-5 text-sm text-danger">{errorMessage}</p>
+		<Button variant="secondary" onclick={() => dialog?.close()}>Fermer</Button>{/if}
+</Dialog>

@@ -10,6 +10,7 @@ import ErrorState from './ErrorState.svelte';
 import Field from './Field.svelte';
 import Icon, { icons } from './Icon.svelte';
 import Input from './Input.svelte';
+import Select from './Select.svelte';
 import Page from './Page.svelte';
 import ThemeToggle from './ThemeToggle.svelte';
 
@@ -113,5 +114,42 @@ describe('ui', () => {
 		const cancel = new Event('cancel', { cancelable: true });
 		document.querySelector('dialog')!.dispatchEvent(cancel);
 		expect(cancel.defaultPrevented).toBe(false);
+	});
+
+	it('Field passe aria-describedby et aria-invalid à son contenu quand il y a une erreur', () => {
+		const children = createRawSnippet<[{ 'aria-describedby'?: string; 'aria-invalid'?: true }]>(
+			(aria) => ({
+				render: () =>
+					`<input id="prix" aria-describedby="${aria()['aria-describedby'] ?? ''}" aria-invalid="${aria()['aria-invalid'] ?? ''}" />`
+			})
+		);
+		render(Field, { label: 'Prix', id: 'prix', error: 'Obligatoire', children });
+		const input = screen.getByRole('textbox');
+		expect(input).toHaveAttribute('aria-describedby', 'prix-error');
+		expect(input).toHaveAttribute('aria-invalid', 'true');
+		expect(document.getElementById('prix-error')).toHaveTextContent('Obligatoire');
+	});
+
+	it('Button danger et Select', () => {
+		render(Button, { variant: 'danger', children: text('Supprimer') });
+		expect(screen.getByRole('button', { name: 'Supprimer' })).toHaveClass('bg-danger');
+		render(Select, { 'aria-label': 'Statut', children: text('') });
+		expect(screen.getByRole('combobox', { name: 'Statut' })).toBeInTheDocument();
+	});
+
+	it('Page wide lève la limite de largeur', () => {
+		const { container } = render(Page, { title: 'Stock', wide: true, children: text('x') });
+		expect(container.firstElementChild).toHaveClass('max-w-none');
+	});
+
+	it('ThemeToggle reflète le thème déjà appliqué dès le montage', async () => {
+		localStorage.setItem('theme', 'dark');
+		window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as never;
+		render(ThemeToggle);
+		expect(
+			await screen.findByRole('button', { name: 'Passer au thème clair' })
+		).toBeInTheDocument();
+		localStorage.clear();
+		document.documentElement.classList.remove('dark');
 	});
 });

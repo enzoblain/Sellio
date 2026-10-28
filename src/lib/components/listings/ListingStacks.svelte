@@ -16,6 +16,7 @@
 <script lang="ts" generics="T extends Article">
 	import type { Snippet } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	let { items, card, empty }: { items: T[]; card: Snippet<[T, Snippet]>; empty: Snippet } =
 		$props();
@@ -44,17 +45,18 @@
 		<section class:col-span-full={multiple && open} class="min-w-0">
 			{#snippet stackButton()}
 				{#if multiple}
-					<button
-						type="button"
+					<Button
+						variant="secondary"
 						onclick={() => toggle(group.key)}
 						aria-expanded={open}
 						aria-controls={`stack-${group.articles[0].id}`}
 						aria-label={`${open ? 'Replier' : 'Déplier'} les ${group.articles.length} articles`}
 						title={open ? 'Replier la pile' : 'Déplier la pile'}
-						class="rounded-lg border border-violet-200 bg-white px-2.5 py-2 text-sm font-medium text-violet-950 shadow-sm transition hover:bg-violet-50"
+						size="sm"
+						class="shadow-sm"
 					>
 						<span aria-hidden="true">▱ {group.articles.length} {open ? '↑' : '↓'}</span>
-					</button>
+					</Button>
 				{/if}
 			{/snippet}
 			<div
@@ -89,7 +91,7 @@
 		position: absolute;
 		inset: 0;
 		border: 1px solid var(--border);
-		border-radius: 0.75rem;
+		border-radius: var(--radius-lg);
 		background: var(--surface-2);
 		pointer-events: none;
 	}

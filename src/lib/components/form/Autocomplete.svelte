@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, untrack } from 'svelte';
+	import Input from '$lib/components/ui/Input.svelte';
 	import { createAutocomplete, type AutocompleteItem } from './Autocomplete.svelte.js';
 
 	let {
@@ -58,7 +59,7 @@
 
 <div class="w-full max-w-md">
 	<div class="relative">
-		<input
+		<Input
 			{id}
 			bind:value={state.value}
 			{disabled}
@@ -74,7 +75,6 @@
 				? `${listId}-${state.activeIndex}`
 				: undefined}
 			autocomplete="off"
-			class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
 			placeholder="Rechercher..."
 		/>
 
@@ -84,7 +84,7 @@
 				role="listbox"
 				{onscroll}
 				style:max-height={`${maxHeight}px`}
-				class="absolute z-10 mt-1 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+				class="absolute z-10 mt-1 w-full overflow-y-auto rounded-lg border border-border bg-surface shadow-lg"
 			>
 				{#if canAdd()}
 					<li
@@ -92,12 +92,12 @@
 						role="option"
 						aria-selected={state.activeIndex === 0}
 						style:height={`${ITEM_HEIGHT}px`}
-						class="border-b border-gray-100"
-						class:bg-blue-50={state.activeIndex === 0}
+						class="border-b border-border"
+						class:bg-surface-2={state.activeIndex === 0}
 					>
 						<button
 							type="button"
-							class="h-full w-full cursor-pointer px-4 text-left font-medium text-blue-600 hover:bg-blue-50"
+							class="h-full w-full cursor-pointer px-4 text-left font-medium text-accent hover:bg-surface-2"
 							tabindex="-1"
 							onmousedown={(event) => event.preventDefault()}
 							onclick={additem}
@@ -108,13 +108,13 @@
 				{/if}
 
 				{#if state.loading && state.items.length === 0}
-					<li style:height={`${ITEM_HEIGHT}px`} class="flex items-center px-4 text-gray-400">
+					<li style:height={`${ITEM_HEIGHT}px`} class="flex items-center px-4 text-fg-muted">
 						Chargement...
 					</li>
 				{:else if state.error}
-					<li class="px-4 py-3 text-sm text-red-600" role="status">{state.error}</li>
+					<li class="px-4 py-3 text-sm text-danger" role="status">{state.error}</li>
 				{:else if state.items.length === 0}
-					<li style:height={`${ITEM_HEIGHT}px`} class="flex items-center px-4 text-gray-500">
+					<li style:height={`${ITEM_HEIGHT}px`} class="flex items-center px-4 text-fg-muted">
 						Aucun résultat trouvé
 					</li>
 				{:else}
@@ -125,11 +125,11 @@
 							role="option"
 							aria-selected={state.activeIndex === optionIndex}
 							style:height={`${ITEM_HEIGHT}px`}
-							class:bg-gray-100={state.activeIndex === optionIndex}
+							class:bg-surface-2={state.activeIndex === optionIndex}
 						>
 							<button
 								type="button"
-								class="h-full w-full cursor-pointer px-4 text-left hover:bg-gray-100"
+								class="h-full w-full cursor-pointer px-4 text-left text-fg hover:bg-surface-2"
 								tabindex="-1"
 								onmousedown={(event) => event.preventDefault()}
 								onclick={() => selectitem(item)}
@@ -142,7 +142,7 @@
 					{#if state.loading}
 						<li
 							style:height={`${ITEM_HEIGHT}px`}
-							class="flex items-center justify-center text-xs text-gray-400"
+							class="flex items-center justify-center text-xs text-fg-muted"
 						>
 							Chargement de la suite...
 						</li>

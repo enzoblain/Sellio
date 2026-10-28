@@ -14,19 +14,19 @@
 </script>
 
 {#snippet placeholder()}
-	<div class="flex h-full w-full items-center justify-center bg-violet-50">
+	<div class="flex h-full w-full items-center justify-center bg-surface-2">
 		<div class="px-6 text-center">
 			<svg
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
 				stroke-width="1.4"
-				class="mx-auto mb-4 h-14 w-14 text-violet-300"
+				class="mx-auto mb-4 h-14 w-14 text-fg-muted"
 				aria-hidden="true"
 				><path d="m8 3-5 3-2 5 4 2 2-3v11h10V10l2 3 4-2-2-5-5-3a4 4 0 0 1-8 0Z" /></svg
 			>
-			<p class="font-medium text-violet-950">{brand}</p>
-			<p class="mt-1 text-sm text-gray-500">{model}</p>
+			<p class="font-medium text-fg">{brand}</p>
+			<p class="mt-1 text-sm text-fg-muted">{model}</p>
 		</div>
 	</div>
 {/snippet}
@@ -46,18 +46,18 @@
 					type="button"
 					aria-label="Photo précédente"
 					onclick={() => (index = (current - 1 + photos.length) % photos.length)}
-					class="absolute top-1/2 left-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl text-violet-950 shadow-sm hover:bg-white"
+					class="absolute top-1/2 left-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 text-xl text-fg shadow-sm hover:bg-surface"
 					>‹</button
 				>
 				<button
 					type="button"
 					aria-label="Photo suivante"
 					onclick={() => (index = (current + 1) % photos.length)}
-					class="absolute top-1/2 right-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl text-violet-950 shadow-sm hover:bg-white"
+					class="absolute top-1/2 right-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 text-xl text-fg shadow-sm hover:bg-surface"
 					>›</button
 				>
 				<span
-					class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-violet-950/75 px-3 py-1 text-xs text-white"
+					class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-fg/75 px-3 py-1 text-xs text-bg"
 					aria-live="polite">{current + 1} / {photos.length}</span
 				>
 			{/if}

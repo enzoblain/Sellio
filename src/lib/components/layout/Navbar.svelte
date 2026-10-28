@@ -1,16 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import Icon, { type IconName } from '$lib/components/ui/Icon.svelte';
 	import ThemeToggle from '$lib/components/ui/ThemeToggle.svelte';
 	import { DARK_MODE_ENABLED } from '$lib/theme';
 
-	type NavItem = {
-		label: string;
-		href: string;
-		icon: IconName;
-	};
-
-	const items: NavItem[] = [
+	const items = [
 		{ label: 'Dashboard', href: '/', icon: 'dashboard' },
 		{ label: 'À récupérer', href: '/to-collect', icon: 'collect' },
 		{ label: 'Stock', href: '/stock', icon: 'stock' },
@@ -18,7 +13,7 @@
 		{ label: 'À expédier', href: '/to-ship', icon: 'toship' },
 		{ label: 'Expédié', href: '/shipped', icon: 'shipped' },
 		{ label: 'Dépenses', href: '/expenses', icon: 'expenses' }
-	];
+	] as const satisfies { label: string; href: string; icon: IconName }[];
 
 	function isActive(href: string) {
 		return href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href);
@@ -34,14 +29,14 @@
 	</div>
 
 	<ul class="flex flex-1 flex-col gap-0.5">
-		{#each items as item}
+		{#each items as item (item.href)}
 			<li class="relative">
 				{#if isActive(item.href)}
 					<span class="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent"
 					></span>
 				{/if}
 				<a
-					href={item.href}
+					href={resolve(item.href)}
 					class="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 {isActive(
 						item.href
 					)
@@ -57,15 +52,18 @@
 </nav>
 
 {#if DARK_MODE_ENABLED}
-	<div class="fixed top-2 right-2 z-20 md:hidden"><ThemeToggle /></div>
+	<div class="flex items-center justify-between px-6 pt-3 md:hidden">
+		<span class="text-base font-semibold tracking-tight text-fg">Sellio</span>
+		<ThemeToggle />
+	</div>
 {/if}
 
 <nav
 	class="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"
 >
-	{#each items as item}
+	{#each items as item (item.href)}
 		<a
-			href={item.href}
+			href={resolve(item.href)}
 			aria-label={item.label}
 			class="flex flex-1 items-center justify-center py-3"
 		>

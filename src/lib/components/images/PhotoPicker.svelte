@@ -92,14 +92,14 @@
 
 <section class="space-y-3">
 	<div class="flex flex-wrap items-center justify-between gap-3">
-		<h3 class="text-sm font-medium text-gray-700">
-			Photos <span class="font-normal text-gray-400">({photos.length}/12)</span>
+		<h3 class="text-sm font-medium text-fg">
+			Photos <span class="font-normal text-fg-muted">({photos.length}/12)</span>
 		</h3>
 		<label
 			for={id}
-			class="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-violet-950 {disabled
+			class="cursor-pointer rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-fg {disabled
 				? 'pointer-events-none opacity-40'
-				: 'hover:bg-violet-50'}">+ Ajouter des photos</label
+				: 'hover:bg-surface-2'}">+ Ajouter des photos</label
 		><input
 			{id}
 			type="file"
@@ -110,17 +110,17 @@
 			class="sr-only"
 		/>
 	</div>
-	<p class="text-xs text-gray-400">
+	<p class="text-xs text-fg-muted">
 		JPG, PNG ou WebP, 10 Mo par photo. La couverture apparaît en premier sur la carte.
 	</p>
-	{#if busy}<p class="text-xs text-gray-500" role="status">Vérification des photos…</p>{/if}
-	{#if errorMessage}<p role="alert" class="text-sm text-red-600">{errorMessage}</p>{/if}
+	{#if busy}<p class="text-xs text-fg-muted" role="status">Vérification des photos…</p>{/if}
+	{#if errorMessage}<p role="alert" class="text-sm text-danger">{errorMessage}</p>{/if}
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
 		{#each photos as photo, index (photo.token)}
 			<div
 				class="overflow-hidden rounded-lg border {photo.token === cover
-					? 'border-violet-500 ring-1 ring-violet-500'
-					: 'border-gray-200'}"
+					? 'border-accent ring-1 ring-accent'
+					: 'border-border'}"
 			>
 				<div class="relative aspect-square">
 					<img
@@ -128,28 +128,28 @@
 						alt={`Photo ${index + 1} de l’article`}
 						class="h-full w-full object-cover"
 					/>{#if photo.token === cover}<span
-							class="absolute right-2 bottom-2 left-2 rounded-md bg-violet-950/90 px-2 py-1 text-center text-xs text-white"
+							class="absolute right-2 bottom-2 left-2 rounded-md bg-fg/90 px-2 py-1 text-center text-xs text-bg"
 							>Couverture</span
 						>{/if}
 				</div>
-				<div class="flex flex-wrap justify-between gap-2 bg-white p-2">
+				<div class="flex flex-wrap justify-between gap-2 bg-surface p-2">
 					<button
 						type="button"
 						onclick={() => (cover = photo.token)}
 						disabled={disabled || busy || photo.token === cover}
 						aria-label={`Utiliser la photo ${index + 1} comme couverture`}
-						class="text-xs font-medium text-violet-950 disabled:opacity-40">Couverture</button
+						class="text-xs font-medium text-fg disabled:opacity-40">Couverture</button
 					><button
 						type="button"
 						onclick={() => remove(photo.token)}
 						disabled={disabled || busy}
 						aria-label={`Retirer la photo ${index + 1}`}
-						class="text-xs font-medium text-red-600 disabled:opacity-40">Retirer</button
+						class="text-xs font-medium text-danger disabled:opacity-40">Retirer</button
 					>
 				</div>
 			</div>
 		{:else}<div
-				class="col-span-full rounded-lg border border-dashed border-gray-300 p-5 text-center text-sm text-gray-400"
+				class="col-span-full rounded-lg border border-dashed border-border p-5 text-center text-sm text-fg-muted"
 			>
 				Aucune photo ajoutée.
 			</div>{/each}
