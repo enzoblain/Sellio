@@ -29,6 +29,11 @@ database_label() {
 	printf '%s' "${rest##*@}"
 }
 
+# Identité de la base (hôte, port, nom, sans identifiants) utilisable dans un nom de fichier.
+database_key() {
+	database_label | sed 's/[^A-Za-z0-9]/_/g'
+}
+
 # Requête SQL qui renvoie une seule valeur, sans décoration.
 sql_value() {
 	psql "$DATABASE_URL" --no-psqlrc -X -v ON_ERROR_STOP=1 -tA -c "$1"
@@ -47,16 +52,16 @@ confirm() {
 	[[ "$answer" == oui ]] || die "annulé."
 }
 
-# Chemin de la sauvegarde la plus récente de moins de BACKUP_MAX_AGE_MIN minutes, vide sinon.
+# Chemin de la sauvegarde de CETTE base la plus récente (moins de BACKUP_MAX_AGE_MIN minutes), vide sinon.
 recent_backup() {
 	[[ -d "$BACKUP_DIR" ]] || return 0
-	find "$BACKUP_DIR" -maxdepth 1 -type f -name '*.dump' -size +0 -mmin "-$BACKUP_MAX_AGE_MIN" -print | sort | tail -n 1
+	find "$BACKUP_DIR" -maxdepth 1 -type f -name "sellio-$(database_key)-*.dump" -size +0 -mmin "-$BACKUP_MAX_AGE_MIN" -print | sort | tail -n 1
 }
 
 require_recent_backup() {
 	local backup
 	backup="$(recent_backup)"
-	[[ -n "$backup" ]] || die "aucune sauvegarde de moins de ${BACKUP_MAX_AGE_MIN} min dans $BACKUP_DIR. Lancer scripts/backup-db.sh d'abord."
+	[[ -n "$backup" ]] || die "aucune sauvegarde de moins de ${BACKUP_MAX_AGE_MIN} min pour $(database_label) dans $BACKUP_DIR. Lancer scripts/backup-db.sh d'abord."
 	log "Sauvegarde récente trouvée : $backup"
 }
 

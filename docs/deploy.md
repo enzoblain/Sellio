@@ -13,7 +13,7 @@ export DATABASE_URL='postgres://utilisateur:motdepasse@hote:5432/sellio'
 
 Le `docker-compose.yml` ne publie pas le port de PostgreSQL : pour utiliser les scripts depuis l'hôte, passer par un tunnel SSH ou un port temporairement publié. Sur le NAS (`deploy/nas`), `update.sh` fait déjà sauvegarde et migration à chaque nouvelle image : voir `deploy/nas/README.md`. Les scripts ci-dessous servent pour une mise en prod pilotée à la main.
 
-Les sauvegardes sont écrites dans `backups/` (ignoré par git, permissions privées). `BACKUP_DIR` change le dossier. Une sauvegarde est « récente » si elle a moins de 60 minutes (`BACKUP_MAX_AGE_MIN`).
+Les sauvegardes sont écrites dans `backups/` (ignoré par git, permissions privées). `BACKUP_DIR` change le dossier. Une sauvegarde est « récente » si elle a moins de 60 minutes (`BACKUP_MAX_AGE_MIN`) et si elle vient de la même base (hôte, port et nom, inclus dans le nom du fichier) : un dump de la copie de test ne débloque pas la prod. Le mot de passe de `DATABASE_URL` apparaît dans la ligne de commande de `psql`/`pg_dump` le temps de l’exécution : à lancer sur une machine de confiance.
 
 Les scripts qui demandent confirmation (`restore-db.sh`, `rollback-0007.sh`) attendent qu'on tape `oui`. Hors terminal, il faut passer `--yes`.
 
@@ -55,7 +55,7 @@ Il exige une sauvegarde récente, vérifie que 0007 est bien la dernière migrat
 scripts/restore-db.sh backups/sellio-<date>.dump
 ```
 
-Remplace tout le contenu de la base : les données ajoutées depuis la sauvegarde sont perdues. Arrêter l'appli avant, puis redéployer la version précédente du code.
+Vide les schémas `public` et `drizzle` puis rejoue le dump en une transaction (une migration appliquée depuis la sauvegarde disparaît donc aussi, et peut être rejouée). Remplace tout le contenu de la base : les données ajoutées depuis la sauvegarde sont perdues. Arrêter l'appli avant, puis redéployer la version précédente du code.
 
 ## Tester avant la prod
 

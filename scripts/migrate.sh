@@ -26,3 +26,8 @@ npm run db:migrate
 
 after="$(count_applied)"
 log "Migrations appliquées : $after (nouvelles : $((after - before)))"
+if ((after > before)); then
+	log "Dernières migrations enregistrées (id, created_at) :"
+	psql "$DATABASE_URL" --no-psqlrc -X -v ON_ERROR_STOP=1 -tA -F ' | ' \
+		-c "SELECT id, created_at FROM drizzle.__drizzle_migrations ORDER BY id DESC LIMIT $((after - before))"
+fi

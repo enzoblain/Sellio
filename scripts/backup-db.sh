@@ -9,7 +9,7 @@ require_cmd pg_dump
 require_database_url
 
 mkdir -p "$BACKUP_DIR"
-file="$BACKUP_DIR/sellio-$(date -u +%Y%m%dT%H%M%SZ).dump"
+file="$BACKUP_DIR/sellio-$(database_key)-$(date -u +%Y%m%dT%H%M%SZ).dump"
 
 log "Sauvegarde de $(database_label) vers $file"
 if ! (umask 077 && pg_dump "$DATABASE_URL" -Fc --no-owner -f "$file"); then
