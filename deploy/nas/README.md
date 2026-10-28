@@ -43,10 +43,12 @@ Ne pas créer les deux tâches. Le script verrouille les exécutions simultanée
 À chaque nouvelle image, le script :
 
 1. Télécharge la version avant de toucher à l’application.
-2. Arrête brièvement Sellio pour éviter des écritures pendant la sauvegarde.
-3. Sauvegarde PostgreSQL, les photos et la configuration dans `backups/<date>/`.
-4. Applique les migrations puis les données de référence.
-5. Démarre Sellio et vérifie son état de santé.
+2. Sauvegarde PostgreSQL (`pg_dump` 17 dans le conteneur `db`), les photos et la configuration dans `backups/<date>/`, pendant que l’ancienne version reste en ligne.
+3. Applique les migrations en attente puis les données de référence, toujours avec l’ancienne version en ligne.
+4. Remplace Sellio par la nouvelle version et vérifie son état de santé. Si elle n’est pas saine, l’image précédente est relancée.
+5. Ne garde que les 10 dernières sauvegardes (`KEEP_BACKUPS=n` dans l’environnement de la tâche pour changer).
+
+Si la sauvegarde échoue, rien n’est modifié et la prochaine exécution réessaie. Si la migration échoue, la nouvelle version ne démarre pas et l’ancienne continue de tourner. Sans migration en attente, le déroulement est le même, l’étape 3 ne fait rien.
 
 La base et les images sont conservées dans les volumes externes `sellio_nas_postgres_data` et `sellio_nas_images_data`. Le script ne les supprime jamais. Il ne met pas automatiquement PostgreSQL à jour et ne lance pas `db:push`.
 
@@ -54,13 +56,13 @@ Les changements du Compose, du script et de `.env` ne sont pas récupérés auto
 
 ## En cas d’échec
 
-Consulter `update.log` et `.state/last-error.log`. Si une migration échoue, l’application reste arrêtée. Une version déjà marquée en échec ne sera pas réessayée automatiquement ; corriger la cause puis lancer :
+Consulter `update.log` et `.state/last-error.log`. Si une migration échoue, l’ancienne version reste en ligne. Une version déjà marquée en échec ne sera pas réessayée automatiquement ; corriger la cause puis lancer :
 
 ```bash
 bash update.sh --retry
 ```
 
-Une nouvelle image peut aussi être déployée après correction du code. Les sauvegardes ne sont pas purgées automatiquement : contrôler l’espace disponible et copier les sauvegardes vers un autre support. Elles contiennent les données et le mot de passe de la base ; conserver leurs permissions privées.
+Une nouvelle image peut aussi être déployée après correction du code. Seules les 10 dernières sauvegardes sont conservées : copier celles à garder vers un autre support. Elles contiennent les données et le mot de passe de la base ; conserver leurs permissions privées.
 
 Revenir à une ancienne image ne restaure pas le schéma de la base. En cas de restauration, arrêter l’application, restaurer le dump avec `pg_restore` et les photos de la même sauvegarde, puis relancer l’image indiquée dans `previous-image`. Ne pas restaurer automatiquement une sauvegarde : cela peut perdre les données ajoutées depuis.
 

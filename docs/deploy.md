@@ -2,6 +2,21 @@
 
 Ce runbook couvre le passage en prod de la partie Colis (migration `0007_add_parcels`). Les scripts sont dans `scripts/` et ne touchent pas au code de l'appli.
 
+## Déploiement automatique (NAS)
+
+Fusionner `dev` dans `master` suffit. Rien d'autre à lancer :
+
+1. GitHub Actions (`Publish Sellio for NAS`) vérifie le code, teste `update.sh` (`deploy/nas/test-update.sh`), construit l'image et la publie sur GHCR.
+2. Sur le NAS, la tâche planifiée lance `update.sh` toutes les 5 minutes. Pour une nouvelle image : sauvegarde (base via `pg_dump` 17 dans le conteneur `db`, photos, config) dans `backups/<date>/`, puis migrations en attente, puis démarrage de la nouvelle version. L'ancienne reste en ligne pendant les deux premières étapes.
+3. Échec de sauvegarde : rien n'est modifié, nouvelle tentative au passage suivant. Échec de migration : la nouvelle version ne démarre pas, l'ancienne continue, l'image est marquée en échec et n'est plus rejouée sans `bash update.sh --retry`. Version non saine après démarrage : l'image précédente est relancée.
+4. Seules les 10 dernières sauvegardes sont gardées (`KEEP_BACKUPS`).
+
+Où voir ce qui s'est passé : onglet Actions de GitHub pour le build, `update.log` (sortie de la tâche planifiée, code de sortie non nul en cas d'échec) et `.state/last-error.log` (erreur de migration ou logs de l'appli) dans le dossier du NAS.
+
+Retour arrière à la main : arrêter l'appli, restaurer `backups/<date>/database.dump` avec `pg_restore --clean --if-exists --no-owner` (et `images.tar.gz` pour les photos), puis relancer l'image notée dans `previous-image`. Pour retirer seulement la migration 0007 en gardant les données, voir `scripts/rollback-0007.sh` plus bas. Ne pas restaurer automatiquement : les données ajoutées depuis la sauvegarde seraient perdues. Détails : `deploy/nas/README.md`.
+
+Les sections suivantes décrivent les scripts `scripts/` pour une mise en prod pilotée à la main.
+
 ## Prérequis
 
 - `psql`, `pg_dump` et `pg_restore` (client PostgreSQL dont la version majeure est la même que celle du serveur : 17 en prod) et `npm` (dépendances installées avec `npm ci`).
