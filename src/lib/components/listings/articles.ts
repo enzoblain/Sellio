@@ -25,6 +25,17 @@ export type Article = {
 	stockingPlace?: string | null;
 };
 
+/** Libellés des statuts en base (index = valeur du statut). */
+export const STATUS_LABELS = [
+	'À récupérer',
+	'Listé / en vente',
+	'À expédier',
+	'Expédié',
+	'Terminé',
+	'Retourné',
+	'En stock'
+];
+
 export type SortKey = 'recent' | 'price-asc' | 'price-desc' | 'profit';
 
 export type ArticleFilters = {

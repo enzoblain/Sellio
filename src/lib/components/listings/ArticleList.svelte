@@ -6,7 +6,7 @@
 	import { groupArticles, type Article } from './articles';
 	import { getArticlesContext } from './context';
 	import ListingCard from './ListingCard.svelte';
-	import ListingEditor from './ListingEditor.svelte';
+	import ArticleDetail from './ArticleDetail.svelte';
 	import ListingStacks from './ListingStacks.svelte';
 
 	let {
@@ -29,6 +29,12 @@
 	const groups = $derived(groupArticles(articles.items));
 	let expanded = $state<string[]>([]);
 
+	// Toute la ligne ouvre le panneau, sauf ses boutons (le titre reste le point d'entrée clavier).
+	function openFromRow(event: MouseEvent, id: string) {
+		if ((event.target as HTMLElement).closest('button, a, input, select')) return;
+		articles.open(id);
+	}
+
 	function toggle(key: string) {
 		expanded = expanded.includes(key)
 			? expanded.filter((value) => value !== key)
@@ -50,10 +56,16 @@
 {/snippet}
 
 {#snippet line(item: T)}
-	<ListingEditor listingId={item.id} inline />
 	<div class="min-w-0 flex-1">
-		<p class="truncate font-medium text-fg">{item.brand} · {item.model}</p>
-		<p class="truncate text-fg-muted">{item.size} · {item.color}</p>
+		<button
+			type="button"
+			onclick={() => articles.open(item.id)}
+			aria-label={`Voir le détail : ${item.brand} ${item.model}`}
+			class="block max-w-full rounded-sm text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+		>
+			<span class="block truncate font-medium text-fg">{item.brand} · {item.model}</span>
+			<span class="block truncate text-fg-muted">{item.size} · {item.color}</span>
+		</button>
 		{@render meta?.(item)}
 	</div>
 	<div class="flex flex-wrap items-center justify-end gap-x-6 gap-y-2">
@@ -66,8 +78,16 @@
 	<ListingStacks items={articles.items}>
 		{#snippet card(item, stackButton)}
 			{#snippet cardAction()}{@render action?.(item)}{/snippet}
-			<ListingCard {item} {stackButton} action={cardAction}>
-				<h2 class="font-medium text-fg">{item.brand} · {item.model}</h2>
+			<ListingCard {item} {stackButton} action={cardAction} onopen={() => articles.open(item.id)}>
+				<h2 class="font-medium text-fg">
+					<button
+						type="button"
+						onclick={() => articles.open(item.id)}
+						aria-label={`Voir le détail : ${item.brand} ${item.model}`}
+						class="rounded-sm text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+						>{item.brand} · {item.model}</button
+					>
+				</h2>
 				<p class="mt-1 text-sm text-fg-muted">{item.size} · {item.color}</p>
 				{@render meta?.(item)}
 				{#snippet footer()}
@@ -83,7 +103,11 @@
 			{@const open = expanded.includes(group.key)}
 			{@const count = group.articles.length}
 			<div class="w-full">
-				<div class="flex flex-wrap items-center gap-3">
+				<div
+					class="flex cursor-pointer flex-wrap items-center gap-3"
+					onclick={(event) => openFromRow(event, group.articles[0].id)}
+					role="presentation"
+				>
 					{@render line(group.articles[0])}
 					{#if count > 1}
 						<Button
@@ -100,7 +124,15 @@
 				{#if open}
 					<ul class="mt-3 divide-y divide-border rounded-md border border-border bg-surface-2">
 						{#each group.articles.slice(1) as item (item.id)}
-							<li class="flex flex-wrap items-center gap-3 px-3 py-2">{@render line(item)}</li>
+							<li>
+								<div
+									class="flex cursor-pointer flex-wrap items-center gap-3 px-3 py-2"
+									onclick={(event) => openFromRow(event, item.id)}
+									role="presentation"
+								>
+									{@render line(item)}
+								</div>
+							</li>
 						{/each}
 					</ul>
 				{/if}
@@ -108,3 +140,5 @@
 		{/snippet}
 	</DataList>
 {/if}
+
+<ArticleDetail item={articles.selected} onclose={articles.close} {action} />

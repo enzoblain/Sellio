@@ -25,7 +25,7 @@
 		md: 'm-auto w-[calc(100%-2rem)] max-w-md overflow-visible rounded-xl p-6',
 		lg: 'm-auto w-[calc(100%-2rem)] max-h-[90vh] max-w-2xl overflow-y-auto rounded-xl p-6',
 		drawer:
-			'm-0 h-dvh max-h-none w-full max-w-none overflow-y-auto p-6 md:ml-auto md:max-w-md md:rounded-l-xl'
+			'm-0 h-dvh max-h-none w-full max-w-none overflow-y-auto p-6 md:ml-auto md:max-w-[30rem] md:rounded-l-xl'
 	};
 
 	const titleId = `${uid}-title`;

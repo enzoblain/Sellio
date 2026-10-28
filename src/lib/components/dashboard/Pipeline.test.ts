@@ -33,4 +33,13 @@ describe('Pipeline', () => {
 		render(Pipeline, { stock });
 		expect(screen.getAllByTestId('pipeline-segment')).toHaveLength(4);
 	});
+
+	it('place une pastille de la couleur du segment devant chaque statut', () => {
+		render(Pipeline, { stock });
+		const dots = screen.getAllByTestId('pipeline-dot');
+		expect(dots).toHaveLength(5);
+		const segments = screen.getAllByTestId('pipeline-segment');
+		expect(dots[0].style.background).toBe((segments[0] as HTMLElement).style.background);
+		expect(dots[2].style.background).toBe((segments[1] as HTMLElement).style.background);
+	});
 });

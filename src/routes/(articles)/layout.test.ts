@@ -49,7 +49,7 @@ import Layout from './+layout.svelte';
 import ArticleListHarness from '$lib/components/listings/ArticleListHarness.svelte';
 import { getArticlesContext } from '$lib/components/listings/context';
 
-vi.mock('$lib/components/listings/ListingEditor.svelte', () => ({ default: () => {} }));
+vi.mock('$lib/components/listings/ArticleDetail.svelte', () => ({ default: () => {} }));
 vi.mock('$lib/components/images/ListingGallery.svelte', () => ({ default: () => {} }));
 
 const children = createRawSnippet(() => ({ render: () => '<p>contenu de page</p>' }));
@@ -207,9 +207,93 @@ describe('layout Articles', () => {
 	});
 });
 
+describe('panneau d’article (?id=)', () => {
+	const probe = () => {
+		let ctx: ReturnType<typeof getArticlesContext> | undefined;
+		const snippet = createRawSnippet(() => ({
+			render: () => {
+				ctx = getArticlesContext();
+				return '<p>sonde</p>';
+			}
+		}));
+		return { snippet, ctx: () => ctx! };
+	};
+
+	it('open pousse ?id= en gardant les filtres (retour = fermeture)', () => {
+		state.url = new URL('http://localhost/stock?brand=Adidas');
+		const sonde = probe();
+		render(Layout, { children: sonde.snippet });
+		sonde.ctx().open('2');
+		expect(goto).toHaveBeenCalledWith(
+			'/stock?brand=Adidas&id=2',
+			expect.not.objectContaining({ replaceState: true })
+		);
+	});
+
+	it('?id= partagé : l’article est sélectionné, sans navigation parasite', () => {
+		state.url = new URL('http://localhost/stock?id=2&sort=price-asc');
+		const sonde = probe();
+		render(Layout, { children: sonde.snippet });
+		expect(sonde.ctx().selected?.id).toBe('2');
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('une recherche garde ?id= dans l’URL', async () => {
+		state.url = new URL('http://localhost/stock?id=2');
+		render(Layout, { children });
+		await fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'nike' } });
+		await waitFor(() =>
+			expect(goto).toHaveBeenLastCalledWith('/stock?q=nike&id=2', expect.anything())
+		);
+	});
+
+	it('un id inconnu est retiré de l’URL (remplacement)', async () => {
+		state.url = new URL('http://localhost/stock?id=inconnu');
+		render(Layout, { children });
+		await waitFor(() =>
+			expect(goto).toHaveBeenCalledWith('/stock', expect.objectContaining({ replaceState: true }))
+		);
+	});
+
+	it('close retire ?id= quand le lien a été ouvert directement', () => {
+		state.url = new URL('http://localhost/stock?id=2&brand=Adidas');
+		const sonde = probe();
+		render(Layout, { children: sonde.snippet });
+		sonde.ctx().close();
+		expect(goto).toHaveBeenCalledWith(
+			'/stock?brand=Adidas',
+			expect.objectContaining({ replaceState: true })
+		);
+	});
+
+	it('close revient en arrière quand le panneau a été ouvert depuis la liste', () => {
+		const back = vi.spyOn(history, 'back').mockImplementation(() => {});
+		const sonde = probe();
+		render(Layout, { children: sonde.snippet });
+		sonde.ctx().open('2');
+		state.url = new URL('http://localhost/stock?id=2');
+		goto.mockClear();
+		sonde.ctx().close();
+		expect(back).toHaveBeenCalledOnce();
+		expect(goto).not.toHaveBeenCalled();
+		back.mockRestore();
+	});
+});
+
 describe('ArticleList', () => {
 	const context = (view: 'list' | 'grid', items: unknown[], total = items.length) =>
-		({ items, total, view, reset: vi.fn() }) as never;
+		({
+			items,
+			total,
+			view,
+			all: items,
+			selected: undefined,
+			reset: vi.fn(),
+			open: vi.fn(),
+			close: vi.fn()
+		}) as never as ReturnType<typeof getArticlesContext> & {
+			open: ReturnType<typeof vi.fn>;
+		};
 	const stack = [row('1', 'Nike', { modelId: 'm', id: '1' }), row('2', 'Nike', { modelId: 'm' })];
 
 	it('liste : piles en lignes groupées ×N, dépliables', async () => {
@@ -220,6 +304,25 @@ describe('ArticleList', () => {
 		await fireEvent.click(toggle);
 		expect(screen.getAllByRole('listitem')).toHaveLength(2);
 		expect(screen.getByRole('button', { name: 'Replier les 2 articles' })).toBeInTheDocument();
+	});
+
+	it('liste : le titre et le reste de la ligne ouvrent le panneau, pas l’action', async () => {
+		const shared = context('list', [stack[0]]);
+		render(ArticleListHarness, { shared });
+		await fireEvent.click(screen.getByRole('button', { name: 'Voir le détail : Nike Modèle 1' }));
+		expect(shared.open).toHaveBeenCalledWith('1');
+		shared.open.mockClear();
+		await fireEvent.click(screen.getByRole('button', { name: 'Récupéré : Modèle 1' }));
+		expect(shared.open).not.toHaveBeenCalled();
+		await fireEvent.click(screen.getByRole('listitem').firstElementChild!.firstElementChild!);
+		expect(shared.open).toHaveBeenCalledWith('1');
+	});
+
+	it('grille : le titre ouvre le panneau', async () => {
+		const shared = context('grid', [stack[0]]);
+		render(ArticleListHarness, { shared });
+		await fireEvent.click(screen.getByRole('button', { name: 'Voir le détail : Nike Modèle 1' }));
+		expect(shared.open).toHaveBeenCalledWith('1');
 	});
 
 	it('grille : conserve les piles', () => {
