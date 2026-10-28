@@ -54,12 +54,7 @@
 
 <Page title="À récupérer" wide>
 	{#snippet actions()}
-		<a
-			href={resolve('/to-collect/insert')}
-			class="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-		>
-			<span aria-hidden="true">+</span> Ajouter
-		</a>
+		<Button href={resolve('/to-collect/insert')}><span aria-hidden="true">+</span> Ajouter</Button>
 	{/snippet}
 	{#await orders}
 		<p class="text-sm text-fg-muted">Chargement des commandes…</p>

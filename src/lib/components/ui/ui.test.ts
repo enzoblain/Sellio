@@ -42,6 +42,14 @@ describe('ui', () => {
 		expect(screen.getByRole('button', { name: 'Non' })).toBeDisabled();
 	});
 
+	it('Button avec href rend un lien stylé comme un bouton', () => {
+		render(Button, { href: '/nouveau', size: 'sm', children: text('Nouveau') });
+		const link = screen.getByRole('link', { name: 'Nouveau' });
+		expect(link).toHaveAttribute('href', '/nouveau');
+		expect(link).toHaveClass('bg-accent', 'rounded-md');
+		expect(screen.queryByRole('button')).toBeNull();
+	});
+
 	it('Button est de type button par défaut', () => {
 		render(Button, { children: text('x') });
 		expect(screen.getByRole('button')).toHaveAttribute('type', 'button');

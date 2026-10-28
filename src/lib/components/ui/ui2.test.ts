@@ -182,3 +182,19 @@ describe('Toast', () => {
 		expect(screen.getByRole('status')).not.toHaveTextContent('Transition faite');
 	});
 });
+
+describe('Tabs en mode href', () => {
+	const tabs = [
+		{ id: 'a', label: 'Un', href: '/un' },
+		{ id: 'b', label: 'Deux', href: '/deux' }
+	];
+
+	it('rend des liens avec aria-current sur l’onglet actif', () => {
+		render(Tabs, { tabs, label: 'Vues', value: 'b' });
+		expect(screen.getByRole('navigation', { name: 'Vues' })).toBeInTheDocument();
+		expect(screen.queryByRole('tab')).toBeNull();
+		expect(screen.getByRole('link', { name: 'Un' })).toHaveAttribute('href', '/un');
+		expect(screen.getByRole('link', { name: 'Un' })).not.toHaveAttribute('aria-current');
+		expect(screen.getByRole('link', { name: 'Deux' })).toHaveAttribute('aria-current', 'page');
+	});
+});

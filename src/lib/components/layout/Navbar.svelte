@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import ThemeToggle from '$lib/components/ui/ThemeToggle.svelte';
 	import { DARK_MODE_ENABLED } from '$lib/theme';
@@ -34,14 +35,10 @@
 		</button>
 	</div>
 
-	<a
-		href={resolve(NEW_ARTICLE_HREF)}
-		title="Nouvel article"
-		class="mb-6 flex items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-	>
+	<Button href={resolve(NEW_ARTICLE_HREF)} size="sm" title="Nouvel article" class="mb-6">
 		<Icon name="plus" />
 		<span class="sidebar-collapsed:sr-only">Nouvel article</span>
-	</a>
+	</Button>
 
 	<ul class="flex flex-1 flex-col gap-0.5">
 		{#each navItems as item (item.href)}
