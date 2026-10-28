@@ -15,12 +15,15 @@
 		statusFromPath,
 		type Article,
 		type ArticleFilters,
+		type FilterKey,
 		type ArticleStatus
 	} from '$lib/components/listings/articles';
 	import { setArticlesContext, type ArticleView } from '$lib/components/listings/context';
+	import Chip from '$lib/components/ui/Chip.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ErrorState from '$lib/components/ui/ErrorState.svelte';
 	import FilterBar from '$lib/components/ui/FilterBar.svelte';
+	import Drawer from '$lib/components/ui/Drawer.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import SegmentedControl from '$lib/components/ui/SegmentedControl.svelte';
@@ -147,6 +150,28 @@
 			})
 		)
 	);
+	// Un modèle dont la marque n'est plus cochée n'a plus lieu d'être filtré. On ne réagit qu'au
+	// changement de marques : un changement des données ne doit pas retirer un filtre actif (#16).
+	$effect(() => {
+		const brands = [...filters.brands];
+		untrack(() => {
+			if (!loaded || brands.length === 0 || filters.models.length === 0) return;
+			const allowed = new Set(
+				all.filter((item) => brands.includes(item.brand)).map((item) => item.model)
+			);
+			const kept = filters.models.filter((model) => allowed.has(model));
+			if (kept.length !== filters.models.length) filters.models = kept;
+		});
+	});
+	// Les modèles proposés suivent les marques cochées (tous si aucune).
+	const modelOptions = $derived(
+		distinct([
+			...all
+				.filter((item) => filters.brands.length === 0 || filters.brands.includes(item.brand))
+				.map((item) => item.model),
+			...filters.models
+		]).map((value) => ({ value, label: value }))
+	);
 	const hasPlaces = $derived(status !== 'to-collect');
 	const tabs = $derived(
 		STATUS_TABS.map((tab) => {
@@ -159,8 +184,51 @@
 		})
 	);
 
+	let filtersOpen = $state(false);
+	const sections = $derived(
+		(
+			[
+				{
+					key: 'places',
+					title: 'Lieu',
+					label: 'Filtrer par stockage',
+					options: placeOptions,
+					show: hasPlaces && (placeOptions.length > 1 || filters.places.length > 0)
+				},
+				{
+					key: 'brands',
+					title: 'Marque',
+					label: 'Filtrer par marque',
+					options: brandOptions,
+					show: brandOptions.length > 1 || filters.brands.length > 0
+				},
+				{
+					key: 'models',
+					title: 'Modèle',
+					label: 'Filtrer par modèle',
+					options: modelOptions,
+					show: modelOptions.length > 1 || filters.models.length > 0
+				}
+			] satisfies {
+				key: FilterKey;
+				title: string;
+				label: string;
+				options: { value: string; label: string }[];
+				show: boolean;
+			}[]
+		).filter((section) => section.show)
+	);
+	const activeChips = $derived([
+		...filters.places.map((value) => ({ key: 'places' as FilterKey, value })),
+		...filters.brands.map((value) => ({ key: 'brands' as FilterKey, value })),
+		...filters.models.map((value) => ({ key: 'models' as FilterKey, value }))
+	]);
+	const removeChip = (key: FilterKey, value: string) => {
+		filters[key] = filters[key].filter((item) => item !== value);
+	};
+
 	function reset() {
-		filters = { q: '', sort: filters.sort, places: [], brands: [] };
+		filters = { q: '', sort: filters.sort, places: [], brands: [], models: [] };
 	}
 
 	setArticlesContext({
@@ -203,6 +271,11 @@
 					<option value={option.value}>{option.label}</option>
 				{/each}
 			</Select>
+			{#if sections.length > 0}
+				<Button variant="secondary" onclick={() => (filtersOpen = true)}>
+					Filtres{activeChips.length > 0 ? ` (${activeChips.length})` : ''}
+				</Button>
+			{/if}
 			<SegmentedControl
 				label="Affichage"
 				options={viewOptions}
@@ -216,17 +289,50 @@
 				}
 			/>
 		</div>
-		{#if hasPlaces && (placeOptions.length > 1 || filters.places.length > 0)}
-			<FilterBar
-				label="Filtrer par stockage"
-				options={placeOptions}
-				bind:selected={filters.places}
-			/>
-		{/if}
-		{#if brandOptions.length > 1 || filters.brands.length > 0}
-			<FilterBar label="Filtrer par marque" options={brandOptions} bind:selected={filters.brands} />
+		{#if activeChips.length > 0}
+			<div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filtres actifs">
+				{#each activeChips as chip (`${chip.key}:${chip.value}`)}
+					<Chip
+						removable
+						aria-label="Retirer le filtre {chip.value}"
+						onclick={() => removeChip(chip.key, chip.value)}
+					>
+						{chip.value}
+					</Chip>
+				{/each}
+				<Button variant="ghost" onclick={reset}>Réinitialiser</Button>
+			</div>
 		{/if}
 	</div>
+	<Drawer bind:open={filtersOpen} title="Filtres">
+		<div class="space-y-3">
+			{#each sections as section (section.key)}
+				<details open class="rounded-lg border border-border px-4 py-2">
+					<summary class="flex min-h-11 cursor-pointer items-center justify-between font-medium">
+						{section.title}
+						{#if filters[section.key].length > 0}
+							<span class="text-sm text-fg-muted">
+								{filters[section.key].length}
+							</span>
+						{/if}
+					</summary>
+					<div class="pt-2 pb-2">
+						<FilterBar
+							label={section.label}
+							options={section.options}
+							bind:selected={filters[section.key]}
+						/>
+					</div>
+				</details>
+			{/each}
+		</div>
+		<div class="mt-6 flex gap-3">
+			<Button variant="ghost" onclick={reset}>Réinitialiser</Button>
+			<Button onclick={() => (filtersOpen = false)}
+				>Voir {items.length} article{items.length > 1 ? 's' : ''}</Button
+			>
+		</div>
+	</Drawer>
 	{#if query.error}
 		<ErrorState message="Impossible de charger les commandes." onretry={() => query.refresh()} />
 	{:else if !loaded}

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const state = vi.hoisted(() => ({
@@ -36,6 +37,18 @@ const resource = (current: unknown[] | undefined, error?: unknown) => ({
 	error,
 	refresh: vi.fn()
 });
+// Ressource dont les données peuvent changer après le rendu (comme un refresh de la requête).
+const liveResource = (initial: unknown[]) => {
+	const store = new SvelteMap<string, unknown[]>([['current', initial]]);
+	return {
+		get current() {
+			return store.get('current');
+		},
+		set: (next: unknown[]) => store.set('current', next),
+		error: undefined,
+		refresh: vi.fn()
+	};
+};
 const remote = vi.hoisted(() => ({ data: {} as Record<string, unknown> }));
 vi.mock('$lib/remote/listings.remote', () => ({
 	getToCollectListings: () => remote.data.toCollect,
@@ -54,7 +67,18 @@ vi.mock('$lib/components/images/ListingGallery.svelte', () => ({ default: () => 
 
 const children = createRawSnippet(() => ({ render: () => '<p>contenu de page</p>' }));
 
+const openFilters = async () => {
+	await fireEvent.click(screen.getByRole('button', { name: /^Filtres/ }));
+};
+
 beforeEach(() => {
+	HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+		this.setAttribute('open', '');
+	};
+	HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+		this.removeAttribute('open');
+		this.dispatchEvent(new Event('close'));
+	};
 	state.url = new URL('http://localhost/stock');
 	goto.mockReset();
 	localStorage.clear();
@@ -128,6 +152,7 @@ describe('layout Articles', () => {
 		await waitFor(() =>
 			expect(goto).toHaveBeenLastCalledWith('/stock?sort=price-asc', expect.anything())
 		);
+		await openFilters();
 		const marques = screen.getByRole('group', { name: 'Filtrer par marque' });
 		await fireEvent.click(within(marques).getByRole('button', { name: 'Adidas' }));
 		await waitFor(() =>
@@ -141,6 +166,14 @@ describe('layout Articles', () => {
 				expect.anything()
 			)
 		);
+		const modeles = screen.getByRole('group', { name: 'Filtrer par modèle' });
+		await fireEvent.click(within(modeles).getByRole('button', { name: 'Modèle 2' }));
+		await waitFor(() =>
+			expect(goto).toHaveBeenLastCalledWith(
+				'/stock?sort=price-asc&place=Cave&brand=Adidas&model=Mod%C3%A8le+2',
+				expect.anything()
+			)
+		);
 	});
 
 	it('restaure recherche, tri et filtres depuis l’URL et ne navigue pas', () => {
@@ -148,7 +181,8 @@ describe('layout Articles', () => {
 		render(Layout, { children });
 		expect(screen.getByRole('searchbox')).toHaveValue('nike');
 		expect(screen.getByRole('combobox', { name: 'Trier par' })).toHaveValue('price-desc');
-		expect(screen.getByRole('button', { name: 'Nike' })).toHaveAttribute('aria-pressed', 'true');
+		expect(screen.getByRole('button', { name: 'Filtres (1)' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Retirer le filtre Nike' })).toBeInTheDocument();
 		expect(goto).not.toHaveBeenCalled();
 	});
 
@@ -156,6 +190,7 @@ describe('layout Articles', () => {
 		state.url = new URL('http://localhost/stock?brand=Zara&place=Cave');
 		remote.data.stock = resource([row('2', 'Nike'), row('3', 'Nike')]);
 		render(Layout, { children });
+		await openFilters();
 		const marques = screen.getByRole('group', { name: 'Filtrer par marque' });
 		const zara = within(marques).getByRole('button', { name: 'Zara' });
 		expect(zara).toHaveAttribute('aria-pressed', 'true');
@@ -165,9 +200,59 @@ describe('layout Articles', () => {
 		);
 	});
 
-	it('ignore le filtre de stockage sur À récupérer', () => {
+	it('retire les modèles qui n’appartiennent plus aux marques cochées', async () => {
+		state.url = new URL('http://localhost/stock?brand=Nike&brand=Adidas&model=Mod%C3%A8le+2');
+		remote.data.stock = resource([row('1', 'Nike'), row('2', 'Adidas')]);
+		render(Layout, { children });
+		await openFilters();
+		const marques = screen.getByRole('group', { name: 'Filtrer par marque' });
+		await fireEvent.click(within(marques).getByRole('button', { name: 'Adidas' }));
+		await waitFor(() =>
+			expect(goto).toHaveBeenLastCalledWith('/stock?brand=Nike', expect.anything())
+		);
+	});
+
+	it('garde le filtre modèle actif quand les données changent et que son dernier article disparaît', async () => {
+		state.url = new URL('http://localhost/stock?brand=Nike&model=Mod%C3%A8le+1');
+		const stock = liveResource([row('1', 'Nike'), row('2', 'Nike')]);
+		remote.data.stock = stock;
+		render(Layout, { children });
+		stock.set([row('2', 'Nike')]);
+		await waitFor(() =>
+			expect(screen.getByText('Stock (1)', { exact: false })).toBeInTheDocument()
+		);
+		expect(screen.getByRole('button', { name: 'Retirer le filtre Modèle 1' })).toBeInTheDocument();
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('retire un filtre depuis son chip, ou tout via Réinitialiser', async () => {
+		state.url = new URL('http://localhost/stock?brand=Nike&model=Mod%C3%A8le+1&place=Cave');
+		render(Layout, { children });
+		expect(screen.getByRole('button', { name: 'Filtres (3)' })).toBeInTheDocument();
+		await fireEvent.click(screen.getByRole('button', { name: 'Retirer le filtre Modèle 1' }));
+		await waitFor(() =>
+			expect(goto).toHaveBeenLastCalledWith('/stock?place=Cave&brand=Nike', expect.anything())
+		);
+		await fireEvent.click(screen.getAllByRole('button', { name: 'Réinitialiser' })[0]);
+		await waitFor(() => expect(goto).toHaveBeenLastCalledWith('/stock', expect.anything()));
+	});
+
+	it('les modèles proposés suivent les marques cochées', async () => {
+		state.url = new URL('http://localhost/stock?brand=Adidas');
+		render(Layout, { children });
+		await openFilters();
+		const modeles = screen.getByRole('group', { name: 'Filtrer par modèle' });
+		expect(
+			within(modeles)
+				.getAllByRole('button')
+				.map((b) => b.textContent?.trim())
+		).toEqual(['Modèle 2', 'Modèle 3']);
+	});
+
+	it('ignore le filtre de stockage sur À récupérer', async () => {
 		state.url = new URL('http://localhost/to-collect?place=Cave');
 		render(Layout, { children });
+		await openFilters();
 		expect(screen.queryByRole('group', { name: 'Filtrer par stockage' })).not.toBeInTheDocument();
 		expect(goto).toHaveBeenCalledWith('/to-collect', expect.anything());
 	});
