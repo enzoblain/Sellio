@@ -5,8 +5,9 @@ set -euo pipefail
 # shellcheck source=scripts/lib.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 
-require_cmd pg_dump
+require_cmd pg_dump psql
 require_database_url
+if command -v pg_restore >/dev/null 2>&1; then require_matching_pg_clients pg_dump psql pg_restore; else require_matching_pg_clients pg_dump psql; fi
 
 mkdir -p "$BACKUP_DIR"
 file="$BACKUP_DIR/sellio-$(database_key)-$(date -u +%Y%m%dT%H%M%SZ).dump"

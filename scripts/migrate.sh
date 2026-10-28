@@ -7,6 +7,7 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 
 require_cmd psql npm
 require_database_url
+require_matching_pg_clients psql
 require_recent_backup
 
 count_applied() {

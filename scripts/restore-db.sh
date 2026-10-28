@@ -11,6 +11,7 @@ file="${POSITIONAL[0]}"
 
 require_cmd pg_restore psql
 require_database_url
+require_matching_pg_clients pg_restore psql
 [[ -s "$file" ]] || die "fichier introuvable ou vide : $file"
 pg_restore --list "$file" >/dev/null || die "ce fichier n'est pas un dump valide : $file"
 

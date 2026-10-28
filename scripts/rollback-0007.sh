@@ -11,6 +11,7 @@ parse_args "$@"
 
 require_cmd psql
 require_database_url
+require_matching_pg_clients psql
 down_sql="$ROOT_DIR/drizzle/rollback/0007_add_parcels.down.sql"
 [[ -s "$down_sql" ]] || die "script de retour arrière introuvable : $down_sql"
 require_recent_backup

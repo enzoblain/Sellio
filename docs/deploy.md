@@ -4,7 +4,7 @@ Ce runbook couvre le passage en prod de la partie Colis (migration `0007_add_par
 
 ## Prérequis
 
-- `psql`, `pg_dump` et `pg_restore` (client PostgreSQL 17) et `npm` (dépendances installées avec `npm ci`).
+- `psql`, `pg_dump` et `pg_restore` (client PostgreSQL dont la version majeure est la même que celle du serveur : 17 en prod) et `npm` (dépendances installées avec `npm ci`).
 - `DATABASE_URL` pointant vers la base à traiter. Aucun identifiant n'est écrit dans les scripts.
 
 ```bash
