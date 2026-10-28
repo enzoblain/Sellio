@@ -36,6 +36,8 @@ Les sections suivantes décrivent les scripts `scripts/` pour une mise en prod p
 
 Le workflow n'utilise que le `GITHUB_TOKEN` (permissions `contents: read` et `pull-requests: write`), aucun secret ajouté, et aucune action tierce : il appelle seulement la CLI `gh` déjà présente sur le runner. Réglage requis une fois : Settings → Actions → General → « Allow GitHub Actions to create and approve pull requests ». On peut aussi le lancer à la main (`workflow_dispatch`).
 
+Limite à connaître : une PR ouverte avec le `GITHUB_TOKEN` ne déclenche pas les workflows (règle de GitHub contre les boucles), donc aucun check CI ne tourne sur la PR `dev` → `master`. La protection vient du push sur `master` : le job `e2e` de `publish-nas.yml` doit passer avant la publication de l'image (`publish` en dépend), donc un code cassé n'est jamais publié. Si on ajoute un jour une protection de branche qui exige des checks, cette PR restera bloquée faute de checks. Une solution possible est de l'ouvrir avec un token d'application GitHub (qui, lui, déclenche les workflows) ; à décider le moment venu.
+
 ## Prérequis
 
 - `psql`, `pg_dump` et `pg_restore` (client PostgreSQL dont la version majeure est la même que celle du serveur : 17 en prod) et `npm` (dépendances installées avec `npm ci`).
