@@ -21,7 +21,7 @@ export const getModelPhotos = query(v.pipe(v.string(), v.uuid()), async (modelId
 		.where(eq(listings.model_id, modelId))
 		.orderBy(desc(images.is_cover), asc(images.listing_id))
 		.limit(1);
-	if (!source) return [];
+	if (!source?.listingId) return [];
 	return db
 		.select({ id: images.id, path: images.path, isCover: images.is_cover })
 		.from(images)
