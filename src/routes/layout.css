@@ -46,7 +46,7 @@
 
 	--chart-revenue: var(--success);
 	--chart-purchases: var(--accent);
-	--chart-shipping: #c4b5fd;
+	--chart-shipping: #9061f9;
 	--chart-other: var(--warning);
 
 	--shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04);
@@ -68,7 +68,7 @@
 	--danger: #f87171;
 	--overlay: rgb(0 0 0 / 0.6);
 
-	--chart-shipping: #4c1d95;
+	--chart-shipping: #c4b5fd;
 
 	--shadow-sm: none;
 	--shadow-md: none;
