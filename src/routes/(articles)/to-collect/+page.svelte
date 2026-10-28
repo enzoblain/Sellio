@@ -1,22 +1,17 @@
 <script lang="ts">
 	import { euros } from '$lib/format';
-	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
-	import ListingCard from '$lib/components/listings/ListingCard.svelte';
+	import ArticleList from '$lib/components/listings/ArticleList.svelte';
 	import Stat from '$lib/components/listings/Stat.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import ErrorState from '$lib/components/ui/ErrorState.svelte';
 	import Field from '$lib/components/ui/Field.svelte';
-	import Page from '$lib/components/ui/Page.svelte';
-	import { resolve } from '$app/paths';
+	import { toast } from '$lib/components/ui/toast.svelte';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
-	import { getToCollectListings, collectItem } from '$lib/remote/listings.remote';
+	import { collectItem } from '$lib/remote/listings.remote';
 	import { searchStockingPlaces } from '$lib/remote/stocking-places.remote';
 
-	const orders = getToCollectListings();
-	let selectedId = $state<string | null>(null);
+	let selected = $state<{ id: string; name: string } | null>(null);
 	let stockingPlace = $state<AutocompleteItem>({ value: '', uuid: null });
 	let saving = $state(false);
 	let transitionKey = $state(0);
@@ -26,24 +21,25 @@
 	const placeQuery = (search: string, offset: number, limit: number) =>
 		searchStockingPlaces({ search, offset, limit });
 
-	function openTransition(id: string) {
+	function openTransition(item: { id: string; brand: string; model: string }) {
 		transitionKey += 1;
-		selectedId = id;
+		selected = { id: item.id, name: `${item.brand} ${item.model}` };
 		stockingPlace = { value: '', uuid: null };
 		errorMessage = '';
 		dialog?.showModal();
 	}
 
 	async function confirm() {
-		if (!valid || !selectedId || saving) return;
+		if (!valid || !selected || saving) return;
 		saving = true;
 		errorMessage = '';
 		try {
 			await collectItem({
-				listingId: selectedId,
+				listingId: selected.id,
 				stockingPlace
 			});
 			dialog?.close();
+			toast(`${selected.name} récupéré, placé en stock.`);
 		} catch {
 			errorMessage = 'Impossible de valider cet article. Réessaie ou actualise la page.';
 		} finally {
@@ -52,40 +48,19 @@
 	}
 </script>
 
-<Page title="À récupérer" wide>
-	{#snippet actions()}
-		<Button href={resolve('/to-collect/insert')}><span aria-hidden="true">+</span> Ajouter</Button>
+<ArticleList emptyLabel="Aucune commande à récupérer.">
+	{#snippet figures(item)}
+		<Stat label="Prix acheté" value={euros(item.purchasePrice)} />
+		<Stat label="Port" align="right" value={euros(item.shippingPrice)} />
 	{/snippet}
-	{#await orders}
-		<p class="text-sm text-fg-muted">Chargement des commandes…</p>
-	{:then items}
-		<ListingStacks {items}>
-			{#snippet card(item, stackButton)}
-				<ListingCard {item} {stackButton}>
-					{#snippet action()}
-						<Button
-							onclick={() => openTransition(item.id)}
-							aria-label={`Valider la récupération de ${item.brand} ${item.model}`}
-							size="sm"
-							class="shadow-sm">✓ Valider</Button
-						>
-					{/snippet}
-					<h2 class="font-medium text-fg">{item.brand} · {item.model}</h2>
-					<p class="mt-1 text-sm text-fg-muted">{item.size} · {item.color}</p>
-					{#snippet footer()}
-						<Stat label="Prix acheté" value={euros(item.purchasePrice)} />
-						<p class="text-xs text-fg-muted">Port : {euros(item.shippingPrice)}</p>
-					{/snippet}
-				</ListingCard>
-			{/snippet}
-			{#snippet empty()}
-				<EmptyState>Aucune commande à récupérer.</EmptyState>
-			{/snippet}
-		</ListingStacks>
-	{:catch}
-		<ErrorState message="Impossible de charger les commandes." onretry={() => orders.refresh()} />
-	{/await}
-</Page>
+	{#snippet action(item)}
+		<Button
+			onclick={() => openTransition(item)}
+			aria-label={`Récupéré : ${item.brand} ${item.model}`}
+			size="sm">Récupéré</Button
+		>
+	{/snippet}
+</ArticleList>
 
 <Dialog
 	bind:element={dialog}

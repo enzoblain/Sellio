@@ -1,20 +1,15 @@
 <script lang="ts">
 	import { euros } from '$lib/format';
-	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
-	import ListingCard from '$lib/components/listings/ListingCard.svelte';
+	import ArticleList from '$lib/components/listings/ArticleList.svelte';
 	import Stat from '$lib/components/listings/Stat.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import ErrorState from '$lib/components/ui/ErrorState.svelte';
 	import Field from '$lib/components/ui/Field.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import Page from '$lib/components/ui/Page.svelte';
-	import { getListedListings } from '$lib/remote/listings.remote';
+	import { toast } from '$lib/components/ui/toast.svelte';
 	import { sellListing } from '$lib/remote/sales.remote';
 
-	const orders = getListedListings();
-	let selectedId = $state<string | null>(null);
+	let selected = $state<{ id: string; name: string } | null>(null);
 	let salePrice = $state<number | undefined>();
 	let generatedCode = $state('');
 	let saving = $state(false);
@@ -24,8 +19,8 @@
 		salePrice !== undefined && Number.isFinite(salePrice) && salePrice >= 0.01
 	);
 
-	function openTransition(id: string) {
-		selectedId = id;
+	function openTransition(item: { id: string; brand: string; model: string }) {
+		selected = { id: item.id, name: `${item.brand} ${item.model}` };
 		salePrice = undefined;
 		generatedCode = '';
 		errorMessage = '';
@@ -33,12 +28,13 @@
 	}
 
 	async function confirm() {
-		if (!valid || !selectedId || saving) return;
+		if (!valid || !selected || saving) return;
 		saving = true;
 		errorMessage = '';
 		try {
-			const result = await sellListing({ listingId: selectedId, salePrice: salePrice! });
+			const result = await sellListing({ listingId: selected.id, salePrice: salePrice! });
 			generatedCode = result.code;
+			toast(`${selected.name} vendu, code ${result.code}.`);
 		} catch {
 			errorMessage = 'Impossible de valider cet article. Réessaie ou actualise la page.';
 		} finally {
@@ -47,42 +43,26 @@
 	}
 </script>
 
-<Page title="En vente" wide>
-	{#await orders}
-		<p class="text-sm text-fg-muted">Chargement des commandes…</p>
-	{:then items}
-		<ListingStacks {items}>
-			{#snippet card(item, stackButton)}
-				<ListingCard {item} {stackButton}>
-					{#snippet action()}
-						<Button
-							onclick={() => openTransition(item.id)}
-							aria-label={`Enregistrer la vente de ${item.brand} ${item.model}`}
-							size="sm"
-							class="shadow-sm">✓ Valider</Button
-						>
-					{/snippet}
-					<h2 class="font-medium text-fg">{item.brand} · {item.model}</h2>
-					<p class="mt-1 text-sm text-fg-muted">{item.size} · {item.color}</p>
-					<p class="mt-2 text-sm text-fg">Stockage : {item.stockingPlace ?? 'Non renseigné'}</p>
-					{#snippet footer()}
-						<Stat label="Achat total" value={euros(item.purchasePrice + item.shippingPrice)} />
-						<Stat
-							label="Prix de vente"
-							align="right"
-							value={item.listingPrice === null ? '—' : euros(item.listingPrice)}
-						/>
-					{/snippet}
-				</ListingCard>
-			{/snippet}
-			{#snippet empty()}
-				<EmptyState>Aucun article en vente.</EmptyState>
-			{/snippet}
-		</ListingStacks>
-	{:catch}
-		<ErrorState message="Impossible de charger les commandes." onretry={() => orders.refresh()} />
-	{/await}
-</Page>
+<ArticleList emptyLabel="Aucun article en vente.">
+	{#snippet meta(item)}
+		<p class="mt-1 text-sm text-fg">Stockage : {item.stockingPlace ?? 'Non renseigné'}</p>
+	{/snippet}
+	{#snippet figures(item)}
+		<Stat label="Achat total" value={euros(item.purchasePrice + item.shippingPrice)} />
+		<Stat
+			label="Prix de vente"
+			align="right"
+			value={item.listingPrice == null ? '—' : euros(item.listingPrice)}
+		/>
+	{/snippet}
+	{#snippet action(item)}
+		<Button
+			onclick={() => openTransition(item)}
+			aria-label={`Vendu : ${item.brand} ${item.model}`}
+			size="sm">Vendu</Button
+		>
+	{/snippet}
+</ArticleList>
 
 <Dialog
 	bind:element={dialog}
