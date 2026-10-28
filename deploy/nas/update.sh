@@ -12,11 +12,13 @@ flock -n 9 || exit 0
 compose() { docker compose --env-file .env -f compose.yml "$@"; }
 pinned() { docker compose --env-file .env -f compose.yml -f .state/image.yml "$@"; }
 
+# Préfixe d'image accepté ; ghcr.io/ en prod. Surchargé uniquement par le test de bout en bout (registre local).
+prefix=${SELLIO_IMAGE_PREFIX:-ghcr.io/}
 image=$(compose config --images | sort -u | sed '/^postgres:/d')
-[[ "$image" == ghcr.io/* && "$image" != *$'\n'* ]] || { echo 'SELLIO_IMAGE must point to one GHCR image.' >&2; exit 1; }
+[[ "$image" == "$prefix"* && "$image" != *$'\n'* ]] || { echo "SELLIO_IMAGE must point to one image under $prefix." >&2; exit 1; }
 docker pull "$image"
 target=$(docker image inspect --format '{{index .RepoDigests 0}}' "$image")
-[[ "$target" == ghcr.io/*@sha256:* ]] || { echo 'Cannot resolve the image digest.' >&2; exit 1; }
+[[ "$target" == "$prefix"*@sha256:* ]] || { echo 'Cannot resolve the image digest.' >&2; exit 1; }
 if [[ -f .state/deployed-image && "$(cat .state/deployed-image)" == "$target" ]]; then
   app_id=$(compose ps -q app)
   if [[ -n "$app_id" && "$(docker inspect --format '{{.State.Health.Status}}' "$app_id")" == healthy && "$(docker inspect --format '{{.Config.Image}}' "$app_id")" == "$target" ]]; then
