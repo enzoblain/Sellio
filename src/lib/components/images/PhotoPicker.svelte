@@ -20,11 +20,20 @@
 	onDestroy(() => {
 		for (const url of previews) URL.revokeObjectURL(url);
 	});
-	async function add(event: Event) {
-		if (disabled || busy) return;
+	let dragging = $state(false);
+	function pick(event: Event) {
 		const input = event.currentTarget as HTMLInputElement;
 		const files = Array.from(input.files ?? []);
 		input.value = '';
+		return add(files);
+	}
+	function drop(event: DragEvent) {
+		event.preventDefault();
+		dragging = false;
+		return add(Array.from(event.dataTransfer?.files ?? []));
+	}
+	async function add(files: File[]) {
+		if (disabled || busy || !files.length) return;
 		errorMessage = '';
 		if (photos.length + files.length > 12) {
 			errorMessage = 'Maximum 12 photos par article.';
@@ -90,7 +99,23 @@
 	}
 </script>
 
-<section class="space-y-3">
+<!-- Un dépôt raté ne doit pas faire ouvrir l'image et perdre le formulaire -->
+<svelte:window ondragover={(e) => e.preventDefault()} ondrop={(e) => e.preventDefault()} />
+
+<section
+	class="space-y-3 rounded-lg border-2 border-dashed p-3 {dragging
+		? 'border-accent bg-surface-2'
+		: 'border-transparent'}"
+	aria-label="Zone de dépôt des photos"
+	ondragover={(event) => {
+		event.preventDefault();
+		dragging = !disabled && !busy;
+	}}
+	ondragleave={(event) => {
+		if (!event.currentTarget.contains(event.relatedTarget as Node | null)) dragging = false;
+	}}
+	ondrop={drop}
+>
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<h3 class="text-sm font-medium text-fg">
 			Photos <span class="font-normal text-fg-muted">({photos.length}/12)</span>
@@ -105,13 +130,14 @@
 			type="file"
 			accept="image/jpeg,image/png,image/webp"
 			multiple
-			onchange={add}
+			onchange={pick}
 			disabled={disabled || busy}
 			class="sr-only"
 		/>
 	</div>
 	<p class="text-xs text-fg-muted">
-		JPG, PNG ou WebP, 10 Mo par photo. La couverture apparaît en premier sur la carte.
+		Glisse tes photos ici ou clique sur le bouton. JPG, PNG ou WebP, 10 Mo par photo. La couverture
+		apparaît en premier sur la carte.
 	</p>
 	{#if busy}<p class="text-xs text-fg-muted" role="status">Vérification des photos…</p>{/if}
 	{#if errorMessage}<p role="alert" class="text-sm text-danger">{errorMessage}</p>{/if}
