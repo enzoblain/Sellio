@@ -36,7 +36,6 @@ Les sections suivantes décrivent les scripts `scripts/` pour une mise en prod p
 
 Aucun workflow ne crée la PR `dev` → `master`. Les releases passent par la proposition du lead : l'outil de release ouvre la PR et la soumet à Enzo en un clic. Un workflow `GITHUB_TOKEN` doublonnait ce flux, échouait à chaque push et risquait d'ouvrir une seconde PR : il a été retiré.
 
-
 ## Prérequis
 
 - `psql`, `pg_dump` et `pg_restore` (client PostgreSQL dont la version majeure est la même que celle du serveur : 17 en prod) et `npm` (dépendances installées avec `npm ci`).
