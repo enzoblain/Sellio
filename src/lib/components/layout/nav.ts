@@ -6,10 +6,34 @@ export const ARTICLE_ROUTES = ['/to-collect', '/stock', '/listed', '/to-ship', '
 export const NEW_ARTICLE_HREF = '/to-collect/insert';
 
 export const navItems = [
-	{ label: 'Tableau de bord', href: '/', icon: 'dashboard', prefixes: ['/'] },
-	{ label: 'Articles', href: '/to-collect', icon: 'articles', prefixes: ARTICLE_ROUTES },
-	{ label: 'Dépenses', href: '/expenses', icon: 'expenses', prefixes: ['/expenses'] }
-] as const satisfies { label: string; href: string; icon: IconName; prefixes: readonly string[] }[];
+	{
+		label: 'Tableau de bord',
+		shortLabel: 'Dashboard',
+		href: '/',
+		icon: 'dashboard',
+		prefixes: ['/']
+	},
+	{
+		label: 'Articles',
+		shortLabel: 'Articles',
+		href: '/to-collect',
+		icon: 'articles',
+		prefixes: ARTICLE_ROUTES
+	},
+	{
+		label: 'Dépenses',
+		shortLabel: 'Dépenses',
+		href: '/expenses',
+		icon: 'expenses',
+		prefixes: ['/expenses']
+	}
+] as const satisfies {
+	label: string;
+	shortLabel: string;
+	href: string;
+	icon: IconName;
+	prefixes: readonly string[];
+}[];
 
 export type NavItem = (typeof navItems)[number];
 

@@ -40,7 +40,7 @@
 	{onclose}
 	class="border border-border bg-surface text-fg shadow-lg backdrop:bg-overlay {sizes[size]}"
 >
-	<h2 id={titleId} class="text-lg">{title}</h2>
+	<h2 id={titleId} class="text-lg {size === 'drawer' ? 'pr-12' : ''}">{title}</h2>
 	{#if description}<p class="mt-1 text-sm text-fg-muted">{description}</p>{/if}
 	<div class="mt-6">
 		{@render children()}

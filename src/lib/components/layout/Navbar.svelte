@@ -9,22 +9,19 @@
 	import { restoreSidebar, sidebar, toggleSidebar } from './sidebar.svelte';
 
 	onMount(restoreSidebar);
-
-	const labelClass = $derived(sidebar.collapsed ? 'sr-only' : '');
 </script>
 
+<!-- Repli piloté par CSS (data-sidebar sur <html>) : rendu correct dès le premier affichage. -->
 <nav
 	aria-label="Navigation principale"
-	class="fixed inset-y-0 left-0 z-20 hidden flex-col border-r border-border bg-surface px-3 py-6 transition-[width] duration-150 md:flex {sidebar.collapsed
-		? 'w-16'
-		: 'w-60'}"
+	class="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r border-border bg-surface px-3 py-6 transition-[width] duration-150 md:flex sidebar-collapsed:w-16"
 >
 	<div
-		class="mb-6 flex items-center {sidebar.collapsed ? 'justify-center' : 'justify-between px-3'}"
+		class="mb-6 flex items-center justify-between px-3 sidebar-collapsed:justify-center sidebar-collapsed:px-0"
 	>
-		{#if !sidebar.collapsed}
-			<span class="text-base font-semibold tracking-tight text-fg">Sellio</span>
-		{/if}
+		<span class="text-base font-semibold tracking-tight text-fg sidebar-collapsed:hidden"
+			>Sellio</span
+		>
 		<button
 			type="button"
 			onclick={toggleSidebar}
@@ -32,17 +29,18 @@
 			aria-expanded={!sidebar.collapsed}
 			class="flex items-center justify-center rounded-md p-2 text-fg-muted transition hover:bg-surface-2 hover:text-fg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 		>
-			<Icon name={sidebar.collapsed ? 'chevronRight' : 'chevronLeft'} />
+			<Icon name="chevronLeft" class="h-5 w-5 sidebar-collapsed:hidden" />
+			<Icon name="chevronRight" class="hidden h-5 w-5 sidebar-collapsed:block" />
 		</button>
 	</div>
 
 	<a
 		href={resolve(NEW_ARTICLE_HREF)}
-		aria-label={sidebar.collapsed ? 'Nouvel article' : undefined}
+		title="Nouvel article"
 		class="mb-6 flex items-center justify-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 	>
 		<Icon name="plus" />
-		{#if !sidebar.collapsed}Nouvel article{/if}
+		<span class="sidebar-collapsed:sr-only">Nouvel article</span>
 	</a>
 
 	<ul class="flex flex-1 flex-col gap-0.5">
@@ -56,22 +54,22 @@
 				<a
 					href={resolve(item.href)}
 					aria-current={active ? 'page' : undefined}
-					title={sidebar.collapsed ? item.label : undefined}
-					class="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 {sidebar.collapsed
-						? 'justify-center'
-						: ''} {active
+					title={item.label}
+					class="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150 sidebar-collapsed:justify-center {active
 						? 'bg-surface-2 text-fg'
 						: 'text-fg-muted hover:bg-surface-2 hover:text-fg'}"
 				>
 					<Icon name={item.icon} />
-					<span class={labelClass}>{item.label}</span>
+					<span class="sidebar-collapsed:sr-only">{item.label}</span>
 				</a>
 			</li>
 		{/each}
 	</ul>
 
 	{#if DARK_MODE_ENABLED}
-		<div class="flex {sidebar.collapsed ? 'justify-center' : 'px-3'}"><ThemeToggle /></div>
+		<div class="flex px-3 sidebar-collapsed:justify-center sidebar-collapsed:px-0">
+			<ThemeToggle />
+		</div>
 	{/if}
 </nav>
 
@@ -111,6 +109,6 @@
 			: 'text-fg-muted'}"
 	>
 		<Icon name={item.icon} />
-		{item.label}
+		{item.shortLabel}
 	</a>
 {/snippet}

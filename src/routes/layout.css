@@ -2,6 +2,7 @@
 @plugin '@tailwindcss/forms';
 
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant sidebar-collapsed (&:where([data-sidebar='collapsed'] *));
 
 @font-face {
 	font-family: 'Inter';

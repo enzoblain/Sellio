@@ -176,14 +176,16 @@ export async function applyPhotos(
 		else {
 			const source = reusable.find(({ photo }) => `reuse:${photo.id}` === token)?.photo;
 			if (source)
-				await tx.insert(images).values({
-					...values,
-					path: source.path,
-					mime_type: source.mime_type,
-					size_bytes: source.size_bytes,
-					width: source.width,
-					height: source.height
-				});
+				await tx
+					.insert(images)
+					.values({
+						...values,
+						path: source.path,
+						mime_type: source.mime_type,
+						size_bytes: source.size_bytes,
+						width: source.width,
+						height: source.height
+					});
 		}
 	}
 	return originals.filter((photo) => !manifest.order.includes(photo.id)).map((photo) => photo.path);
