@@ -39,6 +39,28 @@ sql_value() {
 	psql "$DATABASE_URL" --no-psqlrc -X -v ON_ERROR_STOP=1 -tA -c "$1"
 }
 
+# Version majeure d'un client PostgreSQL (pg_dump, pg_restore, psql), d'après sa sortie --version.
+client_major() {
+	"$1" --version | sed -n 's/^[^0-9]*\([0-9][0-9]*\).*/\1/p' | head -n 1
+}
+
+# require_matching_pg_clients cmd... : la version majeure de chaque client doit être celle du serveur.
+# Un pg_dump/pg_restore plus récent écrit du SQL (ex. SET transaction_timeout en 17) que le serveur
+# refuse, et la restauration casserait avec ON_ERROR_STOP. À appeler après require_database_url.
+require_matching_pg_clients() {
+	local num server cmd client
+	num="$(sql_value 'SHOW server_version_num')" || die "impossible de lire la version du serveur $(database_label)."
+	[[ "$num" =~ ^[0-9]+$ ]] || die "version du serveur illisible : « $num »."
+	server=$((num / 10000))
+	for cmd in "$@"; do
+		client="$(client_major "$cmd")"
+		[[ -n "$client" ]] || die "version illisible pour $cmd ($(command -v "$cmd"))."
+		[[ "$client" == "$server" ]] ||
+			die "$cmd est en version $client ($(command -v "$cmd")) mais le serveur $(database_label) est en PostgreSQL $server. Installer le client PostgreSQL $server (postgresql-client-$server) et le placer devant dans le PATH."
+	done
+	log "Clients PostgreSQL $server alignés sur le serveur ($*)"
+}
+
 # confirm "message" : demande de taper « oui ». --yes (ASSUME_YES=1) passe la question.
 confirm() {
 	printf '%s\n' "$1"

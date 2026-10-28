@@ -9,6 +9,7 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 
 require_cmd psql pg_dump pg_restore npm
 require_database_url
+require_matching_pg_clients psql pg_dump pg_restore
 here="$ROOT_DIR/scripts"
 BACKUP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/restore-chain.XXXXXX")"
 export BACKUP_DIR
@@ -26,6 +27,29 @@ check() { # check "description" "requête renvoyant la valeur attendue" valeur
 }
 has_table() { printf "SELECT to_regclass('public.%s') IS NOT NULL" "$1"; }
 latest_backup() { find "$BACKUP_DIR" -maxdepth 1 -name '*.dump' | sort | tail -n 1; }
+
+step "0a. Client d'une autre version que le serveur : refus avec un message clair"
+wrongbin="$BACKUP_DIR/wrongbin"
+mkdir -p "$wrongbin"
+for tool in psql pg_dump pg_restore; do
+	# Faux client : annonce la version 99, délègue le reste au vrai (psql sert à lire la version du serveur).
+	cat >"$wrongbin/$tool" <<FAKE
+#!/usr/bin/env bash
+[[ "\$1" == --version ]] && echo "$tool (PostgreSQL) 99.0" && exit 0
+exec "$(command -v "$tool")" "\$@"
+FAKE
+	chmod +x "$wrongbin/$tool"
+done
+for script in backup-db.sh migrate.sh rollback-0007.sh restore-db.sh; do
+	args=(--yes)
+	[[ "$script" == restore-db.sh ]] && args+=(/dev/null)
+	if out="$(PATH="$wrongbin:$PATH" "$here/$script" "${args[@]}" 2>&1)"; then
+		die "ÉCHEC : $script aurait dû refuser un client en version 99"
+	fi
+	[[ "$out" == *"est en version 99"*"Installer le client PostgreSQL"* ]] || die "ÉCHEC : message inattendu pour $script : $out"
+	log "OK : $script refuse un client 99"
+done
+log "Exemple de message : $out"
 
 step "0. État initial : schéma 0000-0006 (migrations complètes puis rollback-0007) avec des données"
 (cd "$ROOT_DIR" && npm run db:migrate >/dev/null)
@@ -70,7 +94,7 @@ fakebin="$BACKUP_DIR/fakebin"
 mkdir -p "$fakebin"
 cat >"$fakebin/pg_restore" <<FAKE
 #!/usr/bin/env bash
-for a in "\$@"; do [[ "\$a" == --list ]] && exec "$real_pg_restore" "\$@"; done
+for a in "\$@"; do [[ "\$a" == --list || "\$a" == --version ]] && exec "$real_pg_restore" "\$@"; done
 echo 'DROP TABLE brands CASCADE;'
 echo 'pg_restore: error: simulated failure mid-way' >&2
 exit 1
