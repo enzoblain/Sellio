@@ -63,37 +63,37 @@
 </script>
 
 <Page title="Dépenses">
+	<div class="sticky top-0 z-10 -mx-6 mb-3 bg-bg px-6 py-3 md:-mx-10 md:px-10">
+		<div class="flex items-center gap-3">
+			<SearchInput
+				class="min-w-0 flex-1"
+				aria-label="Rechercher une dépense"
+				placeholder="Rechercher…"
+				bind:value={search}
+			/>
+			<Button onclick={openForm} class="shrink-0"><span aria-hidden="true">+</span> Ajouter</Button>
+		</div>
+	</div>
 	{#await costs}
 		<p class="text-sm text-fg-muted">Chargement des dépenses…</p>
 	{:then items}
 		{@const visible = filterExpenses(items, search, selectedCategories)}
-		<div class="sticky top-0 z-10 -mx-6 mb-4 space-y-3 bg-bg px-6 py-3 md:-mx-10 md:px-10">
-			<div class="flex items-center gap-3">
-				<SearchInput
-					class="min-w-0 flex-1"
-					aria-label="Rechercher une dépense"
-					placeholder="Rechercher…"
-					bind:value={search}
-				/>
-				<Button onclick={openForm} class="shrink-0"
-					><span aria-hidden="true">+</span> Ajouter</Button
-				>
-			</div>
-			{#if items.length > 0}
+		{#if items.length > 0}
+			<div class="mb-4 space-y-3">
 				<FilterBar
 					label="Filtrer par catégorie"
 					options={expenseCategories(items).map((value) => ({ value, label: value }))}
 					bind:selected={selectedCategories}
 				/>
-				<p class="text-sm text-fg-muted" aria-live="polite">
+				<p class="text-sm text-fg-muted">
 					{visible.length}
 					{visible.length > 1 ? 'dépenses' : 'dépense'} · Total :
 					<strong class="font-semibold text-fg tabular-nums" data-testid="expenses-total"
 						>{euros(totalExpenses(visible))}</strong
 					>
 				</p>
-			{/if}
-		</div>
+			</div>
+		{/if}
 		{#if visible.length === 0}
 			<EmptyState
 				>{items.length === 0
@@ -116,7 +116,7 @@
 							<tr>
 								<td class="px-3 py-2 whitespace-nowrap text-fg-muted tabular-nums">
 									{#if item.date}<time datetime={item.date}>{formatDate(item.date)}</time
-										>{:else}—{/if}
+										>{:else}<span title="Date non renseignée">—</span>{/if}
 								</td>
 								<td class="px-3 py-2"><Badge tone="accent">{item.category}</Badge></td>
 								<td class="px-3 py-2 break-words text-fg">{item.name}</td>
