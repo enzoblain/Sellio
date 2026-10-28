@@ -60,3 +60,5 @@ Vide les schémas `public` et `drizzle` puis rejoue le dump en une transaction (
 ## Tester avant la prod
 
 Sur une copie de la base (restaurer un dump récent dans une base de test, `DATABASE_URL` pointant dessus), jouer : `scripts/deploy-colis.sh`, `scripts/rollback-0007.sh`, `scripts/restore-db.sh`.
+
+`scripts/test-restore-chain.sh` rejoue tout l'enchaînement (sauvegarde, 0007, restauration, re-migration, rollback, dump tronqué) et vérifie chaque étape. Il réécrit entièrement la base ciblée, qui doit être vide et jetable.

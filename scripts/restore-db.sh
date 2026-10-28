@@ -18,10 +18,14 @@ confirm "ATTENTION : la base $(database_label) va être REMPLACÉE par $file.
 Les données ajoutées depuis cette sauvegarde seront perdues. Arrêter l'application avant."
 
 log "Restauration de $file (schémas public et drizzle recréés à vide, en une seule transaction)"
-# Le dump est rejoué en SQL après avoir vidé les schémas : pg_restore --clean ne supprime que
-# les objets présents dans le dump, et laisserait par exemple parcels/carriers après une migration 0007.
-{
-	printf 'DROP SCHEMA IF EXISTS drizzle CASCADE;\nDROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\n'
-	pg_restore --no-owner -f - "$file"
-} | PGOPTIONS="-c client_min_messages=warning" psql "$DATABASE_URL" --no-psqlrc -X -q -v ON_ERROR_STOP=1 --single-transaction -f - >/dev/null
+# Le dump est d'abord converti en SQL dans un fichier temporaire : si pg_restore échoue, psql ne
+# tourne pas et la base n'est pas touchée (un flux direct validerait un SQL tronqué après le DROP).
+# pg_restore --clean ne supprime que les objets du dump et laisserait parcels/carriers après une 0007.
+sql_file="$(umask 077 && mktemp "${TMPDIR:-/tmp}/restore-db.XXXXXX")"
+trap 'rm -f "$sql_file"' EXIT
+trap 'exit 130' INT TERM
+printf 'DROP SCHEMA IF EXISTS drizzle CASCADE;\nDROP SCHEMA IF EXISTS public CASCADE;\nCREATE SCHEMA public;\n' >"$sql_file"
+pg_restore --no-owner -f - "$file" >>"$sql_file" ||
+	die "pg_restore a échoué : la base n'a pas été modifiée."
+PGOPTIONS="-c client_min_messages=warning" psql "$DATABASE_URL" --no-psqlrc -X -q -v ON_ERROR_STOP=1 --single-transaction -f "$sql_file" >/dev/null
 log "Restauration terminée."
