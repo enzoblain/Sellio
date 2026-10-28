@@ -215,3 +215,15 @@ Cocher chaque ligne sur l'ancienne et la nouvelle version, en desktop et mobile.
 
 ### Images
 - [ ] `/images/<uuid>.webp` connu → 200 `image/webp` ; nom invalide ou inconnu → 404.
+
+## Espace Articles unifié (#16)
+
+Les écrans §4.3 à 4.7 (À récupérer, Stock, En vente, À expédier, Expédié) partagent désormais le layout `src/routes/(articles)/+layout.svelte`, titre unique « Articles ». Les règles métier des transitions sont inchangées ; seuls les libellés d'action changent (« ✓ Valider » / « ✓ Expédié » deviennent des actions nommées, avec Toast au succès).
+
+- Onglets : 5 statuts avec compteurs, URL inchangées (`/to-collect`, `/stock`, `/listed`, `/to-ship`, `/shipped`).
+- Recherche (`?q=`) sur marque, modèle, taille, couleur, stockage, référence ; insensible à la casse et aux accents, tous les mots doivent correspondre.
+- Filtres en chips : marque (`?brand=`) et stockage (`?place=`, absent sur À récupérer). Un filtre actif reste affiché même si plus aucun article ne correspond, et « Réinitialiser les filtres » apparaît quand rien ne correspond.
+- Tri (`?sort=`) : plus récents (défaut), prix croissant/décroissant, bénéfice (À expédier et Expédié seulement).
+- Recherche, filtres et tri sont perdus au changement d'onglet.
+- Vue liste (défaut, piles en lignes « ×N » dépliables) ou grille (cartes et piles), choix mémorisé en localStorage (`articles-view`). La vue liste n'a pas de photo.
+- Actions : À récupérer → « Récupéré », Stock → « Mettre en vente », En vente → « Vendu », À expédier → « Expédié ».

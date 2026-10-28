@@ -17,7 +17,7 @@
 	import { searchSizes } from '$lib/remote/sizes.remote';
 	import { searchColors } from '$lib/remote/colors.remote';
 	import { searchStockingPlaces } from '$lib/remote/stocking-places.remote';
-	let { listingId }: { listingId: string } = $props();
+	let { listingId, inline = false }: { listingId: string; inline?: boolean } = $props();
 	let dialog = $state<HTMLDialogElement>();
 	let mode = $state<'edit' | 'delete'>('edit');
 	let loading = $state(false);
@@ -171,7 +171,7 @@
 	}
 </script>
 
-<div class="absolute top-3 left-3 z-10 flex gap-1.5">
+<div class={inline ? 'flex shrink-0 gap-1.5' : 'absolute top-3 left-3 z-10 flex gap-1.5'}>
 	<button
 		type="button"
 		onclick={() => open('edit')}

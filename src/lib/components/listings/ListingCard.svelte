@@ -33,7 +33,9 @@
 		{@render children()}
 	</div>
 	{#if footer}
-		<div class="flex items-center justify-between border-t border-border bg-surface-2 px-4 py-3">
+		<div
+			class="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-surface-2 px-4 py-3"
+		>
 			{@render footer()}
 		</div>
 	{/if}
