@@ -21,9 +21,9 @@ export function calculateMetrics(data: DashboardData, year: number) {
 		costs: {} as Record<string, number>
 	}));
 	const categories = [
-		{ id: 'purchases', name: 'Achats d’articles', color: '#7c3aed' },
-		{ id: 'shipping', name: 'Frais de port d’achat', color: '#c4b5fd' },
-		{ id: 'expenses', name: 'Autres dépenses', color: '#f59e0b' }
+		{ id: 'purchases', name: 'Achats d’articles', color: 'var(--chart-purchases)' },
+		{ id: 'shipping', name: 'Frais de port d’achat', color: 'var(--chart-shipping)' },
+		{ id: 'expenses', name: 'Autres dépenses', color: 'var(--chart-other)' }
 	];
 	const sold = data.listings.filter(
 		(item) =>

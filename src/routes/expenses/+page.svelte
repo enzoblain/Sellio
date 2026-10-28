@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { euros } from '$lib/format';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
 	import { createExpense, getExpenses, searchExpenseCategories } from '$lib/remote/expenses.remote';
@@ -18,8 +19,6 @@
 			Number.isFinite(price) &&
 			price >= 0.01
 	);
-	const euros = (cents: number) =>
-		new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 	const formatDate = (value: string) =>
 		new Intl.DateTimeFormat('fr-FR', { timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
 	const categoryQuery = (search: string, offset: number, limit: number) =>

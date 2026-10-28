@@ -1,15 +1,10 @@
 <script lang="ts">
+	import { euros } from '$lib/format';
 	import { resolve } from '$app/paths';
 	import { getDashboard } from '$lib/remote/dashboard.remote';
 	import { calculateMetrics, type DashboardData } from '$lib/dashboard/metrics';
 	const dashboard = getDashboard();
 	let selectedYear = $state<number | undefined>();
-	const euros = (cents: number) =>
-		new Intl.NumberFormat('fr-FR', {
-			style: 'currency',
-			currency: 'EUR',
-			maximumFractionDigits: 2
-		}).format(cents / 100);
 	const shortEuros = (cents: number) =>
 		new Intl.NumberFormat('fr-FR', {
 			style: 'currency',
@@ -162,9 +157,13 @@
 							x2="950"
 							y1={250 - fraction * 210}
 							y2={250 - fraction * 210}
-							stroke="#f3f4f6"
-						/><text x="55" y={254 - fraction * 210} text-anchor="end" fill="#9ca3af" font-size="11"
-							>{shortEuros(maximum * fraction)}</text
+							stroke="var(--border)"
+						/><text
+							x="55"
+							y={254 - fraction * 210}
+							text-anchor="end"
+							fill="var(--fg-muted)"
+							font-size="11">{shortEuros(maximum * fraction)}</text
 						>
 					{/each}
 					{#each stats.months as month, index (month.key)}
@@ -175,7 +174,7 @@
 							width="21"
 							height={(month.revenue / maximum) * 210}
 							rx="3"
-							fill="#10b981"
+							fill="var(--chart-revenue)"
 							><title>{monthNames[index]} : revenus {euros(month.revenue)}</title></rect
 						>
 						{#each stats.categories as category, categoryIndex (category.id)}
@@ -192,7 +191,7 @@
 								><title>{monthNames[index]} : {category.name}, {euros(amount)}</title></rect
 							>
 						{/each}
-						<text x={x + 23} y="278" text-anchor="middle" fill="#6b7280" font-size="11"
+						<text x={x + 23} y="278" text-anchor="middle" fill="var(--fg-muted)" font-size="11"
 							>{monthNames[index]}</text
 						>
 					{/each}
