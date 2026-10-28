@@ -3,7 +3,11 @@
 	import { applyTheme, resolveTheme, setTheme, type Theme } from '$lib/theme';
 	import Icon from './Icon.svelte';
 
-	let theme = $state<Theme>('light');
+	let theme = $state<Theme>(
+		typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+			? 'dark'
+			: 'light'
+	);
 
 	onMount(() => {
 		theme = resolveTheme();

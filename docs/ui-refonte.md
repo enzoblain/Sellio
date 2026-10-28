@@ -51,6 +51,10 @@ Reprise de la décision #8 (validée par Enzo) : design system en CSS variables 
 
 Ces trois emplacements sont migrés vers les tokens dans la #13. Les classes `violet-*` / `gray-*` des écrans existants restent à migrer écran par écran dans la #14, en réutilisant les composants `ui/`.
 
+## Activation du thème sombre
+
+Tant que les écrans (#14) utilisent encore des classes `bg-white` / `violet-*`, le sombre est désactivé en prod : `DARK_MODE_ENABLED = false` dans `src/lib/theme.ts` masque le `ThemeToggle`, et le script anti-flash n'est plus dans `app.html`. À la fin de la #14 : passer le flag à `true` et remettre dans `<head>` le script qui lit `localStorage.theme` / `prefers-color-scheme` et ajoute `dark` sur `<html>`.
+
 ## Tests
 
 `npm test` (vitest + jsdom + @testing-library/svelte, devDependencies uniquement) : `format.test.ts` et `components/ui/ui.test.ts`.

@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import Icon, { type IconName } from '$lib/components/ui/Icon.svelte';
 	import ThemeToggle from '$lib/components/ui/ThemeToggle.svelte';
+	import { DARK_MODE_ENABLED } from '$lib/theme';
 
 	type NavItem = {
 		label: string;
@@ -29,7 +30,7 @@
 >
 	<div class="mb-8 flex items-center justify-between px-3">
 		<span class="text-base font-semibold tracking-tight text-fg">Sellio</span>
-		<ThemeToggle />
+		{#if DARK_MODE_ENABLED}<ThemeToggle />{/if}
 	</div>
 
 	<ul class="flex flex-1 flex-col gap-0.5">
@@ -55,7 +56,9 @@
 	</ul>
 </nav>
 
-<div class="fixed top-2 right-2 z-20 md:hidden"><ThemeToggle /></div>
+{#if DARK_MODE_ENABLED}
+	<div class="fixed top-2 right-2 z-20 md:hidden"><ThemeToggle /></div>
+{/if}
 
 <nav
 	class="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"

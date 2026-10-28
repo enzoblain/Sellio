@@ -3,6 +3,7 @@ import { createRawSnippet } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 import Badge from './Badge.svelte';
 import Button from './Button.svelte';
+import Dialog from './Dialog.svelte';
 import Card from './Card.svelte';
 import EmptyState from './EmptyState.svelte';
 import ErrorState from './ErrorState.svelte';
@@ -83,5 +84,34 @@ describe('ui', () => {
 		await fireEvent.click(screen.getByRole('button', { name: 'Passer au thème clair' }));
 		expect(document.documentElement).not.toHaveClass('dark');
 		expect(localStorage.getItem('theme')).toBe('light');
+	});
+
+	it('Dialog associe son titre via aria-labelledby, avec un id unique par instance', () => {
+		const a = render(Dialog, { title: 'Premier', children: text('a') });
+		const b = render(Dialog, { title: 'Second', children: text('b') });
+		const dialogs = document.querySelectorAll('dialog');
+		const ids = [...dialogs].map((dialog) => dialog.getAttribute('aria-labelledby'));
+		expect(new Set(ids).size).toBe(2);
+		for (const dialog of dialogs) {
+			const title = document.getElementById(dialog.getAttribute('aria-labelledby')!);
+			expect(title).toHaveTextContent(dialog.querySelector('h2')!.textContent!);
+		}
+		a.unmount();
+		b.unmount();
+	});
+
+	it('Dialog bloque cancel (Échap) quand dismissible est false', () => {
+		render(Dialog, { title: 'Enregistrement', dismissible: false, children: text('x') });
+		const dialog = document.querySelector('dialog')!;
+		const cancel = new Event('cancel', { cancelable: true });
+		dialog.dispatchEvent(cancel);
+		expect(cancel.defaultPrevented).toBe(true);
+	});
+
+	it('Dialog laisse cancel passer par défaut', () => {
+		render(Dialog, { title: 'Libre', children: text('x') });
+		const cancel = new Event('cancel', { cancelable: true });
+		document.querySelector('dialog')!.dispatchEvent(cancel);
+		expect(cancel.defaultPrevented).toBe(false);
 	});
 });
