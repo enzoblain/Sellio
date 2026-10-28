@@ -3,6 +3,7 @@ import { models } from './003_models';
 import { sizes } from './004_sizes';
 import { colors } from './002_colors';
 import { stocking_places } from './006_stocking_places';
+import { parcels } from './014_parcels';
 
 import { pgTable, uuid, bigint } from 'drizzle-orm/pg-core';
 
@@ -21,5 +22,6 @@ export const listings = pgTable('listings', {
 	shipping_price: bigint('shipping_price', { mode: 'number' }).notNull().default(0),
 	listing_price: bigint('listing_price', { mode: 'number' }),
 	sale_price: bigint('sale_price', { mode: 'number' }),
-	stocking_place_id: uuid('stocking_place_id').references(() => stocking_places.id)
+	stocking_place_id: uuid('stocking_place_id').references(() => stocking_places.id),
+	parcel_id: uuid('parcel_id').references(() => parcels.id, { onDelete: 'set null' })
 });
