@@ -53,7 +53,7 @@ Ces trois emplacements sont migrés vers les tokens dans la #13. Les classes `vi
 
 ## Activation du thème sombre
 
-Tant que les écrans (#14) utilisent encore des classes `bg-white` / `violet-*`, le sombre est désactivé en prod : `DARK_MODE_ENABLED = false` dans `src/lib/theme.ts` masque le `ThemeToggle`, et le script anti-flash n'est plus dans `app.html`. À la fin de la #14 : passer le flag à `true` et remettre dans `<head>` le script qui lit `localStorage.theme` / `prefers-color-scheme` et ajoute `dark` sur `<html>`.
+Activé à la fin de la #14 : `DARK_MODE_ENABLED = true` dans `src/lib/theme.ts` affiche le `ThemeToggle`, et le script anti-flash d'`app.html` (dans `<head>`) lit `localStorage.theme` / `prefers-color-scheme` et ajoute `dark` sur `<html>` avant le premier rendu. Sur mobile, le toggle est dans une barre haute en flux normal (pas en `fixed`), donc il ne chevauche pas le bouton « + Ajouter ».
 
 ## Tests
 

@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { euros } from '$lib/format';
 	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
-	import ListingGallery from '$lib/components/images/ListingGallery.svelte';
-	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
+	import ListingCard from '$lib/components/listings/ListingCard.svelte';
+	import Stat from '$lib/components/listings/Stat.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import ErrorState from '$lib/components/ui/ErrorState.svelte';
+	import Field from '$lib/components/ui/Field.svelte';
+	import Page from '$lib/components/ui/Page.svelte';
 	import { resolve } from '$app/paths';
 	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
@@ -15,7 +21,7 @@
 	let saving = $state(false);
 	let transitionKey = $state(0);
 	let errorMessage = $state('');
-	let dialog: HTMLDialogElement;
+	let dialog = $state<HTMLDialogElement>();
 	const valid = $derived(stockingPlace.value.trim().length > 0);
 	const placeQuery = (search: string, offset: number, limit: number) =>
 		searchStockingPlaces({ search, offset, limit });
@@ -25,7 +31,7 @@
 		selectedId = id;
 		stockingPlace = { value: '', uuid: null };
 		errorMessage = '';
-		dialog.showModal();
+		dialog?.showModal();
 	}
 
 	async function confirm() {
@@ -37,7 +43,7 @@
 				listingId: selectedId,
 				stockingPlace
 			});
-			dialog.close();
+			dialog?.close();
 		} catch {
 			errorMessage = 'Impossible de valider cet article. Réessaie ou actualise la page.';
 		} finally {
@@ -46,91 +52,59 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-50 px-6 py-6">
-	<div class="mb-6 flex items-center justify-between gap-4">
-		<h1 class="text-xl font-semibold text-violet-950">À récupérer</h1>
+<Page title="À récupérer" wide>
+	{#snippet actions()}
 		<a
 			href={resolve('/to-collect/insert')}
-			class="inline-flex items-center gap-2 rounded-lg bg-violet-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-900"
+			class="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 		>
 			<span aria-hidden="true">+</span> Ajouter
 		</a>
-	</div>
+	{/snippet}
 	{#await orders}
-		<p class="text-sm text-gray-500">Chargement des commandes…</p>
+		<p class="text-sm text-fg-muted">Chargement des commandes…</p>
 	{:then items}
 		<ListingStacks {items}>
 			{#snippet card(item, stackButton)}
-				<article class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-					<div class="relative flex aspect-square items-center justify-center bg-violet-50">
-						<ListingEditor listingId={item.id} />
-						<ListingGallery listingId={item.id} brand={item.brand} model={item.model} />
-						<div class="absolute top-3 right-3 flex items-center gap-2">
-							<button
-								type="button"
-								onclick={() => openTransition(item.id)}
-								aria-label={`Valider la récupération de ${item.brand} ${item.model}`}
-								class="rounded-lg bg-violet-950 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-900"
-								>✓ Valider</button
-							>
-							{@render stackButton()}
-						</div>
-					</div>
-					<div class="px-4 py-3">
-						<h2 class="font-medium text-gray-900">{item.brand} · {item.model}</h2>
-						<p class="mt-1 text-sm text-gray-500">{item.size} · {item.color}</p>
-					</div>
-					<div
-						class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3"
-					>
-						<div>
-							<p class="text-xs text-gray-500">Prix acheté</p>
-							<p class="font-semibold text-violet-950">{euros(item.purchasePrice)}</p>
-						</div>
-						<p class="text-xs text-gray-500">Port : {euros(item.shippingPrice)}</p>
-					</div>
-				</article>
+				<ListingCard {item} {stackButton}>
+					{#snippet action()}
+						<Button
+							onclick={() => openTransition(item.id)}
+							aria-label={`Valider la récupération de ${item.brand} ${item.model}`}
+							class="px-3 shadow-sm">✓ Valider</Button
+						>
+					{/snippet}
+					<h2 class="font-medium text-fg">{item.brand} · {item.model}</h2>
+					<p class="mt-1 text-sm text-fg-muted">{item.size} · {item.color}</p>
+					{#snippet footer()}
+						<Stat label="Prix acheté" value={euros(item.purchasePrice)} />
+						<p class="text-xs text-fg-muted">Port : {euros(item.shippingPrice)}</p>
+					{/snippet}
+				</ListingCard>
 			{/snippet}
 			{#snippet empty()}
-				<p
-					class="col-span-full rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500"
-				>
-					Aucune commande à récupérer.
-				</p>
+				<EmptyState>Aucune commande à récupérer.</EmptyState>
 			{/snippet}
 		</ListingStacks>
 	{:catch}
-		<p role="alert" class="text-sm text-red-600">Impossible de charger les commandes.</p>
-		<button
-			type="button"
-			onclick={() => orders.refresh()}
-			class="mt-3 text-sm font-medium text-violet-950">Réessayer</button
-		>
+		<ErrorState message="Impossible de charger les commandes." onretry={() => orders.refresh()} />
 	{/await}
-</div>
+</Page>
 
-<dialog
-	bind:this={dialog}
-	oncancel={(event) => {
-		if (saving) event.preventDefault();
-	}}
-	class="m-auto w-[calc(100%-2rem)] max-w-md overflow-visible rounded-xl bg-white p-6 shadow-xl backdrop:bg-violet-950/30"
+<Dialog
+	bind:element={dialog}
+	dismissible={!saving}
+	title="Récupérer l’article"
+	description="Indique le lieu de stockage pour placer l’article en stock."
 >
-	<h2 class="text-lg font-semibold text-violet-950">Récupérer l’article</h2>
-	<p class="mt-1 text-sm text-gray-500">
-		Indique le lieu de stockage pour placer l’article en stock.
-	</p>
 	<form
-		class="mt-6 space-y-5"
+		class="space-y-5"
 		onsubmit={(event) => {
 			event.preventDefault();
 			confirm();
 		}}
 	>
-		<div>
-			<label for="stocking-place" class="mb-2 block text-sm font-medium text-gray-700"
-				>Lieu de stockage</label
-			>
+		<Field label="Lieu de stockage" id="stocking-place">
 			{#key transitionKey}
 				<Autocomplete
 					id="stocking-place"
@@ -139,22 +113,12 @@
 					disabled={saving}
 				/>
 			{/key}
-		</div>
-		{#if errorMessage}<p role="alert" class="text-sm text-red-600">{errorMessage}</p>{/if}
+		</Field>
+		{#if errorMessage}<p role="alert" class="text-sm text-danger">{errorMessage}</p>{/if}
 		<div class="flex justify-end gap-3">
-			<button
-				type="button"
-				disabled={saving}
-				onclick={() => dialog.close()}
-				class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 disabled:opacity-50"
-				>Annuler</button
-			>
-			<button
-				type="submit"
-				disabled={!valid || saving}
-				class="rounded-lg bg-violet-950 px-4 py-2 text-sm font-medium text-white hover:bg-violet-900 disabled:cursor-not-allowed disabled:opacity-40"
-				>{saving ? 'Validation…' : 'Valider'}</button
+			<Button variant="secondary" disabled={saving} onclick={() => dialog?.close()}>Annuler</Button>
+			<Button type="submit" disabled={!valid || saving}>{saving ? 'Validation…' : 'Valider'}</Button
 			>
 		</div>
 	</form>
-</dialog>
+</Dialog>

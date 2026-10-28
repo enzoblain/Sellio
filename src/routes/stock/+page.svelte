@@ -1,8 +1,15 @@
 <script lang="ts">
 	import { euros } from '$lib/format';
 	import ListingStacks from '$lib/components/listings/ListingStacks.svelte';
-	import ListingGallery from '$lib/components/images/ListingGallery.svelte';
-	import ListingEditor from '$lib/components/listings/ListingEditor.svelte';
+	import ListingCard from '$lib/components/listings/ListingCard.svelte';
+	import Stat from '$lib/components/listings/Stat.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import ErrorState from '$lib/components/ui/ErrorState.svelte';
+	import Field from '$lib/components/ui/Field.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Page from '$lib/components/ui/Page.svelte';
 	import { getStockListings } from '$lib/remote/listings.remote';
 	import { listStockItem } from '$lib/remote/listings.remote';
 
@@ -11,7 +18,7 @@
 	let salePrice = $state<number | undefined>();
 	let saving = $state(false);
 	let errorMessage = $state('');
-	let dialog: HTMLDialogElement;
+	let dialog = $state<HTMLDialogElement>();
 	const valid = $derived(
 		salePrice !== undefined && Number.isFinite(salePrice) && salePrice >= 0.01
 	);
@@ -20,7 +27,7 @@
 		selectedId = id;
 		salePrice = undefined;
 		errorMessage = '';
-		dialog.showModal();
+		dialog?.showModal();
 	}
 
 	async function confirm() {
@@ -29,7 +36,7 @@
 		errorMessage = '';
 		try {
 			await listStockItem({ listingId: selectedId, listingPrice: salePrice! });
-			dialog.close();
+			dialog?.close();
 		} catch {
 			errorMessage = 'Impossible de valider cet article. Réessaie ou actualise la page.';
 		} finally {
@@ -38,88 +45,52 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-50 px-6 py-6">
-	<div class="mb-6 flex items-center justify-between gap-4">
-		<h1 class="text-xl font-semibold text-violet-950">Stock</h1>
-	</div>
+<Page title="Stock" wide>
 	{#await orders}
-		<p class="text-sm text-gray-500">Chargement des commandes…</p>
+		<p class="text-sm text-fg-muted">Chargement des commandes…</p>
 	{:then items}
 		<ListingStacks {items}>
 			{#snippet card(item, stackButton)}
-				<article class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-					<div class="relative flex aspect-square items-center justify-center bg-violet-50">
-						<ListingEditor listingId={item.id} />
-						<ListingGallery listingId={item.id} brand={item.brand} model={item.model} />
-						<div class="absolute top-3 right-3 flex items-center gap-2">
-							<button
-								type="button"
-								onclick={() => openTransition(item.id)}
-								aria-label={`Mettre en vente ${item.brand} ${item.model}`}
-								class="rounded-lg bg-violet-950 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-900"
-								>✓ Valider</button
-							>
-							{@render stackButton()}
-						</div>
-					</div>
-					<div class="px-4 py-3">
-						<h2 class="font-medium text-gray-900">{item.brand} · {item.model}</h2>
-						<p class="mt-1 text-sm text-gray-500">{item.size} · {item.color}</p>
-						<p class="mt-2 text-sm text-violet-950">
-							Stockage : {item.stockingPlace ?? 'Non renseigné'}
-						</p>
-					</div>
-					<div
-						class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3"
-					>
-						<div>
-							<p class="text-xs text-gray-500">Achat total</p>
-							<p class="font-semibold text-violet-950">
-								{euros(item.purchasePrice + item.shippingPrice)}
-							</p>
-						</div>
-					</div>
-				</article>
+				<ListingCard {item} {stackButton}>
+					{#snippet action()}
+						<Button
+							onclick={() => openTransition(item.id)}
+							aria-label={`Mettre en vente ${item.brand} ${item.model}`}
+							class="px-3 shadow-sm">✓ Valider</Button
+						>
+					{/snippet}
+					<h2 class="font-medium text-fg">{item.brand} · {item.model}</h2>
+					<p class="mt-1 text-sm text-fg-muted">{item.size} · {item.color}</p>
+					<p class="mt-2 text-sm text-fg">Stockage : {item.stockingPlace ?? 'Non renseigné'}</p>
+					{#snippet footer()}
+						<Stat label="Achat total" value={euros(item.purchasePrice + item.shippingPrice)} />
+					{/snippet}
+				</ListingCard>
 			{/snippet}
 			{#snippet empty()}
-				<p
-					class="col-span-full rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500"
-				>
-					Aucun article en stock.
-				</p>
+				<EmptyState>Aucun article en stock.</EmptyState>
 			{/snippet}
 		</ListingStacks>
 	{:catch}
-		<p role="alert" class="text-sm text-red-600">Impossible de charger les commandes.</p>
-		<button
-			type="button"
-			onclick={() => orders.refresh()}
-			class="mt-3 text-sm font-medium text-violet-950">Réessayer</button
-		>
+		<ErrorState message="Impossible de charger les commandes." onretry={() => orders.refresh()} />
 	{/await}
-</div>
+</Page>
 
-<dialog
-	bind:this={dialog}
-	oncancel={(event) => {
-		if (saving) event.preventDefault();
-	}}
-	class="m-auto w-[calc(100%-2rem)] max-w-md overflow-visible rounded-xl bg-white p-6 shadow-xl backdrop:bg-violet-950/30"
+<Dialog
+	bind:element={dialog}
+	dismissible={!saving}
+	title="Mettre l’article en vente"
+	description="Indique le prix auquel tu mets l’article en vente."
 >
-	<h2 class="text-lg font-semibold text-violet-950">Mettre l’article en vente</h2>
-	<p class="mt-1 text-sm text-gray-500">Indique le prix auquel tu mets l’article en vente.</p>
 	<form
-		class="mt-6 space-y-5"
+		class="space-y-5"
 		onsubmit={(event) => {
 			event.preventDefault();
 			confirm();
 		}}
 	>
-		<div>
-			<label for="listing-price" class="mb-2 block text-sm font-medium text-gray-700"
-				>Prix de mise en vente (€)</label
-			>
-			<input
+		<Field label="Prix de mise en vente (€)" id="listing-price">
+			<Input
 				id="listing-price"
 				type="number"
 				min="0.01"
@@ -128,24 +99,13 @@
 				bind:value={salePrice}
 				disabled={saving}
 				placeholder="0,00"
-				class="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
 			/>
-		</div>
-		{#if errorMessage}<p role="alert" class="text-sm text-red-600">{errorMessage}</p>{/if}
+		</Field>
+		{#if errorMessage}<p role="alert" class="text-sm text-danger">{errorMessage}</p>{/if}
 		<div class="flex justify-end gap-3">
-			<button
-				type="button"
-				disabled={saving}
-				onclick={() => dialog.close()}
-				class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 disabled:opacity-50"
-				>Annuler</button
-			>
-			<button
-				type="submit"
-				disabled={!valid || saving}
-				class="rounded-lg bg-violet-950 px-4 py-2 text-sm font-medium text-white hover:bg-violet-900 disabled:cursor-not-allowed disabled:opacity-40"
-				>{saving ? 'Validation…' : 'Valider'}</button
+			<Button variant="secondary" disabled={saving} onclick={() => dialog?.close()}>Annuler</Button>
+			<Button type="submit" disabled={!valid || saving}>{saving ? 'Validation…' : 'Valider'}</Button
 			>
 		</div>
 	</form>
-</dialog>
+</Dialog>

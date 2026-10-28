@@ -5,7 +5,7 @@
 		value = $bindable(),
 		class: className = '',
 		...rest
-	}: HTMLInputAttributes & { value?: string | number | null } = $props();
+	}: Omit<HTMLInputAttributes, 'value'> & { value?: string | number | null } = $props();
 </script>
 
 <input

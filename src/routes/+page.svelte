@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { euros } from '$lib/format';
 	import { resolve } from '$app/paths';
+	import Card from '$lib/components/ui/Card.svelte';
+	import ErrorState from '$lib/components/ui/ErrorState.svelte';
+	import Page from '$lib/components/ui/Page.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
 	import { getDashboard } from '$lib/remote/dashboard.remote';
 	import { calculateMetrics, type DashboardData } from '$lib/dashboard/metrics';
 	const dashboard = getDashboard();
@@ -54,10 +58,10 @@
 	} as const;
 </script>
 
-<div class="min-h-screen bg-gray-50 px-6 py-6">
+<Page>
 	{#await dashboard}
-		<h1 class="text-xl font-semibold text-violet-950">Dashboard</h1>
-		<p class="mt-6 text-sm text-gray-500">Chargement des statistiques…</p>
+		<h1 class="text-2xl text-fg">Dashboard</h1>
+		<p class="mt-6 text-sm text-fg-muted">Chargement des statistiques…</p>
 	{:then data}
 		{@const year = selectedYear ?? data.currentYear}
 		{@const stats = calculateMetrics(data, year)}
@@ -70,66 +74,66 @@
 		)}
 		<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
 			<div>
-				<h1 class="text-xl font-semibold text-violet-950">Dashboard</h1>
-				<p class="mt-1 text-sm text-gray-500">
+				<h1 class="text-2xl text-fg">Dashboard</h1>
+				<p class="mt-1 text-sm text-fg-muted">
 					Tes ventes, tes dépenses et la rentabilité de tes articles.
 				</p>
 			</div>
 			<div>
-				<label for="dashboard-year" class="mr-2 text-sm text-gray-500">Année</label><select
+				<label for="dashboard-year" class="mr-2 text-sm text-fg-muted">Année</label><Select
 					id="dashboard-year"
 					value={year}
 					onchange={(event) => (selectedYear = Number(event.currentTarget.value))}
-					class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-violet-950"
+					class="w-auto py-1.5 text-sm"
 					>{#each years(data) as availableYear (availableYear)}<option value={availableYear}
 							>{availableYear}</option
-						>{/each}</select
+						>{/each}</Select
 				>
 			</div>
 		</div>
 		<div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 			{#each [{ label: 'Revenus', value: euros(stats.revenue), detail: `${stats.soldCount} article${stats.soldCount === 1 ? '' : 's'} vendu${stats.soldCount === 1 ? '' : 's'}` }, { label: 'Bénéfice des articles', value: euros(stats.profit), detail: 'Prix vendus − achats et ports des articles vendus' }, { label: 'Bénéfice moyen / article', value: stats.averageProfit === null ? '—' : euros(stats.averageProfit), detail: 'Sur les articles vendus cette année' }, { label: 'Multiplicateur moyen', value: stats.averageRatio === null ? '—' : `×${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(stats.averageRatio)}`, detail: 'Moyenne des prix vendus ÷ achats totaux' }] as metric (metric.label)}
-				<div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-					<p class="text-sm text-gray-500">{metric.label}</p>
-					<p class="mt-3 text-2xl font-semibold text-violet-950">{metric.value}</p>
-					<p class="mt-2 text-xs text-gray-400">{metric.detail}</p>
-				</div>
+				<Card>
+					<p class="text-sm text-fg-muted">{metric.label}</p>
+					<p class="mt-3 text-2xl font-semibold text-fg">{metric.value}</p>
+					<p class="mt-2 text-xs text-fg-muted">{metric.detail}</p>
+				</Card>
 			{/each}
 		</div>
-		<section class="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-			<h2 class="font-semibold text-violet-950">Potentiel des articles en vente</h2>
-			<p class="mt-1 text-sm text-gray-500">
+		<Card class="mb-6">
+			<h2 class="font-semibold text-fg">Potentiel des articles en vente</h2>
+			<p class="mt-1 text-sm text-fg-muted">
 				Tous les articles actuellement en vente, quelle que soit l’année d’achat. Estimation s’ils
 				sont vendus au prix affiché.
 			</p>
 			<div class="mt-4 grid gap-5 sm:grid-cols-2">
 				<div>
-					<p class="text-sm text-gray-500">Total des prix de mise en vente</p>
-					<p class="mt-2 text-2xl font-semibold text-violet-950">{euros(stats.potentialRevenue)}</p>
-					<p class="mt-2 text-xs text-gray-400">
+					<p class="text-sm text-fg-muted">Total des prix de mise en vente</p>
+					<p class="mt-2 text-2xl font-semibold text-fg">{euros(stats.potentialRevenue)}</p>
+					<p class="mt-2 text-xs text-fg-muted">
 						{stats.listedCount} article{stats.listedCount === 1 ? '' : 's'} en vente
 					</p>
 				</div>
 				<div>
-					<p class="text-sm text-gray-500">Bénéfice potentiel</p>
-					<p class="mt-2 text-2xl font-semibold text-violet-950">{euros(stats.potentialProfit)}</p>
-					<p class="mt-2 text-xs text-gray-400">
+					<p class="text-sm text-fg-muted">Bénéfice potentiel</p>
+					<p class="mt-2 text-2xl font-semibold text-fg">{euros(stats.potentialProfit)}</p>
+					<p class="mt-2 text-xs text-fg-muted">
 						Prix affichés − achats et ports de ces articles, avant autres frais
 					</p>
 				</div>
 			</div>
-		</section>
-		<section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+		</Card>
+		<Card>
 			<div class="mb-5">
-				<h2 class="font-semibold text-violet-950">Revenus et dépenses par mois</h2>
-				<p class="mt-1 text-sm text-gray-500">
+				<h2 class="font-semibold text-fg">Revenus et dépenses par mois</h2>
+				<p class="mt-1 text-sm text-fg-muted">
 					Les dépenses regroupent les achats d’articles, leurs frais de port et tous les autres
 					frais.
 				</p>
 			</div>
-			<div class="mb-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-gray-600">
+			<div class="mb-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-fg-muted">
 				<span class="flex items-center gap-2"
-					><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>Revenus</span
+					><span class="h-2.5 w-2.5 rounded-sm bg-chart-revenue"></span>Revenus</span
 				>
 				{#each stats.categories as category (category.id)}
 					<span class="flex items-center gap-2"
@@ -198,14 +202,14 @@
 				</svg>
 			</div>
 			{#if stats.revenue === 0 && stats.totalExpenses === 0}<p
-					class="mt-2 text-center text-sm text-gray-500"
+					class="mt-2 text-center text-sm text-fg-muted"
 				>
 					Aucune activité datée pour cette année.
 				</p>{/if}
-		</section>
+		</Card>
 		<div class="mt-6 grid gap-5 lg:grid-cols-2">
-			<section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-				<h2 class="mb-5 font-semibold text-violet-950">Répartition des dépenses</h2>
+			<Card>
+				<h2 class="mb-5 font-semibold text-fg">Répartition des dépenses</h2>
 				{#each stats.categories as category (category.id)}
 					{@const total = stats.months.reduce(
 						(sum, month) => sum + (month.costs[category.id] ?? 0),
@@ -213,11 +217,11 @@
 					)}
 					<div class="mb-4">
 						<div class="mb-2 flex items-center justify-between gap-3 text-sm">
-							<span class="text-gray-600">{category.name}</span><span
-								class="font-medium text-violet-950">{euros(total)}</span
+							<span class="text-fg-muted">{category.name}</span><span class="font-medium text-fg"
+								>{euros(total)}</span
 							>
 						</div>
-						<div class="h-2 overflow-hidden rounded-full bg-gray-100">
+						<div class="h-2 overflow-hidden rounded-full bg-surface-2">
 							<div
 								class="h-full rounded-full"
 								style:background={category.color}
@@ -226,47 +230,43 @@
 						</div>
 					</div>
 				{/each}
-				<div
-					class="flex justify-between border-t border-gray-100 pt-4 text-sm font-semibold text-violet-950"
-				>
+				<div class="flex justify-between border-t border-border pt-4 text-sm font-semibold text-fg">
 					<span>Total dépenses</span><span>{euros(stats.totalExpenses)}</span>
 				</div>
-			</section>
-			<section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-				<h2 class="mb-5 font-semibold text-violet-950">Vue d’ensemble</h2>
+			</Card>
+			<Card>
+				<h2 class="mb-5 font-semibold text-fg">Vue d’ensemble</h2>
 				<div class="grid grid-cols-2 gap-3">
 					{#each stats.stock as entry (entry.status)}<a
 							href={resolve(stockLinks[entry.status as keyof typeof stockLinks])}
-							class="rounded-lg bg-violet-50 p-4 transition hover:bg-violet-100"
-							><p class="text-xs text-gray-500">{stockLabels[entry.status]}</p>
-							<p class="mt-2 text-xl font-semibold text-violet-950">{entry.count}</p></a
+							class="rounded-lg bg-surface-2 p-4 transition hover:bg-border"
+							><p class="text-xs text-fg-muted">{stockLabels[entry.status]}</p>
+							<p class="mt-2 text-xl font-semibold text-fg">{entry.count}</p></a
 						>{/each}
 				</div>
-				<div class="mt-5 space-y-3 border-t border-gray-100 pt-4">
+				<div class="mt-5 space-y-3 border-t border-border pt-4">
 					<div class="flex justify-between gap-4 text-sm">
-						<span class="text-gray-500">Bénéfice après dépenses</span><span
-							class="font-semibold text-violet-950">{euros(stats.netProfit)}</span
+						<span class="text-fg-muted">Bénéfice après dépenses</span><span
+							class="font-semibold text-fg">{euros(stats.netProfit)}</span
 						>
 					</div>
-					<p class="text-xs text-gray-400">
+					<p class="text-xs text-fg-muted">
 						Bénéfice des articles vendus − autres dépenses de l’année.
 					</p>
 					<div class="flex justify-between gap-4 text-sm">
-						<span class="text-gray-500">Solde revenus − dépenses</span><span
-							class="font-semibold text-violet-950">{euros(stats.cashBalance)}</span
+						<span class="text-fg-muted">Solde revenus − dépenses</span><span
+							class="font-semibold text-fg">{euros(stats.cashBalance)}</span
 						>
 					</div>
-					<p class="text-xs text-gray-400">Inclut aussi les achats des articles encore en stock.</p>
+					<p class="text-xs text-fg-muted">Inclut aussi les achats des articles encore en stock.</p>
 				</div>
-			</section>
+			</Card>
 		</div>
-		<details class="mt-6 rounded-xl border border-gray-200 bg-white p-5 text-sm shadow-sm">
-			<summary class="cursor-pointer font-medium text-violet-950"
-				>Détail des montants mensuels</summary
-			>
+		<details class="mt-6 rounded-lg border border-border bg-surface p-5 text-sm shadow-sm">
+			<summary class="cursor-pointer font-medium text-fg">Détail des montants mensuels</summary>
 			<div class="mt-4 overflow-x-auto">
 				<table class="w-full text-left">
-					<thead class="text-xs text-gray-500"
+					<thead class="text-xs text-fg-muted"
 						><tr
 							><th class="py-3">Mois</th><th class="py-3 text-right">Revenus</th><th
 								class="py-3 text-right">Dépenses</th
@@ -275,19 +275,18 @@
 					><tbody
 						>{#each stats.months as month, index (month.key)}{@const cost = Object.values(
 								month.costs
-							).reduce((a, b) => a + b, 0)}<tr class="border-t border-gray-100"
-								><td class="py-3 text-gray-600">{monthNames[index]}</td><td class="py-3 text-right"
+							).reduce((a, b) => a + b, 0)}<tr class="border-t border-border"
+								><td class="py-3 text-fg-muted">{monthNames[index]}</td><td class="py-3 text-right"
 									>{euros(month.revenue)}</td
 								><td class="py-3 text-right">{euros(cost)}</td><td
-									class="py-3 text-right font-medium text-violet-950"
-									>{euros(month.revenue - cost)}</td
+									class="py-3 text-right font-medium text-fg">{euros(month.revenue - cost)}</td
 								></tr
 							>{/each}</tbody
 					>
 				</table>
 			</div>
 		</details>
-		<p class="mt-5 text-xs leading-relaxed text-gray-400">
+		<p class="mt-5 text-xs leading-relaxed text-fg-muted">
 			Les ventes sont comptées au passage en « à expédier » ; les articles retournés sont exclus.
 			Les achats sont datés de l’ajout dans Sellio. Le multiplicateur inclut les frais de port
 			d’achat.{#if stats.zeroCostSales > 0}
@@ -298,12 +297,12 @@
 				{stats.undatedPurchases} achat(s) sans date exclu(s) des graphiques.{/if}
 		</p>
 	{:catch}
-		<h1 class="text-xl font-semibold text-violet-950">Dashboard</h1>
-		<p role="alert" class="mt-6 text-sm text-red-600">Impossible de charger les statistiques.</p>
-		<button
-			type="button"
-			onclick={() => dashboard.refresh()}
-			class="mt-3 text-sm font-medium text-violet-950">Réessayer</button
-		>
+		<h1 class="text-2xl text-fg">Dashboard</h1>
+		<div class="mt-6">
+			<ErrorState
+				message="Impossible de charger les statistiques."
+				onretry={() => dashboard.refresh()}
+			/>
+		</div>
 	{/await}
-</div>
+</Page>

@@ -3,7 +3,7 @@
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 
 	type Props = HTMLButtonAttributes & {
-		variant?: 'primary' | 'secondary' | 'ghost';
+		variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
 		children: Snippet;
 	};
 
@@ -18,6 +18,7 @@
 	const variants = {
 		primary: 'bg-accent text-accent-fg hover:opacity-90',
 		secondary: 'border border-border bg-surface text-fg hover:bg-surface-2',
+		danger: 'bg-danger text-bg hover:opacity-90',
 		ghost: 'text-fg-muted hover:bg-surface-2 hover:text-fg'
 	};
 </script>

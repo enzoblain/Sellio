@@ -61,5 +61,5 @@
 	});
 </script>
 
-{#if busy}<p class="text-xs text-gray-500" role="status">Chargement des photos du modèle…</p>{/if}
-{#if error}<p class="text-sm text-red-600" role="alert">{error}</p>{/if}
+{#if busy}<p class="text-xs text-fg-muted" role="status">Chargement des photos du modèle…</p>{/if}
+{#if error}<p class="text-sm text-danger" role="alert">{error}</p>{/if}
