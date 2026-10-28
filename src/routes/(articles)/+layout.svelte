@@ -63,10 +63,21 @@
 			}
 		});
 	});
+	// Le panneau d'article vit dans l'URL (`?id=`) à côté des filtres.
+	const canonical = (params: URLSearchParams) =>
+		[...params]
+			.map(([key, value]) => `${key}=${value}`)
+			.sort()
+			.join('&');
+	const withId = (params: URLSearchParams, id: string | null) => {
+		if (id) params.set('id', id);
+		return params;
+	};
 	$effect(() => {
-		const search = paramsFromFilters(filters).toString();
+		const params = withId(paramsFromFilters(filters), page.url.searchParams.get('id'));
+		const search = params.toString();
 		untrack(() => {
-			if (search === page.url.searchParams.toString()) return;
+			if (canonical(params) === canonical(page.url.searchParams)) return;
 			// eslint-disable-next-line svelte/no-navigation-without-resolve -- on ne change que la query string
 			goto(`${page.url.pathname}${search ? `?${search}` : ''}`, {
 				replaceState: true,
@@ -85,6 +96,40 @@
 		{ value: 'list', label: 'Liste' },
 		{ value: 'grid', label: 'Grille' }
 	];
+
+	const selectedId = $derived(page.url.searchParams.get('id'));
+	const selected = $derived(selectedId ? all.find((item) => item.id === selectedId) : undefined);
+	// Ouvert par nos soins (entrée d'historique ajoutée) : la fermeture revient en arrière.
+	let pushed = false;
+	function open(id: string) {
+		pushed = true;
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- on ne change que la query string
+		goto(`${page.url.pathname}?${withId(paramsFromFilters(filters), id)}`, {
+			keepFocus: true,
+			noScroll: true
+		});
+	}
+	function close() {
+		if (!page.url.searchParams.has('id')) return;
+		if (pushed) {
+			pushed = false;
+			history.back();
+			return;
+		}
+		const params = paramsFromFilters(filters).toString();
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- on ne change que la query string
+		goto(`${page.url.pathname}${params ? `?${params}` : ''}`, {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true
+		});
+	}
+	$effect(() => {
+		// Retour navigateur : l'entrée poussée n'existe plus.
+		if (!selectedId) pushed = false;
+		// Identifiant inconnu (lien périmé, article déplacé ou supprimé) : on retire ?id=.
+		else if (loaded && !selected) untrack(close);
+	});
 
 	const items = $derived(sortArticles(filterArticles(all, filters), filters.sort));
 	const brandOptions = $derived(
@@ -127,7 +172,15 @@
 		},
 		get view() {
 			return view;
-		}
+		},
+		get all() {
+			return all;
+		},
+		get selected() {
+			return selected;
+		},
+		open,
+		close
 	});
 </script>
 

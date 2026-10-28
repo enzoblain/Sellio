@@ -10,6 +10,12 @@ export type ArticlesContext<T extends Article = Article> = {
 	/** Nombre d'articles du statut avant recherche et filtres. */
 	readonly total: number;
 	readonly view: ArticleView;
+	/** Articles du statut courant, sans recherche ni filtre (résolution de `?id=`). */
+	readonly all: T[];
+	/** Article ouvert dans le panneau latéral (`?id=`), s'il existe dans le statut courant. */
+	readonly selected: T | undefined;
+	open: (id: string) => void;
+	close: () => void;
 	/** Retire la recherche et les filtres (le tri est conservé). */
 	reset: () => void;
 };
