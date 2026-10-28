@@ -75,7 +75,8 @@ describe('ListingCard', () => {
 			item,
 			stackButton: text('PILE'),
 			action: text('ACTION'),
-			children: text('CORPS')
+			children: text('CORPS'),
+			onopen: vi.fn()
 		});
 		expect(screen.getByText('CORPS')).toBeInTheDocument();
 		const action = screen.getByText('ACTION').parentElement!;
@@ -89,10 +90,27 @@ describe('ListingCard', () => {
 			stackButton: text('PILE'),
 			children: text('CORPS'),
 			footer: text('FOOTER'),
-			extra: text('EXTRA')
+			extra: text('EXTRA'),
+			onopen: vi.fn()
 		});
 		expect(screen.getByText('FOOTER')).toBeInTheDocument();
 		expect(screen.getByText('EXTRA')).toBeInTheDocument();
 		expect(container.querySelectorAll('.border-t')).toHaveLength(2);
+	});
+
+	it('ouvre le détail au clic sur la photo, pas au clic sur un bouton de la photo', async () => {
+		const onopen = vi.fn();
+		const { container } = render(ListingCard, {
+			item,
+			stackButton: createRawSnippet(() => ({
+				render: () => '<button type="button">PILE</button>'
+			})),
+			children: text('CORPS'),
+			onopen
+		});
+		await fireEvent.click(container.querySelector('[role="presentation"]')!);
+		expect(onopen).toHaveBeenCalledOnce();
+		await fireEvent.click(screen.getByText('PILE'));
+		expect(onopen).toHaveBeenCalledOnce();
 	});
 });

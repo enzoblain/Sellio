@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { euros } from '$lib/format';
-	import { resolve } from '$app/paths';
 	import Card from '$lib/components/ui/Card.svelte';
 	import ErrorState from '$lib/components/ui/ErrorState.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
-	import Select from '$lib/components/ui/Select.svelte';
+	import Pipeline from '$lib/components/dashboard/Pipeline.svelte';
+	import SegmentedControl from '$lib/components/ui/SegmentedControl.svelte';
 	import { getDashboard } from '$lib/remote/dashboard.remote';
 	import { calculateMetrics, type DashboardData } from '$lib/dashboard/metrics';
 	const dashboard = getDashboard();
@@ -42,20 +42,6 @@
 					.map((value) => (typeof value === 'number' ? value : Number(value!.slice(0, 4))))
 			)
 		].sort((a, b) => b - a);
-	const stockLabels: Record<number, string> = {
-		0: 'À récupérer',
-		6: 'En stock',
-		1: 'En vente',
-		2: 'À expédier',
-		3: 'Expédié'
-	};
-	const stockLinks = {
-		0: '/to-collect',
-		6: '/stock',
-		1: '/listed',
-		2: '/to-ship',
-		3: '/shipped'
-	} as const;
 </script>
 
 <Page>
@@ -79,16 +65,12 @@
 					Tes ventes, tes dépenses et la rentabilité de tes articles.
 				</p>
 			</div>
-			<div>
-				<label for="dashboard-year" class="mr-2 text-sm text-fg-muted">Année</label><Select
-					id="dashboard-year"
-					value={year}
-					onchange={(event) => (selectedYear = Number(event.currentTarget.value))}
-					class="w-auto py-1.5 text-sm"
-					>{#each years(data) as availableYear (availableYear)}<option value={availableYear}
-							>{availableYear}</option
-						>{/each}</Select
-				>
+			<div class="max-w-full overflow-x-auto">
+				<SegmentedControl
+					label="Année"
+					options={years(data).map((value) => ({ value: String(value), label: String(value) }))}
+					bind:value={() => String(year), (next) => (selectedYear = Number(next))}
+				/>
 			</div>
 		</div>
 		<div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -100,30 +82,8 @@
 				</Card>
 			{/each}
 		</div>
+		<div class="mb-6"><Pipeline stock={stats.stock} /></div>
 		<Card class="mb-6">
-			<h2 class="font-semibold text-fg">Potentiel des articles en vente</h2>
-			<p class="mt-1 text-sm text-fg-muted">
-				Tous les articles actuellement en vente, quelle que soit l’année d’achat. Estimation s’ils
-				sont vendus au prix affiché.
-			</p>
-			<div class="mt-4 grid gap-5 sm:grid-cols-2">
-				<div>
-					<p class="text-sm text-fg-muted">Total des prix de mise en vente</p>
-					<p class="mt-2 text-2xl font-semibold text-fg">{euros(stats.potentialRevenue)}</p>
-					<p class="mt-2 text-xs text-fg-muted">
-						{stats.listedCount} article{stats.listedCount === 1 ? '' : 's'} en vente
-					</p>
-				</div>
-				<div>
-					<p class="text-sm text-fg-muted">Bénéfice potentiel</p>
-					<p class="mt-2 text-2xl font-semibold text-fg">{euros(stats.potentialProfit)}</p>
-					<p class="mt-2 text-xs text-fg-muted">
-						Prix affichés − achats et ports de ces articles, avant autres frais
-					</p>
-				</div>
-			</div>
-		</Card>
-		<Card>
 			<div class="mb-5">
 				<h2 class="font-semibold text-fg">Revenus et dépenses par mois</h2>
 				<p class="mt-1 text-sm text-fg-muted">
@@ -207,7 +167,30 @@
 					Aucune activité datée pour cette année.
 				</p>{/if}
 		</Card>
-		<div class="mt-6 grid gap-5 lg:grid-cols-2">
+		<div class="mt-6 grid gap-5 lg:grid-cols-3">
+			<Card>
+				<h2 class="font-semibold text-fg">Potentiel en vente</h2>
+				<p class="mt-1 text-sm text-fg-muted">
+					Tous les articles actuellement en vente, quelle que soit l’année d’achat. Estimation s’ils
+					sont vendus au prix affiché.
+				</p>
+				<div class="mt-4 grid gap-5 sm:grid-cols-2">
+					<div>
+						<p class="text-sm text-fg-muted">Total des prix de mise en vente</p>
+						<p class="mt-2 text-2xl font-semibold text-fg">{euros(stats.potentialRevenue)}</p>
+						<p class="mt-2 text-xs text-fg-muted">
+							{stats.listedCount} article{stats.listedCount === 1 ? '' : 's'} en vente
+						</p>
+					</div>
+					<div>
+						<p class="text-sm text-fg-muted">Bénéfice potentiel</p>
+						<p class="mt-2 text-2xl font-semibold text-fg">{euros(stats.potentialProfit)}</p>
+						<p class="mt-2 text-xs text-fg-muted">
+							Prix affichés − achats et ports de ces articles, avant autres frais
+						</p>
+					</div>
+				</div>
+			</Card>
 			<Card>
 				<h2 class="mb-5 font-semibold text-fg">Répartition des dépenses</h2>
 				{#each stats.categories as category (category.id)}
@@ -235,16 +218,8 @@
 				</div>
 			</Card>
 			<Card>
-				<h2 class="mb-5 font-semibold text-fg">Vue d’ensemble</h2>
-				<div class="grid grid-cols-2 gap-3">
-					{#each stats.stock as entry (entry.status)}<a
-							href={resolve(stockLinks[entry.status as keyof typeof stockLinks])}
-							class="rounded-lg bg-surface-2 p-4 transition hover:bg-border"
-							><p class="text-xs text-fg-muted">{stockLabels[entry.status]}</p>
-							<p class="mt-2 text-xl font-semibold text-fg">{entry.count}</p></a
-						>{/each}
-				</div>
-				<div class="mt-5 space-y-3 border-t border-border pt-4">
+				<h2 class="mb-5 font-semibold text-fg">Résultat</h2>
+				<div class="space-y-3">
 					<div class="flex justify-between gap-4 text-sm">
 						<span class="text-fg-muted">Bénéfice après dépenses</span><span
 							class="font-semibold text-fg">{euros(stats.netProfit)}</span

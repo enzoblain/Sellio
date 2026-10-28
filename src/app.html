@@ -25,6 +25,16 @@
 				} catch (e) {}
 			})();
 		</script>
+		<script>
+			// Idem pour la vue liste/grille des articles : le premier rendu utilise déjà la vue mémorisée.
+			(function () {
+				try {
+					var view = localStorage.getItem('articles-view');
+					if (view === 'list' || view === 'grid')
+						document.documentElement.dataset.articlesView = view;
+				} catch (e) {}
+			})();
+		</script>
 		<link
 			rel="preload"
 			href="/fonts/inter-latin-wght-normal.woff2"
