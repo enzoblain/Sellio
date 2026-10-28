@@ -21,6 +21,13 @@ export const navItems = [
 		prefixes: ARTICLE_ROUTES
 	},
 	{
+		label: 'Colis',
+		shortLabel: 'Colis',
+		href: '/parcels',
+		icon: 'parcel',
+		prefixes: ['/parcels']
+	},
+	{
 		label: 'Dépenses',
 		shortLabel: 'Dépenses',
 		href: '/expenses',

@@ -61,7 +61,7 @@ services:
 volumes:
   postgres_data:
     external: true
-    name: sellio_nas_postgres_data
+    name: ${POSTGRES_VOLUME:-sellio_nas_postgres_data}
   images_data:
     external: true
-    name: sellio_nas_images_data
+    name: ${IMAGES_VOLUME:-sellio_nas_images_data}

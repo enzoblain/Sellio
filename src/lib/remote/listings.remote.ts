@@ -4,13 +4,14 @@ import * as v from 'valibot';
 import { and, eq, desc, sql } from 'drizzle-orm';
 
 import { getDb } from '$lib/server/db';
+import { collectListing, resolveStockingPlace } from '$lib/server/collect';
+import { insertListing } from '$lib/server/listing-create';
 import {
 	brands,
 	models,
 	sizes,
 	colors,
 	listings,
-	listingStatuses,
 	listingStatusHistory,
 	stocking_places,
 	images
@@ -35,189 +36,9 @@ export const createListing = command(
 	async ({ brand, model, size, color, purchasePrice, shippingPrice }) => {
 		const db = getDb();
 
-		const result = await db.transaction(async (tx) => {
-			let brandId = brand.uuid;
-
-			if (!brandId) {
-				let [existingBrand] = await tx
-					.select({
-						id: brands.id
-					})
-					.from(brands)
-					.where(eq(brands.name, brand.value))
-					.limit(1);
-
-				if (!existingBrand) {
-					[existingBrand] = await tx
-						.insert(brands)
-						.values({
-							name: brand.value
-						})
-						.onConflictDoNothing({
-							target: brands.name
-						})
-						.returning({
-							id: brands.id
-						});
-
-					if (!existingBrand) {
-						[existingBrand] = await tx
-							.select({
-								id: brands.id
-							})
-							.from(brands)
-							.where(eq(brands.name, brand.value))
-							.limit(1);
-					}
-				}
-
-				if (!existingBrand) {
-					throw new Error('Impossible de créer ou récupérer la marque');
-				}
-
-				brandId = existingBrand.id;
-			}
-			let modelId = model.uuid;
-
-			if (!modelId) {
-				let [existingModel] = await tx
-					.select({
-						id: models.id
-					})
-					.from(models)
-					.where(and(eq(models.brand_id, brandId), eq(models.name, model.value)))
-					.limit(1);
-
-				if (!existingModel) {
-					[existingModel] = await tx
-						.insert(models)
-						.values({
-							brand_id: brandId,
-							name: model.value
-						})
-						.onConflictDoNothing({
-							target: [models.brand_id, models.name]
-						})
-						.returning({
-							id: models.id
-						});
-
-					if (!existingModel) {
-						[existingModel] = await tx
-							.select({
-								id: models.id
-							})
-							.from(models)
-							.where(and(eq(models.brand_id, brandId), eq(models.name, model.value)))
-							.limit(1);
-					}
-				}
-
-				if (!existingModel) {
-					throw new Error('Impossible de créer ou récupérer le modèle');
-				}
-
-				modelId = existingModel.id;
-			}
-			let sizeId = size.uuid;
-
-			if (!sizeId) {
-				let [existingSize] = await tx
-					.select({
-						id: sizes.id
-					})
-					.from(sizes)
-					.where(eq(sizes.name, size.value))
-					.limit(1);
-
-				if (!existingSize) {
-					[existingSize] = await tx
-						.insert(sizes)
-						.values({
-							name: size.value
-						})
-						.onConflictDoNothing({
-							target: sizes.name
-						})
-						.returning({
-							id: sizes.id
-						});
-
-					if (!existingSize) {
-						[existingSize] = await tx
-							.select({
-								id: sizes.id
-							})
-							.from(sizes)
-							.where(eq(sizes.name, size.value))
-							.limit(1);
-					}
-				}
-
-				if (!existingSize) {
-					throw new Error('Impossible de créer ou récupérer la taille');
-				}
-
-				sizeId = existingSize.id;
-			}
-			let colorId = color.uuid;
-
-			if (!colorId) {
-				let [existingColor] = await tx
-					.select({
-						id: colors.id
-					})
-					.from(colors)
-					.where(eq(colors.name, color.value))
-					.limit(1);
-
-				if (!existingColor) {
-					[existingColor] = await tx
-						.insert(colors)
-						.values({
-							name: color.value
-						})
-						.onConflictDoNothing({
-							target: colors.name
-						})
-						.returning({
-							id: colors.id
-						});
-
-					if (!existingColor) {
-						[existingColor] = await tx
-							.select({
-								id: colors.id
-							})
-							.from(colors)
-							.where(eq(colors.name, color.value))
-							.limit(1);
-					}
-				}
-
-				if (!existingColor) {
-					throw new Error('Impossible de créer ou récupérer la couleur');
-				}
-
-				colorId = existingColor.id;
-			}
-			const [listing] = await tx
-				.insert(listings)
-				.values({
-					model_id: modelId,
-					size_id: sizeId,
-					color_id: colorId,
-					purchase_price: Math.round(purchasePrice * 100),
-					shipping_price: Math.round(shippingPrice * 100)
-				})
-				.returning({
-					id: listings.id
-				});
-
-			await tx.insert(listingStatuses).values({ id: 0, name: 'purchased' }).onConflictDoNothing();
-			await tx.insert(listingStatusHistory).values({ listing_id: listing.id, status: 0 });
-			return listing;
-		});
+		const result = await db.transaction((tx) =>
+			insertListing(tx, { brand, model, size, color, purchasePrice, shippingPrice })
+		);
 		await getToCollectListings().refresh();
 		await getDashboard().refresh();
 		return result;
@@ -277,51 +98,9 @@ export const collectItem = command(
 				.where(eq(listings.id, listingId))
 				.for('update');
 			if (!listing) throw new Error('Article introuvable.');
-			const [current] = await tx
-				.select()
-				.from(listingStatusHistory)
-				.where(eq(listingStatusHistory.listing_id, listingId))
-				.orderBy(desc(listingStatusHistory.created_at), desc(listingStatusHistory.id))
-				.limit(1);
-			if (current && current.status !== 0) throw new Error('Cet article a déjà été récupéré.');
-			let placeId = stockingPlace.uuid;
-			if (placeId) {
-				const [place] = await tx
-					.select()
-					.from(stocking_places)
-					.where(eq(stocking_places.id, placeId));
-				if (!place) throw new Error('Lieu de stockage introuvable.');
-			} else {
-				await tx
-					.insert(stocking_places)
-					.values({ name: stockingPlace.value })
-					.onConflictDoNothing();
-				const [place] = await tx
-					.select()
-					.from(stocking_places)
-					.where(eq(stocking_places.name, stockingPlace.value));
-				placeId = place.id;
-			}
-			await tx
-				.insert(listingStatuses)
-				.values([
-					{ id: 0, name: 'purchased' },
-					{ id: 6, name: 'stocked' }
-				])
-				.onConflictDoNothing();
-			if (!current)
-				await tx
-					.insert(listingStatusHistory)
-					.values({ listing_id: listingId, status: 0, created_at: new Date(Date.now() - 1) });
-			await tx
-				.update(listings)
-				.set({ stocking_place_id: placeId })
-				.where(eq(listings.id, listingId));
-			await tx.insert(listingStatusHistory).values({
-				listing_id: listingId,
-				status: 6,
-				created_at: new Date(Math.max(Date.now(), (current?.created_at.getTime() ?? 0) + 1))
-			});
+			const placeId = await resolveStockingPlace(tx, stockingPlace);
+			if ((await collectListing(tx, listingId, placeId)) === 'already')
+				throw new Error('Cet article a déjà été récupéré.');
 		});
 		await getToCollectListings().refresh();
 		await getDashboard().refresh();

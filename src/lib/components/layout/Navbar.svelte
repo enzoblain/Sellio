@@ -5,11 +5,14 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import ThemeToggle from '$lib/components/ui/ThemeToggle.svelte';
+	import { getParcelsToCollect } from '$lib/remote/parcels.remote';
 	import { DARK_MODE_ENABLED } from '$lib/theme';
 	import { isActive, navItems, NEW_ARTICLE_HREF } from './nav';
 	import { restoreSidebar, sidebar, toggleSidebar } from './sidebar.svelte';
 
 	onMount(restoreSidebar);
+
+	const parcelCount = $derived(getParcelsToCollect().current?.length ?? 0);
 </script>
 
 <!-- Repli piloté par CSS (data-sidebar sur <html>) : rendu correct dès le premier affichage. -->
@@ -58,6 +61,9 @@
 				>
 					<Icon name={item.icon} />
 					<span class="sidebar-collapsed:sr-only">{item.label}</span>
+					{#if item.href === '/parcels' && parcelCount > 0}
+						{@render counter()}
+					{/if}
 				</a>
 			</li>
 		{/each}
@@ -79,7 +85,7 @@
 
 <nav
 	aria-label="Navigation principale"
-	class="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 items-stretch border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"
+	class="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 items-stretch border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"
 >
 	{#each navItems.slice(0, 2) as item (item.href)}
 		{@render tab(item)}
@@ -94,6 +100,7 @@
 		</span>
 	</a>
 	{@render tab(navItems[2])}
+	{@render tab(navItems[3])}
 </nav>
 
 {#snippet tab(item: (typeof navItems)[number])}
@@ -105,7 +112,23 @@
 			? 'text-accent'
 			: 'text-fg-muted'}"
 	>
-		<Icon name={item.icon} />
+		<span class="relative">
+			<Icon name={item.icon} />
+			{#if item.href === '/parcels' && parcelCount > 0}
+				{@render counter(true)}
+			{/if}
+		</span>
 		{item.shortLabel}
 	</a>
+{/snippet}
+
+{#snippet counter(floating = false)}
+	<span
+		data-testid="parcel-count"
+		class="inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-medium text-accent-fg tabular-nums {floating
+			? 'absolute -top-1 left-3'
+			: 'ml-auto sidebar-collapsed:hidden'}"
+	>
+		<span class="sr-only">Colis à récupérer :</span>{parcelCount}
+	</span>
 {/snippet}

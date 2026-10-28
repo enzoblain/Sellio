@@ -50,6 +50,13 @@
       "when": 1792015200000,
       "tag": "0006_add_stocked_status",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793196672721,
+      "tag": "0007_add_parcels",
+      "breakpoints": true
     }
   ]
 }
