@@ -37,9 +37,16 @@
 </script>
 
 {#snippet noItems()}
-	<EmptyState
-		>{articles.total === 0 ? emptyLabel : 'Aucun article ne correspond à ta recherche.'}</EmptyState
-	>
+	<EmptyState>
+		{#if articles.total === 0}
+			{emptyLabel}
+		{:else}
+			Aucun article ne correspond à ta recherche.
+			<Button variant="ghost" class="ml-2" onclick={articles.reset}
+				>Réinitialiser les filtres</Button
+			>
+		{/if}
+	</EmptyState>
 {/snippet}
 
 {#snippet line(item: T)}

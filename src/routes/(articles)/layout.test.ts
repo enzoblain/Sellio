@@ -151,6 +151,26 @@ describe('layout Articles', () => {
 		expect(goto).not.toHaveBeenCalled();
 	});
 
+	it('garde visible un filtre actif dont plus aucun article ne dispose, et permet de le retirer', async () => {
+		state.url = new URL('http://localhost/stock?brand=Zara&place=Cave');
+		remote.data.stock = resource([row('2', 'Nike'), row('3', 'Nike')]);
+		render(Layout, { children });
+		const marques = screen.getByRole('group', { name: 'Filtrer par marque' });
+		const zara = within(marques).getByRole('button', { name: 'Zara' });
+		expect(zara).toHaveAttribute('aria-pressed', 'true');
+		await fireEvent.click(zara);
+		await waitFor(() =>
+			expect(goto).toHaveBeenLastCalledWith('/stock?place=Cave', expect.anything())
+		);
+	});
+
+	it('ignore le filtre de stockage sur À récupérer', () => {
+		state.url = new URL('http://localhost/to-collect?place=Cave');
+		render(Layout, { children });
+		expect(screen.queryByRole('group', { name: 'Filtrer par stockage' })).not.toBeInTheDocument();
+		expect(goto).toHaveBeenCalledWith('/to-collect', expect.anything());
+	});
+
 	it('le tri par bénéfice n’est proposé que sur À expédier / Expédié', () => {
 		const { unmount } = render(Layout, { children });
 		expect(screen.queryByRole('option', { name: 'Bénéfice' })).not.toBeInTheDocument();
@@ -189,7 +209,7 @@ describe('layout Articles', () => {
 
 describe('ArticleList', () => {
 	const context = (view: 'list' | 'grid', items: unknown[], total = items.length) =>
-		({ items, total, view }) as never;
+		({ items, total, view, reset: vi.fn() }) as never;
 	const stack = [row('1', 'Nike', { modelId: 'm', id: '1' }), row('2', 'Nike', { modelId: 'm' })];
 
 	it('liste : piles en lignes groupées ×N, dépliables', async () => {
@@ -213,7 +233,7 @@ describe('ArticleList', () => {
 		expect(screen.getByRole('button', { name: 'Récupéré : Modèle 1' })).toBeInTheDocument();
 	});
 
-	it('vide : message du statut, ou « aucun résultat » si des filtres masquent tout', () => {
+	it('vide : message du statut, ou « aucun résultat » si des filtres masquent tout', async () => {
 		const { unmount } = render(ArticleListHarness, { shared: context('list', [], 0) });
 		expect(screen.getByText('Rien ici.')).toBeInTheDocument();
 		unmount();

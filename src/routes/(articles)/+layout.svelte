@@ -88,13 +88,18 @@
 
 	const items = $derived(sortArticles(filterArticles(all, filters), filters.sort));
 	const brandOptions = $derived(
-		distinct(all.map((item) => item.brand)).map((value) => ({ value, label: value }))
-	);
-	const placeOptions = $derived(
-		distinct(all.map((item) => item.stockingPlace ?? NO_PLACE)).map((value) => ({
+		distinct([...all.map((item) => item.brand), ...filters.brands]).map((value) => ({
 			value,
 			label: value
 		}))
+	);
+	const placeOptions = $derived(
+		distinct([...all.map((item) => item.stockingPlace ?? NO_PLACE), ...filters.places]).map(
+			(value) => ({
+				value,
+				label: value
+			})
+		)
 	);
 	const hasPlaces = $derived(status !== 'to-collect');
 	const tabs = $derived(
@@ -108,7 +113,12 @@
 		})
 	);
 
+	function reset() {
+		filters = { q: '', sort: filters.sort, places: [], brands: [] };
+	}
+
 	setArticlesContext({
+		reset,
 		get items() {
 			return items;
 		},
@@ -151,14 +161,14 @@
 				}
 			/>
 		</div>
-		{#if hasPlaces && placeOptions.length > 1}
+		{#if hasPlaces && (placeOptions.length > 1 || filters.places.length > 0)}
 			<FilterBar
 				label="Filtrer par stockage"
 				options={placeOptions}
 				bind:selected={filters.places}
 			/>
 		{/if}
-		{#if brandOptions.length > 1}
+		{#if brandOptions.length > 1 || filters.brands.length > 0}
 			<FilterBar label="Filtrer par marque" options={brandOptions} bind:selected={filters.brands} />
 		{/if}
 	</div>

@@ -10,6 +10,8 @@ export type ArticlesContext<T extends Article = Article> = {
 	/** Nombre d'articles du statut avant recherche et filtres. */
 	readonly total: number;
 	readonly view: ArticleView;
+	/** Retire la recherche et les filtres (le tri est conservé). */
+	reset: () => void;
 };
 
 const KEY = Symbol('articles');

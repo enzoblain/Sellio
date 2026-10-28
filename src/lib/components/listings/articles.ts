@@ -136,7 +136,8 @@ export function filtersFromParams(params: URLSearchParams, status?: ArticleStatu
 	return {
 		q: params.get('q') ?? '',
 		sort: allowed.includes(sort) ? sort : 'recent',
-		places: params.getAll('place'),
+		// Pas de stockage avant la récupération : le filtre n'a pas de sens (et serait invisible).
+		places: status === 'to-collect' ? [] : params.getAll('place'),
 		brands: params.getAll('brand')
 	};
 }
