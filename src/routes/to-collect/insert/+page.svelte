@@ -8,20 +8,12 @@
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import Field from '$lib/components/ui/Field.svelte';
-	import Input from '$lib/components/ui/Input.svelte';
-	import { euros } from '$lib/format';
 	import { toast } from '$lib/components/ui/toast.svelte';
-	import { totalCents } from '$lib/components/listings/insert-total';
+	import ListingFields from '$lib/components/listings/ListingFields.svelte';
 	import Page from '$lib/components/ui/Page.svelte';
-	import Autocomplete from '$lib/components/form/Autocomplete.svelte';
 	import type { AutocompleteItem } from '$lib/components/form/Autocomplete.svelte.js';
 
 	import { createListing } from '$lib/remote/listings.remote';
-	import { searchBrands } from '$lib/remote/brands.remote';
-	import { searchModels } from '$lib/remote/models.remote';
-	import { searchSizes } from '$lib/remote/sizes.remote';
-	import { searchColors } from '$lib/remote/colors.remote';
 
 	let selectedBrand = $state<AutocompleteItem>({ value: '', uuid: null });
 	let selectedModel = $state<AutocompleteItem>({ value: '', uuid: null });
@@ -40,9 +32,6 @@
 	let createdId = $state<string | null>(null);
 	// Change à chaque « Ajouter et en créer un autre » : remonte les photos du modèle
 	let resetKey = $state(0);
-	const total = $derived(totalCents(price, shippingCost));
-
-	let previousBrandId = $state<string | null>(null);
 
 	const isValid = $derived(
 		!photoBusy &&
@@ -56,35 +45,6 @@
 			shippingCost !== undefined &&
 			shippingCost >= 0
 	);
-
-	const brandQuery = (search: string, offset: number, limit: number) =>
-		searchBrands({ search, offset, limit });
-
-	const modelQuery = (search: string, offset: number, limit: number) => {
-		if (!selectedBrand.uuid) return Promise.resolve([]);
-
-		return searchModels({
-			search,
-			brandId: selectedBrand.uuid,
-			offset,
-			limit
-		});
-	};
-
-	const sizeQuery = (search: string, offset: number, limit: number) =>
-		searchSizes({ search, offset, limit });
-
-	const colorQuery = (search: string, offset: number, limit: number) =>
-		searchColors({ search, offset, limit });
-
-	$effect(() => {
-		const brandId = selectedBrand.uuid;
-
-		if (brandId !== previousBrandId) {
-			previousBrandId = brandId;
-			selectedModel = { value: '', uuid: null };
-		}
-	});
 
 	async function confirm(another = false) {
 		if (!isValid || saving) return;
@@ -171,65 +131,14 @@
 				/>
 			</Card>
 			<fieldset disabled={saving || !!createdId} class="space-y-6">
-				<Card class="space-y-4">
-					<h2 class="text-base font-medium text-fg">Article</h2>
-					<Field label="Marque" id="brand">
-						<Autocomplete id="brand" query={brandQuery} limit={5} bind:model={selectedBrand} />
-					</Field>
-					<Field label="Modèle" id="model">
-						<Autocomplete
-							id="model"
-							query={modelQuery}
-							limit={5}
-							bind:model={selectedModel}
-							disabled={!selectedBrand.value}
-						/>
-					</Field>
-					<div class="grid gap-4 sm:grid-cols-2">
-						<Field label="Taille" id="size">
-							<Autocomplete id="size" query={sizeQuery} limit={5} bind:model={selectedSize} />
-						</Field>
-						<Field label="Couleur" id="color">
-							<Autocomplete id="color" query={colorQuery} limit={5} bind:model={selectedColor} />
-						</Field>
-					</div>
-				</Card>
-				<Card class="space-y-4">
-					<h2 class="text-base font-medium text-fg">Coût</h2>
-					<div class="grid gap-4 sm:grid-cols-2">
-						<Field label="Prix de l'article" id="price">
-							<div class="relative">
-								<Input
-									id="price"
-									type="number"
-									min="0"
-									step="0.01"
-									bind:value={price}
-									placeholder="0,00"
-									class="pr-10"
-								/>
-								<span class="absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted">€</span>
-							</div>
-						</Field>
-						<Field label="Frais de port" id="shipping-cost">
-							<div class="relative">
-								<Input
-									id="shipping-cost"
-									type="number"
-									min="0"
-									step="0.01"
-									bind:value={shippingCost}
-									placeholder="0,00"
-									class="pr-10"
-								/>
-								<span class="absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted">€</span>
-							</div>
-						</Field>
-					</div>
-					<p class="flex items-center justify-between text-sm text-fg-muted">
-						Total <strong class="text-base text-fg" data-testid="total">{euros(total)}</strong>
-					</p>
-				</Card>
+				<ListingFields
+					bind:brand={selectedBrand}
+					bind:model={selectedModel}
+					bind:size={selectedSize}
+					bind:color={selectedColor}
+					bind:price
+					bind:shippingCost
+				/>
 			</fieldset>
 		</div>
 		{#if errorMessage}<p role="alert" class="mt-4 text-sm text-danger">{errorMessage}</p>{/if}
