@@ -38,15 +38,23 @@ jobs:
             echo "## Changements depuis master (${ahead})"
             echo
             gh api --paginate "repos/${GH_REPO}/compare/master...dev" \
-              --jq '.commits[] | "- \(.sha[0:7]) \(.commit.message | split("\n")[0])"' \
-              | head -n 200
+              --jq '.commits[] | "- \(.sha[0:7]) \(.commit.message | split("\n")[0])"' > commits.md
+            head -n 200 commits.md
           } > body.md
 
           title="Release : dev → master"
           number=$(gh pr list --base master --head dev --state open --json number --jq '.[0].number // empty')
           if [ -n "$number" ]; then
-            gh pr edit "$number" --title "$title" --body-file body.md
+            if ! gh pr edit "$number" --title "$title" --body-file body.md; then
+              echo "::error title=PR update failed::gh pr edit a échoué sur la PR #${number} (voir les logs du run)."
+              exit 1
+            fi
             echo "PR #${number} updated."
           else
-            gh pr create --base master --head dev --title "$title" --body-file body.md
+            if ! out=$(gh pr create --base master --head dev --title "$title" --body-file body.md 2>&1); then
+              echo "$out"
+              echo "::error title=PR creation failed::${out} -- Si le message parle de permissions, cocher Settings > Actions > General > 'Allow GitHub Actions to create and approve pull requests' (voir docs/deploy.md)."
+              exit 1
+            fi
+            echo "$out"
           fi
