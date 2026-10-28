@@ -15,6 +15,7 @@
 	import Drawer from '$lib/components/ui/Drawer.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import ErrorState from '$lib/components/ui/ErrorState.svelte';
+	import ParcelCollect from './ParcelCollect.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { toast } from '$lib/components/ui/toast.svelte';
 	import {
@@ -31,9 +32,12 @@
 
 	let carrierId = $state('');
 	let sort = $state<ParcelSort>('deadline');
-	const items = $derived(
-		sortParcels(filterByCarrier(all, carrierId ? [Number(carrierId)] : []), sort)
-	);
+	// Récupérés : l'ordre du serveur (date de récupération) est conservé, le tri par date limite
+	// ne concerne que les colis à récupérer.
+	const items = $derived.by(() => {
+		const filtered = filterByCarrier(all, carrierId ? [Number(carrierId)] : []);
+		return collected ? filtered : sortParcels(filtered, sort);
+	});
 	const carrierOptions = $derived(
 		[...new Map(all.map((p) => [p.carrierId, p.carrier]))].map(([id, name]) => ({ id, name }))
 	);
@@ -45,6 +49,8 @@
 		selectedId = id;
 		open = true;
 	}
+
+	let collecting = $state(false);
 
 	let deleting = $state(false);
 	let deleteError = $state('');
@@ -187,13 +193,16 @@
 			{#if !collected}
 				<div class="flex flex-wrap justify-between gap-3">
 					<Button variant="ghost" onclick={askDelete}>Supprimer</Button>
-					<!-- Branché à la collecte (#28) -->
-					<Button disabled title="Disponible bientôt">Récupéré</Button>
+					<Button onclick={() => (collecting = true)}>Récupéré</Button>
 				</div>
 			{/if}
 		</div>
 	{/if}
 </Drawer>
+
+{#if selected && !collected}
+	<ParcelCollect bind:open={collecting} parcel={selected} oncollected={() => (open = false)} />
+{/if}
 
 <Dialog
 	bind:element={dialog}

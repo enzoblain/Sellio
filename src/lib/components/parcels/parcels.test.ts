@@ -16,8 +16,15 @@ vi.mock('$lib/remote/parcels.remote', () => ({
 			{ id: 1, name: 'Colissimo' },
 			{ id: 2, name: 'Mondial Relay' }
 		]),
-	removeParcel: remote.removeParcel
+	removeParcel: remote.removeParcel,
+	markParcelCollected: vi.fn()
 }));
+vi.mock('$lib/remote/listings.remote', () => ({ getToCollectListings: () => ({ current: [] }) }));
+vi.mock('$lib/remote/stocking-places.remote', () => ({ searchStockingPlaces: vi.fn() }));
+vi.mock('$lib/remote/brands.remote', () => ({ searchBrands: vi.fn() }));
+vi.mock('$lib/remote/models.remote', () => ({ searchModels: vi.fn() }));
+vi.mock('$lib/remote/sizes.remote', () => ({ searchSizes: vi.fn() }));
+vi.mock('$lib/remote/colors.remote', () => ({ searchColors: vi.fn() }));
 vi.mock('$lib/components/ui/toast.svelte', () => ({ toast: vi.fn() }));
 
 import ParcelForm from './ParcelForm.svelte';
