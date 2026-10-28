@@ -36,7 +36,7 @@ Reprise de la décision #8 (validée par Enzo) : design system en CSS variables 
 | danger                            | #DC2626                    | #F87171       |
 | ring                              | accent à 40 %              | accent à 40 % |
 | chart-revenue / purchases / other | success / accent / warning | idem          |
-| chart-shipping                    | #C4B5FD                    | #4C1D95       |
+| chart-shipping                    | #9061F9                    | #C4B5FD       |
 
 - Typo : Inter, échelle 12 / 14 / 16 / 20 / 24 / 32 px ; titres 600 avec tracking -0.02em ; chiffres en `tabular-nums`.
 - Espacements : grille de 4 px, padding de page 24 px mobile / 40 px desktop, cartes 20–24 px.
