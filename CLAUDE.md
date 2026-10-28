@@ -6,3 +6,7 @@
 - Avant de recréer un composant (bouton, input, carte, dialog, badge, empty/error state, icône), on réutilise ceux de `src/lib/components/ui/`.
 - Les montants passent par `euros()` de `src/lib/format.ts`.
 - Détails et tokens : `docs/ui-refonte.md`.
+
+## Base de données
+
+- Une migration doit rester compatible avec la version précédente du code (ajouts uniquement, pas de suppression ni renommage de colonne ou table dans la même livraison) : le déploiement migre pendant que l'ancienne version tourne et peut la relancer. Voir `docs/deploy.md`.

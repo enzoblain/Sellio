@@ -106,6 +106,23 @@ grep -q previous "$work/site/.state/image.yml" || fail "l'image précédente n'e
 [[ "$(cat "$work/site/.state/deployed-image")" == ghcr.io/example/sellio@sha256:previous ]] || fail "deployed-image modifié"
 echo OK
 
+echo '##### 5b. Restauration : pg_restore en échec, la base n'"'"'est pas touchée'
+reset
+cp "$src/restore.sh" "$work/site/"
+mkdir -p "$work/site/backups/x"
+echo DUMP >"$work/site/backups/x/database.dump"
+cat >"$work/bin/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >>"$STUB_LOG"
+[[ "$*" == *pg_restore* ]] && exit 1
+exit 0
+STUB
+bash "$work/site/restore.sh" --yes "$work/site/backups/x" >/dev/null 2>&1 && fail "restore.sh aurait dû échouer"
+grep -q psql "$STUB_LOG" && fail "psql lancé malgré l'échec de pg_restore"
+grep -q 'stop app' "$STUB_LOG" && fail "app arrêtée malgré l'échec de pg_restore"
+cp "$work/docker.full" "$work/bin/docker"
+echo OK
+
 echo '##### 6. Rétention : seules les 10 plus récentes sont gardées'
 reset
 mkdir -p "$work/site/backups"

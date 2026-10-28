@@ -43,7 +43,7 @@ failure() {
     [[ -z "$partial" ]] || rm -rf -- "$partial"
     if (( updating == 1 )); then
       printf '%s\n' "$target" > .state/failed-image
-      echo 'Deployment stopped. The previous version was left running (or restarted) when there is one. Backups are preserved. Do not restore automatically after a schema change.' >&2
+      echo 'Deployment stopped. Backups are preserved. Do not restore automatically after a schema change.' >&2
       pinned logs --no-color --tail=80 app >> .state/last-error.log 2>&1 || true
     else
       echo 'Backup failed: nothing was changed, the running version is untouched. The next run retries.' >&2
@@ -84,11 +84,15 @@ if ! pinned up -d --no-deps --wait app; then
   if [[ -f .state/deployed-image ]]; then
     previous=$(cat .state/deployed-image)
     printf 'services:\n  app:\n    image: "%s"\n    pull_policy: never\n' "$previous" > .state/image.yml
-    pinned up -d --no-deps --wait app || true
+    if pinned up -d --no-deps --wait app; then
+      echo 'The previous version was restarted and is healthy.' | tee -a .state/last-error.log >&2
+    else
+      echo 'The previous version could NOT be restarted: Sellio is DOWN. See restore.sh / README.' | tee -a .state/last-error.log >&2
+    fi
   else
     pinned stop app
   fi
-  echo 'Health check failed. The previous version was restarted when there is one; see .state/last-error.log.' >&2
+  echo 'Health check failed on the new version; see .state/last-error.log.' >&2
   exit 1
 fi
 printf '%s\n' "$target" > .state/deployed-image

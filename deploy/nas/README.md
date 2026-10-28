@@ -64,7 +64,7 @@ bash update.sh --retry
 
 Une nouvelle image peut aussi être déployée après correction du code. Seules les 10 dernières sauvegardes sont conservées : copier celles à garder vers un autre support. Elles contiennent les données et le mot de passe de la base ; conserver leurs permissions privées.
 
-Revenir à une ancienne image ne restaure pas le schéma de la base. En cas de restauration, arrêter l’application, restaurer le dump avec `pg_restore` et les photos de la même sauvegarde, puis relancer l’image indiquée dans `previous-image`. Ne pas restaurer automatiquement une sauvegarde : cela peut perdre les données ajoutées depuis.
+Revenir à une ancienne image ne restaure pas le schéma de la base. En cas de restauration, arrêter l’application, lancer `bash restore.sh backups/<date>` (il vide les schémas avant de rejouer le dump, via le conteneur `db`, après confirmation ; `pg_restore --clean` seul laisserait les tables d’une migration récente), restaurer les photos de `images.tar.gz` si besoin, puis relancer l’image indiquée dans `previous-image`. Ne pas restaurer automatiquement une sauvegarde : cela peut perdre les données ajoutées depuis.
 
 ## Données présentes sur l’ordinateur
 
