@@ -28,7 +28,13 @@ Règles à connaître :
 
 Tests : `deploy/nas/test-update.sh` simule docker (rapide) ; `scripts/test-update-e2e.sh` rejoue update.sh avec la vraie pile (docker compose, postgres:17-alpine, image construite, registre local) : installation, 0007 appliquée automatiquement, déjà à jour, échec de migration avec l'ancienne version toujours en ligne, `--retry`. Il tourne en CI (`Deployment end-to-end`) sur les PR qui touchent le déploiement, avec shellcheck. Il exige `SELLIO_E2E=1`, utilise ses propres volumes `sellio_e2e_*`, le projet `sellio-e2e` et les ports 25099 et 5000, et refuse de tourner si des volumes `sellio_nas_*` existent : à lancer sur une machine jetable, jamais sur le NAS.
 
+Avant toute publication de l'image (push sur `master`, `.github/workflows/publish-nas.yml`), le job `publish` dépend (`needs`) de quatre contrôles : `e2e` (shellcheck et scripts de mise à jour), `test` (`npm test`), `lint` (`npm run lint`), puis ses propres étapes `npm run check` et `test-update.sh`. Un seul rouge bloque la publication, donc le déploiement.
+
 Les sections suivantes décrivent les scripts `scripts/` pour une mise en prod pilotée à la main.
+
+## Releases dev → master
+
+Aucun workflow ne crée la PR `dev` → `master`. Les releases passent par la proposition du lead : l'outil de release ouvre la PR et la soumet à Enzo en un clic. Un workflow `GITHUB_TOKEN` doublonnait ce flux, échouait à chaque push et risquait d'ouvrir une seconde PR : il a été retiré.
 
 ## Prérequis
 
