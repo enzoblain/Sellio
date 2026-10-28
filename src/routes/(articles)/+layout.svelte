@@ -87,11 +87,11 @@
 		});
 	});
 
-	let view = $state<ArticleView>('list');
-	$effect(() => {
-		const saved = localStorage.getItem(VIEW_KEY);
-		if (saved === 'list' || saved === 'grid') view = saved;
-	});
+	// Posée avant le premier rendu par app.html : pas de saut liste → grille au chargement.
+	const initialView = (): ArticleView =>
+		typeof document !== 'undefined' &&
+		document.documentElement.dataset.articlesView === 'grid' ? 'grid' : 'list';
+	let view = $state<ArticleView>(initialView());
 	const viewOptions = [
 		{ value: 'list', label: 'Liste' },
 		{ value: 'grid', label: 'Grille' }
@@ -209,6 +209,7 @@
 					() => view,
 					(next) => {
 						view = next as ArticleView;
+						document.documentElement.dataset.articlesView = view;
 						localStorage.setItem(VIEW_KEY, view);
 					}
 				}

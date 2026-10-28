@@ -13,6 +13,7 @@ vi.mock('./ListingEditor.svelte', async () => ({
 vi.mock('$lib/components/images/ListingGallery.svelte', () => ({ default: () => {} }));
 
 import ArticleDetail from './ArticleDetail.svelte';
+import { toasts } from '$lib/components/ui/toast.svelte';
 
 const item = {
 	id: 'a1',
@@ -80,6 +81,15 @@ describe('ArticleDetail', () => {
 		expect(screen.getByTestId('editor-stub')).toHaveTextContent('a1');
 		await fireEvent.click(screen.getByRole('button', { name: 'Annuler l’édition', hidden: true }));
 		expect(screen.getByRole('heading', { name: 'Nike · Air' })).toBeInTheDocument();
+	});
+
+	it('un enregistrement réussi revient au détail et affiche un toast', async () => {
+		toasts.items = [];
+		render(ArticleDetail, { item, onclose: vi.fn() });
+		await fireEvent.click(screen.getByRole('button', { name: 'Modifier', hidden: true }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Enregistré', hidden: true }));
+		expect(screen.getByRole('heading', { name: 'Nike · Air' })).toBeInTheDocument();
+		expect(toasts.items.map((t) => t.message)).toEqual(['Article modifié']);
 	});
 
 	it('pendant l’enregistrement, Échap et la croix sont bloqués', async () => {

@@ -82,7 +82,10 @@
 				listingId={item.id}
 				bind:saving
 				oncancel={() => (editing = false)}
-				onsaved={() => (editing = false)}
+				onsaved={() => {
+					editing = false;
+					toast('Article modifié');
+				}}
 			/>
 		{:else}
 			{@const total = totalCost(item)}

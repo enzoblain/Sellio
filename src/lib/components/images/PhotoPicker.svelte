@@ -99,9 +99,6 @@
 	}
 </script>
 
-<!-- Un dépôt raté ne doit pas faire ouvrir l'image et perdre le formulaire -->
-<svelte:window ondragover={(e) => e.preventDefault()} ondrop={(e) => e.preventDefault()} />
-
 <section
 	class="space-y-3 rounded-lg border-2 border-dashed p-3 {dragging
 		? 'border-accent bg-surface-2'
